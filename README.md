@@ -1,78 +1,62 @@
-# Welcome to your Lovable project
+# MailForensix 📧🔍
 
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
-
-## Built with
-
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
+**MailForensix** is an intelligent, automated email forensics and phishing analysis tool developed for **Smart India Hackathon 2026 (SIH '26)**. It simplifies digital forensics for cybersecurity investigators, security operation center (SOC) analysts, and law enforcement agencies by analyzing email headers, artifacts, links, attachments, and metadata to detect phishing attempts, header spoofing, and malicious intent.
 
 ---
 
-## Live Enrichment
+## 🎯 Core Idea
 
-MailForensix optionally performs four live network lookups to strengthen its findings.
-All lookups run **entirely in the browser** — no server component is involved and no message
-content (headers, body, subject) is ever transmitted.
+Email is one of the most common vectors for cyberattacks, social engineering, and financial fraud. Manual header and attachment analysis is time-consuming and requires specialized expertise. 
 
-### What is sent and to whom
+**MailForensix** automates end-to-end email forensic analysis:
+1. **Header & Authentication Verification**: Parses raw `.eml` / `.msg` files to extract SPF, DKIM, DMARC records, and hop-by-hop IP routing trails to spot spoofed domain signatures.
+2. **Body & Link Inspection**: Scans embedded URLs, checks domain reputation against threat intelligence feeds, and identifies phishing tactics (e.g., typosquatting, IDN homograph attacks).
+3. **Attachment & Artifact Analysis**: Extracts, hashes (MD5, SHA-256), and evaluates attachments for malicious payloads.
+4. **Automated Reporting**: Generates comprehensive forensic evidence reports with risk scoring for legal and technical compliance.
 
-| Feature | External service | Data transmitted | Never transmitted |
-|---|---|---|---|
-| SPF DNS | `cloudflare-dns.com/dns-query` | Sender domain (e.g. `example.com`) | Email content |
-| DKIM DNS | `cloudflare-dns.com/dns-query` | `<selector>._domainkey.<domain>` | Email content |
-| Domain age | `rdap.org/domain/<domain>` | Sender domain | Email content |
-| IP geo/ASN | `ipapi.co/<ip>/json/` | Originating public IP | Email content |
+---
 
-### Fallback behaviour
+## 🛠️ Tech Stack
 
-Every lookup is wrapped in `try/catch`.  If a request fails (network offline, CORS policy,
-API rate-limited, or timeout) the lookup is **silently skipped** and the analysis falls back
-to the existing static heuristics (`NET_MAP` / `HOST_HINTS` for geo, header-based auth
-results for SPF/DKIM).  The tool is fully usable in air-gapped and offline-demo environments.
+- **Frontend / UI**: React.js / Next.js, Tailwind CSS *(or Streamlit for quick prototyping)*
+- **Backend**: Python (FastAPI / Flask)
+- **Forensic & Parsing Libraries**:
+  - `python-mail-parser` / `extract-msg`: Email parsing and attachment extraction
+  - `dnspython`: DNS, SPF, DKIM, and DMARC verification
+  - `ipwhois` / `geoip2`: IP geolocation and ISP routing analysis
+  - `re` / `BeautifulSoup4`: URL extraction and DOM scraping
+- **Threat Intelligence Integrations**:
+  - VirusTotal API
+  - AbuseIPDB API
+  - PhishTank API
+- **Database**: PostgreSQL / MongoDB *(for case history and analysis caching)*
 
-### Disabling live geo lookup
+---
 
-Pass `{ liveGeoEnabled: false }` to `analyzeEmailAsync()` to disable the `ipapi.co` call
-(the Cloudflare DoH and RDAP calls still run):
+## 📂 Project Structure
 
-```ts
-import { analyzeEmailAsync } from "@/lib/email-forensics";
-const result = await analyzeEmailAsync(rawEmail, { liveGeoEnabled: false });
-```
-
-### New findings added by live enrichment
-
-| Finding ID | Severity | Weight | Trigger |
-|---|---|---|---|
-| `dns-spf-disagree` | Critical | +20 | Live SPF TXT contradicts `Authentication-Results` header |
-| `dns-dkim-disagree` | Critical | +20 | Live DKIM TXT absent/present when header says opposite |
-| `domain-age-new` | High | +15 | Sender domain registered < 30 days ago |
-| `domain-age-young` | Medium | +8 | Sender domain registered < 365 days ago |
-
-### PDF export
-
-The **Download PDF** button in the Report tab uses [jsPDF](https://github.com/parallax/jsPDF)
-(already bundled) to render a formatted A4 forensic report entirely client-side.
-No server round-trip is required.
+```text
+SIH26-MailForensix/
+├── backend/
+│   ├── app/
+│   │   ├── api/             # API routes and endpoint controllers
+│   │   ├── core/            # Configs, security, and global variables
+│   │   ├── parsers/         # Email header, body, and attachment parsers
+│   │   ├── services/        # Threat Intel API integrations (VirusTotal, AbuseIPDB)
+│   │   └── utils/           # Helper functions, hashing, IP lookup scripts
+│   ├── tests/               # Unit and integration test cases
+│   ├── requirements.txt     # Python dependencies
+│   └── main.py              # Application entry point
+│
+├── frontend/
+│   ├── public/              # Static assets and icons
+│   ├── src/
+│   │   ├── components/      # Reusable UI components (Header viewer, Map, Risk score)
+│   │   ├── pages/           # Dashboard, Upload, and Report views
+│   │   └── services/        # API calls to backend
+│   └── package.json         # Frontend dependencies
+│
+├── sample_emails/           # Sample .eml / .msg test files for demo
+├── docs/                    # Architecture diagrams and SIH presentation materials
+├── LICENSE                  # Open-source license
+└── README.md                # Project documentation
