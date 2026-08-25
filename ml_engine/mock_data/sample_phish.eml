@@ -1,0 +1,30 @@
+From: "PayPal Support" <support@paypal.com>
+To: victim@example.com
+Subject: URGENT: Your PayPal Account Has Been Suspended - Action Required Immediately
+Date: Tue, 25 Aug 2026 21:40:00 +0530
+Message-ID: <20260825214000.12345.qmail@bad-domain.xyz>
+Return-Path: <attacker@bad-domain.xyz>
+Authentication-Results: mx.google.com; spf=fail (google.com: domain of attacker@bad-domain.xyz does not designate 192.168.1.100 as permitted sender)
+Received-SPF: fail (google.com: domain of attacker@bad-domain.xyz does not designate 192.168.1.100 as permitted sender)
+Received: from mail7.bad-domain.xyz (mail7.bad-domain.xyz [10.0.0.7]) by mx.google.com with ESMTPS id abc12345
+Received: from hop6.relay.net (hop6.relay.net [10.0.0.6]) by mail7.bad-domain.xyz with SMTP id 666
+Received: from hop5.relay.net (hop5.relay.net [10.0.0.5]) by hop6.relay.net with SMTP id 555
+Received: from hop4.relay.net (hop4.relay.net [10.0.0.4]) by hop5.relay.net with SMTP id 444
+Received: from hop3.relay.net (hop3.relay.net [10.0.0.3]) by hop4.relay.net with SMTP id 333
+Received: from hop2.relay.net (hop2.relay.net [10.0.0.2]) by hop3.relay.net with SMTP id 222
+Received: from tor-exit.provider.org (tor-exit.provider.org [185.220.101.5]) by hop2.relay.net with SMTP id 111
+Received: from localhost (localhost [127.0.0.1]) by tor-exit.provider.org with ESMTP
+Content-Type: text/html; charset="UTF-8"
+
+<!DOCTYPE html>
+<html>
+<body>
+  <h2>Urgent Security Notice</h2>
+  <p>Dear Customer,</p>
+  <p>We detected unauthorized login attempts on your account. Your account has been temporarily suspended to prevent fraud.</p>
+  <p>You must verify your credentials and confirm your password within 24 hours to restore full access, or your account will be permanently closed.</p>
+  <p><a href="http://192.168.1.100/login">Click here to log in to your account via IP portal</a></p>
+  <p><a href="http://paypa1-security-check.com/verify">Verify Account Information Now</a></p>
+  <p>Thank you,<br/>PayPal Security Team</p>
+</body>
+</html>
