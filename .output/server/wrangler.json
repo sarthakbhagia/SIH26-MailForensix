@@ -3,7 +3,7 @@
   "main": "index.mjs",
   "assets": {
     "binding": "ASSETS",
-    "directory": "../public"
+    "directory": "..\\public"
   },
   "name": "sarthakbhagia-sih26-mailforensix",
   "compatibility_flags": [
