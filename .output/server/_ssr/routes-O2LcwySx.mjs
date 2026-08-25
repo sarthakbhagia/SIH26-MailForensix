@@ -1,0 +1,2258 @@
+import { i as __toESM } from "../_runtime.mjs";
+import { o as require_jsx_runtime, r as Slot, s as require_react } from "../_libs/@radix-ui/react-collection+[...].mjs";
+import { _ as CircleCheck, a as MapPin, c as LoaderCircle, d as FileText, f as FileDown, g as CircleX, h as CloudUpload, i as Network, l as FingerprintPattern, m as Copy, n as ShieldAlert, o as Mail, p as Download, r as Radar, s as Lock, t as Trash2, u as FileUp } from "../_libs/lucide-react.mjs";
+import { n as clsx, t as cva } from "../_libs/class-variance-authority+clsx.mjs";
+import { t as twMerge } from "../_libs/tailwind-merge.mjs";
+import { i as Trigger, n as List, r as Root2, t as Content } from "../_libs/radix-ui__react-tabs.mjs";
+import { t as Root } from "../_libs/radix-ui__react-separator.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-O2LcwySx.js
+var import_react = /* @__PURE__ */ __toESM(require_react());
+var import_jsx_runtime = require_jsx_runtime();
+function cn(...inputs) {
+	return twMerge(clsx(inputs));
+}
+var buttonVariants = cva("inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0", {
+	variants: {
+		variant: {
+			default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+			destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+			outline: "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
+			secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
+			ghost: "hover:bg-accent hover:text-accent-foreground",
+			link: "text-primary underline-offset-4 hover:underline"
+		},
+		size: {
+			default: "h-9 px-4 py-2",
+			sm: "h-8 rounded-md px-3 text-xs",
+			lg: "h-10 rounded-md px-8",
+			icon: "h-9 w-9"
+		}
+	},
+	defaultVariants: {
+		variant: "default",
+		size: "default"
+	}
+});
+var Button = import_react.forwardRef(({ className, variant, size, asChild = false, ...props }, ref) => {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(asChild ? Slot : "button", {
+		className: cn(buttonVariants({
+			variant,
+			size,
+			className
+		})),
+		ref,
+		...props
+	});
+});
+Button.displayName = "Button";
+var Textarea = import_react.forwardRef(({ className, ...props }, ref) => {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", {
+		className: cn("flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm", className),
+		ref,
+		...props
+	});
+});
+Textarea.displayName = "Textarea";
+var Tabs = Root2;
+var TabsList = import_react.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(List, {
+	ref,
+	className: cn("inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground", className),
+	...props
+}));
+TabsList.displayName = List.displayName;
+var TabsTrigger = import_react.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Trigger, {
+	ref,
+	className: cn("inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow", className),
+	...props
+}));
+TabsTrigger.displayName = Trigger.displayName;
+var TabsContent = import_react.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Content, {
+	ref,
+	className: cn("mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2", className),
+	...props
+}));
+TabsContent.displayName = Content.displayName;
+var Separator = import_react.forwardRef(({ className, orientation = "horizontal", decorative = true, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Root, {
+	ref,
+	decorative,
+	orientation,
+	className: cn("shrink-0 bg-border", orientation === "horizontal" ? "h-[1px] w-full" : "h-full w-[1px]", className),
+	...props
+}));
+Separator.displayName = Root.displayName;
+var VERDICT_LABEL = {
+	legitimate: "Legitimate",
+	suspicious: "Suspicious",
+	impersonation: "Impersonation",
+	phishing: "Phishing",
+	fraud: "Fraud / BEC"
+};
+function verdictColor(verdict) {
+	if (verdict === "fraud") return "var(--critical)";
+	if (verdict === "phishing") return "var(--high)";
+	if (verdict === "impersonation") return "var(--medium)";
+	if (verdict === "suspicious") return "var(--low)";
+	return "var(--clean)";
+}
+function RiskGauge({ score, verdict }) {
+	const r = 62;
+	const c = 2 * Math.PI * r;
+	const dash = Math.min(100, Math.max(0, score)) / 100 * c;
+	const color = verdictColor(verdict);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "flex flex-col items-center gap-3",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "relative",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+				width: "156",
+				height: "156",
+				viewBox: "0 0 156 156",
+				className: "-rotate-90",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+					cx: "78",
+					cy: "78",
+					r,
+					fill: "none",
+					stroke: "var(--muted)",
+					strokeWidth: "12"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+					cx: "78",
+					cy: "78",
+					r,
+					fill: "none",
+					stroke: color,
+					strokeWidth: "12",
+					strokeLinecap: "round",
+					strokeDasharray: `${dash} ${c}`,
+					style: { transition: "stroke-dasharray 700ms ease" }
+				})]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "absolute inset-0 flex flex-col items-center justify-center",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "font-mono text-4xl font-semibold",
+					style: { color },
+					children: score
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "label-mono",
+					children: "risk / 100"
+				})]
+			})]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "rounded-full border px-4 py-1 font-mono text-xs uppercase tracking-widest",
+			style: {
+				color,
+				borderColor: color
+			},
+			children: VERDICT_LABEL[verdict]
+		})]
+	});
+}
+/** Equirectangular projection onto a 720x360 viewBox. */
+function project(lat, lon) {
+	return {
+		x: (lon + 180) / 360 * 720,
+		y: (90 - lat) / 180 * 360
+	};
+}
+var LANDMASS = [
+	"M 118 78 L 168 62 L 214 66 L 236 92 L 224 120 L 196 138 L 168 132 L 150 150 L 132 138 L 120 108 Z",
+	"M 196 176 L 222 168 L 236 196 L 252 232 L 240 276 L 216 300 L 200 268 L 194 224 Z",
+	"M 330 66 L 372 56 L 412 64 L 430 84 L 404 104 L 372 100 L 342 92 Z",
+	"M 340 110 L 386 104 L 402 132 L 412 178 L 392 226 L 366 244 L 348 206 L 336 156 Z",
+	"M 440 60 L 520 46 L 600 58 L 636 84 L 612 118 L 560 128 L 500 118 L 456 96 Z",
+	"M 468 128 L 512 126 L 528 160 L 506 186 L 482 166 Z",
+	"M 596 236 L 646 228 L 672 254 L 656 288 L 616 284 L 594 262 Z"
+];
+function TraceMap({ origin }) {
+	const point = origin.latitude != null && origin.longitude != null ? project(origin.latitude, origin.longitude) : null;
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "panel grid-bg relative overflow-hidden",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+				viewBox: "0 0 720 360",
+				className: "h-auto w-full",
+				children: [LANDMASS.map((d, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+					d,
+					fill: "var(--surface-2)",
+					stroke: "var(--border)",
+					strokeWidth: "1"
+				}, i)), point && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("g", { children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("line", {
+						x1: point.x,
+						y1: 0,
+						x2: point.x,
+						y2: 360,
+						stroke: "var(--primary)",
+						strokeOpacity: "0.25",
+						strokeDasharray: "4 6"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("line", {
+						x1: 0,
+						y1: point.y,
+						x2: 720,
+						y2: point.y,
+						stroke: "var(--primary)",
+						strokeOpacity: "0.25",
+						strokeDasharray: "4 6"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+						cx: point.x,
+						cy: point.y,
+						r: "26",
+						fill: "var(--critical)",
+						fillOpacity: "0.12"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("circle", {
+						cx: point.x,
+						cy: point.y,
+						r: "14",
+						fill: "var(--critical)",
+						fillOpacity: "0.22",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("animate", {
+							attributeName: "r",
+							values: "12;22;12",
+							dur: "2.4s",
+							repeatCount: "indefinite"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("animate", {
+							attributeName: "fill-opacity",
+							values: "0.3;0.02;0.3",
+							dur: "2.4s",
+							repeatCount: "indefinite"
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+						cx: point.x,
+						cy: point.y,
+						r: "4.5",
+						fill: "var(--critical)"
+					})
+				] })]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "absolute left-4 top-4 space-y-1",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "label-mono",
+						children: "estimated origin"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "font-mono text-sm text-foreground",
+						children: [origin.region, origin.country].filter(Boolean).join(", ") || "Undetermined"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+						className: "font-mono text-xs text-muted-foreground",
+						children: [
+							origin.ip ?? "no public IP",
+							" · ",
+							origin.provider ?? "unclassified network"
+						]
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "absolute bottom-4 right-4 rounded-md border border-border bg-background/80 px-3 py-2 text-right backdrop-blur",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					className: "label-mono",
+					children: "geo confidence"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+					className: "font-mono text-lg text-primary",
+					children: [origin.confidence, "%"]
+				})]
+			})
+		]
+	});
+}
+function unfold(raw) {
+	const lines = (raw.replace(/\r\n/g, "\n").split(/\n\n/)[0] ?? "").split("\n");
+	const out = [];
+	for (const line of lines) if (/^[ \t]/.test(line) && out.length) out[out.length - 1] += " " + line.trim();
+	else if (line.trim()) out.push(line);
+	return out;
+}
+function parseHeaders(raw) {
+	return unfold(raw).map((line) => {
+		const i = line.indexOf(":");
+		if (i < 0) return null;
+		return {
+			name: line.slice(0, i).trim(),
+			value: line.slice(i + 1).trim()
+		};
+	}).filter((h) => !!h);
+}
+function pick(headers, name) {
+	return headers.find((h) => h.name.toLowerCase() === name.toLowerCase())?.value ?? null;
+}
+function pickAll(headers, name) {
+	return headers.filter((h) => h.name.toLowerCase() === name.toLowerCase()).map((h) => h.value);
+}
+function extractAddress(value) {
+	if (!value) return {
+		display: null,
+		address: null
+	};
+	const angle = value.match(/<([^>]+)>/);
+	const address = (angle ? angle[1] : value.match(/[\w.+-]+@[\w.-]+/)?.[0] ?? null)?.trim() ?? null;
+	let display = angle ? value.slice(0, value.indexOf("<")).trim() : "";
+	display = display.replace(/^["']|["']$/g, "").trim();
+	return {
+		display: display || null,
+		address
+	};
+}
+function classifyIp(ip) {
+	if (!ip) return "unknown";
+	if (/^127\./.test(ip) || ip === "::1") return "loopback";
+	if (/^10\./.test(ip) || /^192\.168\./.test(ip) || /^172\.(1[6-9]|2\d|3[01])\./.test(ip)) return "private";
+	if (/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)) return "public";
+	return ip.includes(":") ? "public" : "unknown";
+}
+function parseReceived(raw, index) {
+	const from = raw.match(/from\s+([^\s;()]+)/i)?.[1] ?? null;
+	const by = raw.match(/\bby\s+([^\s;()]+)/i)?.[1] ?? null;
+	const ip = raw.match(/\[((?:\d{1,3}\.){3}\d{1,3})\]/)?.[1] ?? raw.match(/\(((?:\d{1,3}\.){3}\d{1,3})\)/)?.[1] ?? raw.match(/(?:\d{1,3}\.){3}\d{1,3}/)?.[0] ?? null;
+	const protocol = raw.match(/\bwith\s+([A-Za-z0-9]+)/i)?.[1] ?? null;
+	const timestamp = raw.split(";").slice(1).join(";").trim() || null;
+	const notes = [];
+	if (/helo=|ehlo=/i.test(raw) && from) {
+		const helo = raw.match(/(?:helo|ehlo)=([^\s)\];]+)/i)?.[1];
+		if (helo && from && !from.includes(helo) && !helo.includes(from)) notes.push(`HELO identity "${helo}" does not match announced host "${from}"`);
+	}
+	if (protocol && /^smtp$/i.test(protocol)) notes.push("Unauthenticated SMTP submission");
+	if (/localhost|unknown/i.test(from ?? "")) notes.push("Obfuscated or unresolvable sending host");
+	return {
+		index,
+		from,
+		by,
+		ip,
+		ipClass: classifyIp(ip),
+		protocol,
+		timestamp,
+		raw,
+		notes
+	};
+}
+var NET_MAP = [
+	{
+		test: /^13\.|^20\.|^40\.|^52\.1[0-9][0-9]\./,
+		provider: "Microsoft Azure / Outlook",
+		country: "United States",
+		region: "Virginia",
+		infra: "cloud",
+		lat: 38.95,
+		lon: -77.45
+	},
+	{
+		test: /^3\.|^18\.|^34\.2|^54\./,
+		provider: "Amazon AWS EC2",
+		country: "United States",
+		region: "Oregon",
+		infra: "cloud",
+		lat: 45.84,
+		lon: -119.7
+	},
+	{
+		test: /^34\.|^35\.|^142\.250\./,
+		provider: "Google Cloud / Google Mail",
+		country: "United States",
+		region: "Iowa",
+		infra: "cloud",
+		lat: 41.26,
+		lon: -95.86
+	},
+	{
+		test: /^159\.89\.|^165\.227\.|^167\.99\./,
+		provider: "DigitalOcean LLC",
+		country: "Netherlands",
+		region: "Amsterdam",
+		infra: "hosting",
+		lat: 52.37,
+		lon: 4.9
+	},
+	{
+		test: /^45\.(1[0-9][0-9]|2[0-9][0-9])\./,
+		provider: "Bulk hosting / bulletproof range",
+		country: "Unknown (bulk allocation)",
+		region: "Unknown",
+		infra: "anonymized",
+		lat: 47,
+		lon: 8
+	},
+	{
+		test: /^185\.220\./,
+		provider: "Tor exit relay operator",
+		country: "Germany",
+		region: "Frankfurt",
+		infra: "anonymized",
+		lat: 50.11,
+		lon: 8.68
+	},
+	{
+		test: /^103\.(2[0-9]|3[0-9])\./,
+		provider: "APNIC regional allocation",
+		country: "India",
+		region: "Maharashtra",
+		infra: "hosting",
+		lat: 19.08,
+		lon: 72.88
+	},
+	{
+		test: /^41\.|^102\./,
+		provider: "AFRINIC regional allocation",
+		country: "Nigeria",
+		region: "Lagos",
+		infra: "residential",
+		lat: 6.52,
+		lon: 3.37
+	},
+	{
+		test: /^196\./,
+		provider: "AFRINIC regional allocation",
+		country: "South Africa",
+		region: "Gauteng",
+		infra: "residential",
+		lat: -26.2,
+		lon: 28.04
+	},
+	{
+		test: /^5\.|^31\.|^37\.|^95\./,
+		provider: "RIPE NCC regional allocation",
+		country: "Russia",
+		region: "Moscow",
+		infra: "hosting",
+		lat: 55.75,
+		lon: 37.62
+	},
+	{
+		test: /^1\.|^14\.|^27\.|^49\.|^61\./,
+		provider: "APNIC regional allocation",
+		country: "China",
+		region: "Guangdong",
+		infra: "residential",
+		lat: 23.13,
+		lon: 113.26
+	}
+];
+var HOST_HINTS = [
+	{
+		test: /amazonaws\.com$/i,
+		provider: "Amazon AWS EC2",
+		infra: "cloud"
+	},
+	{
+		test: /outlook\.com|protection\.outlook\.com$/i,
+		provider: "Microsoft 365 (Exchange Online)",
+		infra: "cloud"
+	},
+	{
+		test: /google\.com|gmail\.com$/i,
+		provider: "Google Workspace",
+		infra: "cloud"
+	},
+	{
+		test: /sendgrid\.net|mailgun|amazonses|sparkpost/i,
+		provider: "Bulk ESP relay",
+		infra: "cloud"
+	},
+	{
+		test: /digitalocean|vultr|hetzner|ovh|contabo|linode/i,
+		provider: "Low-cost VPS provider",
+		infra: "hosting"
+	},
+	{
+		test: /tor-exit|torservers|relay/i,
+		provider: "Anonymizing relay",
+		infra: "anonymized"
+	},
+	{
+		test: /dynamic|dsl|broadband|cable|pppoe|res\./i,
+		provider: "Consumer broadband allocation",
+		infra: "residential"
+	}
+];
+function estimateOrigin(hops) {
+	const basis = [];
+	const earliest = [...hops].reverse().find((h) => h.ipClass === "public");
+	const ip = earliest?.ip ?? null;
+	const host = earliest?.from ?? null;
+	let country = null;
+	let region = null;
+	let provider = null;
+	let infrastructure = "unknown";
+	let latitude = null;
+	let longitude = null;
+	let confidence = 20;
+	if (!ip) {
+		basis.push("No public IP address present in the Received chain — origin cannot be established");
+		return {
+			ip: null,
+			ipClass: "unknown",
+			reverseHost: host,
+			country,
+			region,
+			provider,
+			infrastructure,
+			latitude,
+			longitude,
+			confidence: 10,
+			basis
+		};
+	}
+	basis.push(`Earliest reliable sending node identified at hop ${earliest.index + 1} (${ip})`);
+	const net = NET_MAP.find((n) => n.test.test(ip));
+	if (net) {
+		country = net.country;
+		region = net.region;
+		provider = net.provider;
+		infrastructure = net.infra;
+		latitude = net.lat;
+		longitude = net.lon;
+		confidence = 62;
+		basis.push(`IP block matches ${net.provider} allocation (${net.country})`);
+	}
+	if (host) {
+		const hint = HOST_HINTS.find((h) => h.test.test(host));
+		if (hint) {
+			provider = provider ?? hint.provider;
+			infrastructure = hint.infra === "anonymized" ? "anonymized" : infrastructure === "unknown" ? hint.infra : infrastructure;
+			confidence += 12;
+			basis.push(`Reverse hostname fingerprint indicates ${hint.provider}`);
+		}
+		const cc = host.match(/\.([a-z]{2})$/i)?.[1]?.toLowerCase();
+		const ccMap = {
+			in: "India",
+			ru: "Russia",
+			cn: "China",
+			ng: "Nigeria",
+			ua: "Ukraine",
+			br: "Brazil",
+			de: "Germany",
+			nl: "Netherlands",
+			uk: "United Kingdom",
+			vn: "Vietnam"
+		};
+		if (cc && ccMap[cc]) {
+			country = country ?? ccMap[cc];
+			confidence += 8;
+			basis.push(`ccTLD in relay hostname corroborates ${ccMap[cc]}`);
+		}
+	}
+	const publicHops = hops.filter((h) => h.ipClass === "public").length;
+	if (publicHops > 4) {
+		confidence -= 10;
+		basis.push(`${publicHops} public relay hops present — long chain reduces origin certainty`);
+	}
+	if (infrastructure === "anonymized") {
+		confidence -= 15;
+		basis.push("Anonymizing infrastructure detected — geolocation reflects exit node, not the actor");
+	}
+	return {
+		ip,
+		ipClass: earliest.ipClass,
+		reverseHost: host,
+		country,
+		region,
+		provider,
+		infrastructure,
+		latitude,
+		longitude,
+		confidence: Math.max(8, Math.min(92, confidence)),
+		basis
+	};
+}
+function parseAuth(headers, fromDomain) {
+	const blob = [
+		...pickAll(headers, "authentication-results"),
+		...pickAll(headers, "received-spf"),
+		...pickAll(headers, "arc-authentication-results"),
+		...pickAll(headers, "x-ms-exchange-authentication-results")
+	].join(" ").toLowerCase();
+	const grab = (k) => blob.match(new RegExp(`${k}\\s*=\\s*([a-z]+)`))?.[1] ?? null;
+	const spfRaw = grab("spf") ?? pick(headers, "received-spf")?.toLowerCase().trim().split(/\s/)[0] ?? null;
+	const dkimRaw = grab("dkim");
+	const dmarcRaw = grab("dmarc");
+	const dkimHeader = pick(headers, "dkim-signature");
+	const dkimDomain = dkimHeader?.match(/d=([^;\s]+)/)?.[1] ?? null;
+	const norm = (v, allowed, fallback) => allowed.includes(v ?? "") ? v : fallback;
+	return {
+		spf: norm(spfRaw, [
+			"pass",
+			"fail",
+			"softfail",
+			"neutral",
+			"none"
+		], dkimHeader || blob ? "unknown" : "none"),
+		dkim: dkimRaw ? norm(dkimRaw, [
+			"pass",
+			"fail",
+			"none"
+		], "unknown") : dkimHeader ? "unknown" : "none",
+		dmarc: dmarcRaw ? norm(dmarcRaw, [
+			"pass",
+			"fail",
+			"none"
+		], "unknown") : "none",
+		dkimDomain,
+		aligned: !!(dkimDomain && fromDomain && (fromDomain.endsWith(dkimDomain) || dkimDomain.endsWith(fromDomain)))
+	};
+}
+var URGENCY = [
+	"urgent",
+	"immediately",
+	"within 24 hours",
+	"final warning",
+	"act now",
+	"last reminder",
+	"account will be suspended",
+	"expires today",
+	"failure to comply",
+	"do not ignore"
+];
+var CREDENTIAL = [
+	"verify your account",
+	"confirm your password",
+	"re-enter your credentials",
+	"login to continue",
+	"validate your identity",
+	"unlock your account",
+	"click here to sign in"
+];
+var BEC = [
+	"wire transfer",
+	"change of bank details",
+	"updated bank account",
+	"invoice attached",
+	"remittance",
+	"payment must be released",
+	"confidential transaction",
+	"keep this between us",
+	"gift card",
+	"purchase order"
+];
+var EXEC = [
+	"ceo",
+	"cfo",
+	"managing director",
+	"chairman",
+	"principal",
+	"registrar",
+	"director general"
+];
+var BRANDS = [
+	"microsoft",
+	"office365",
+	"paypal",
+	"netflix",
+	"hdfc",
+	"sbi",
+	"icici",
+	"amazon",
+	"dhl",
+	"irs",
+	"income tax",
+	"uidai",
+	"aadhaar",
+	"google"
+];
+var SUSPICIOUS_TLD = [
+	"zip",
+	"top",
+	"xyz",
+	"click",
+	"gq",
+	"tk",
+	"ml",
+	"cf",
+	"work",
+	"support",
+	"rest",
+	"cam",
+	"monster"
+];
+var SHORTENERS = [
+	"bit.ly",
+	"tinyurl.com",
+	"t.co",
+	"goo.gl",
+	"is.gd",
+	"rb.gy",
+	"cutt.ly",
+	"shorturl.at",
+	"rebrand.ly"
+];
+var RISKY_ATTACH = [
+	"exe",
+	"scr",
+	"js",
+	"vbs",
+	"iso",
+	"img",
+	"lnk",
+	"hta",
+	"docm",
+	"xlsm",
+	"jar",
+	"zip",
+	"rar",
+	"7z",
+	"html"
+];
+function levenshtein(a, b) {
+	let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+	for (let i = 1; i <= a.length; i++) {
+		const cur = [i];
+		for (let j = 1; j <= b.length; j++) {
+			const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+			cur[j] = Math.min((cur[j - 1] ?? 0) + 1, (prev[j] ?? 0) + 1, (prev[j - 1] ?? 0) + cost);
+		}
+		prev = cur;
+	}
+	return prev[b.length] ?? 0;
+}
+var LOOKALIKE_TARGETS = [
+	"microsoft.com",
+	"outlook.com",
+	"gmail.com",
+	"paypal.com",
+	"amazon.com",
+	"google.com",
+	"hdfcbank.com",
+	"sbi.co.in",
+	"icicibank.com",
+	"netflix.com",
+	"apple.com"
+];
+function extractUrls(body) {
+	const urls = /* @__PURE__ */ new Set();
+	for (const m of body.matchAll(/https?:\/\/[^\s"'<>)\]]+/gi)) urls.add(m[0].replace(/[.,;]+$/, ""));
+	for (const m of body.matchAll(/href\s*=\s*["']([^"']+)["']/gi)) {
+		const href = m[1] ?? "";
+		if (/^https?:/i.test(href)) urls.add(href);
+	}
+	return [...urls];
+}
+function hostOf(url) {
+	return (url.replace(/^https?:\/\//i, "").split(/[/?#]/)[0] ?? "").replace(/^.*@/, "").toLowerCase();
+}
+function analyzeEmail(raw) {
+	const headers = parseHeaders(raw);
+	const normalized = raw.replace(/\r\n/g, "\n");
+	const body = normalized.split(/\n\n/).slice(1).join("\n\n");
+	const subject = pick(headers, "subject") ?? "(no subject)";
+	const { display: fromDisplay, address: fromAddress } = extractAddress(pick(headers, "from"));
+	const fromDomain = fromAddress?.split("@")[1]?.toLowerCase() ?? null;
+	const replyTo = extractAddress(pick(headers, "reply-to")).address;
+	const returnPath = extractAddress(pick(headers, "return-path")).address;
+	const messageId = pick(headers, "message-id");
+	const auth = parseAuth(headers, fromDomain);
+	const hops = pickAll(headers, "received").map((r, i) => parseReceived(r, i));
+	const origin = estimateOrigin(hops);
+	const findings = [];
+	const add = (f) => findings.push(f);
+	if (auth.spf === "fail" || auth.spf === "softfail") add({
+		id: "spf-fail",
+		title: `SPF ${auth.spf.toUpperCase()}`,
+		detail: `The sending IP is not authorised to send for ${fromDomain ?? "the From domain"}. Classic indicator of envelope spoofing.`,
+		severity: auth.spf === "fail" ? "critical" : "high",
+		category: "authentication",
+		weight: auth.spf === "fail" ? 22 : 14
+	});
+	if (auth.spf === "none") add({
+		id: "spf-none",
+		title: "No SPF evaluation present",
+		detail: "No Received-SPF or Authentication-Results header. The receiving infrastructure did not validate the envelope sender.",
+		severity: "medium",
+		category: "authentication",
+		weight: 8
+	});
+	if (auth.dkim === "fail") add({
+		id: "dkim-fail",
+		title: "DKIM signature verification failed",
+		detail: "The cryptographic signature does not validate — the message body or headers were altered in transit, or the signature was forged.",
+		severity: "critical",
+		category: "authentication",
+		weight: 20
+	});
+	if (auth.dkim === "none") add({
+		id: "dkim-none",
+		title: "Message is unsigned (no DKIM)",
+		detail: "No DKIM-Signature header. Domain ownership of the message cannot be cryptographically established.",
+		severity: "medium",
+		category: "authentication",
+		weight: 9
+	});
+	if (auth.dmarc === "fail") add({
+		id: "dmarc-fail",
+		title: "DMARC alignment failure",
+		detail: `The authenticated domain does not align with the visible From domain (${fromDomain ?? "unknown"}). The message impersonates the header sender.`,
+		severity: "critical",
+		category: "authentication",
+		weight: 24
+	});
+	if (auth.dkimDomain && fromDomain && !auth.aligned) add({
+		id: "dkim-misalign",
+		title: "DKIM d= domain misaligned with From",
+		detail: `Signed by "${auth.dkimDomain}" while presenting as "${fromDomain}" — third-party or spoofed signing domain.`,
+		severity: "high",
+		category: "authentication",
+		weight: 14
+	});
+	if (returnPath && fromAddress && returnPath.toLowerCase() !== fromAddress.toLowerCase()) {
+		const rpDomain = returnPath.split("@")[1]?.toLowerCase();
+		add({
+			id: "return-path",
+			title: "Return-Path differs from From address",
+			detail: `Envelope sender ${returnPath} does not match header sender ${fromAddress}. Bounces route to ${rpDomain ?? "an unrelated domain"}.`,
+			severity: rpDomain === fromDomain ? "low" : "high",
+			category: "identity",
+			weight: rpDomain === fromDomain ? 3 : 13
+		});
+	}
+	if (replyTo && fromAddress && replyTo.toLowerCase() !== fromAddress.toLowerCase()) add({
+		id: "reply-to",
+		title: "Reply-To redirection detected",
+		detail: `Replies are diverted to ${replyTo} instead of ${fromAddress} — the standard conversation-hijacking and BEC payment-diversion pattern.`,
+		severity: "high",
+		category: "identity",
+		weight: 16
+	});
+	if (fromDisplay) {
+		const displayAddr = extractAddress(fromDisplay).address;
+		if (displayAddr && fromAddress && displayAddr.toLowerCase() !== fromAddress.toLowerCase()) add({
+			id: "display-spoof",
+			title: "Display name contains a conflicting email address",
+			detail: `Display name shows "${displayAddr}" while the actual sender is ${fromAddress}. Deliberate display-name spoofing.`,
+			severity: "critical",
+			category: "identity",
+			weight: 20
+		});
+		const dl = fromDisplay.toLowerCase();
+		const brand = BRANDS.find((b) => dl.includes(b));
+		if (brand && fromDomain && !fromDomain.includes(brand)) add({
+			id: "brand-impersonation",
+			title: `Brand impersonation: "${brand}"`,
+			detail: `Display name invokes ${brand} but the sending domain is ${fromDomain}.`,
+			severity: "high",
+			category: "identity",
+			weight: 17
+		});
+		if (EXEC.some((r) => dl.includes(r))) add({
+			id: "exec-impersonation",
+			title: "Executive impersonation pattern in display name",
+			detail: `Display name "${fromDisplay}" claims institutional authority — typical of CEO-fraud and payment-instruction attacks.`,
+			severity: "high",
+			category: "identity",
+			weight: 12
+		});
+	}
+	if (fromDomain) {
+		const tld = fromDomain.split(".").pop();
+		if (SUSPICIOUS_TLD.includes(tld)) add({
+			id: "sender-tld",
+			title: `High-abuse sender TLD ".${tld}"`,
+			detail: `Sender domain ${fromDomain} uses a TLD with disproportionate phishing registration volume.`,
+			severity: "medium",
+			category: "infrastructure",
+			weight: 10
+		});
+		const bare = fromDomain.replace(/^mail\.|^smtp\./, "");
+		for (const target of LOOKALIKE_TARGETS) {
+			const d = levenshtein(bare, target);
+			if (d > 0 && d <= 2) {
+				add({
+					id: `lookalike-${target}`,
+					title: `Lookalike domain of ${target}`,
+					detail: `${fromDomain} differs from ${target} by ${d} character(s) — homoglyph/typosquat registration.`,
+					severity: "critical",
+					category: "infrastructure",
+					weight: 22
+				});
+				break;
+			}
+		}
+		if (/[0-9]{2,}|--|xn--/.test(fromDomain)) add({
+			id: "domain-shape",
+			title: "Algorithmic domain characteristics",
+			detail: `${fromDomain} contains digit runs, double hyphens, or punycode — consistent with disposable or DGA-registered infrastructure.`,
+			severity: "medium",
+			category: "infrastructure",
+			weight: 8
+		});
+	}
+	if (hops.length === 0) add({
+		id: "no-received",
+		title: "No Received headers present",
+		detail: "The relay chain is absent — headers were stripped or fabricated, making the transmission record unverifiable.",
+		severity: "high",
+		category: "routing",
+		weight: 15
+	});
+	if (hops.length === 1) add({
+		id: "single-hop",
+		title: "Single-hop delivery",
+		detail: "Only one Received header — direct-to-MX injection, typical of scripted bulk senders bypassing authorised infrastructure.",
+		severity: "medium",
+		category: "routing",
+		weight: 9
+	});
+	for (const hop of hops) for (const note of hop.notes) add({
+		id: `hop-${hop.index}-${note.slice(0, 12)}`,
+		title: `Relay anomaly at hop ${hop.index + 1}`,
+		detail: note,
+		severity: "medium",
+		category: "routing",
+		weight: 7
+	});
+	if (messageId && fromDomain) {
+		const midDomain = messageId.split("@")[1]?.replace(/[<>]/g, "").toLowerCase();
+		const fromRoot = fromDomain.split(".").slice(-2)[0] ?? fromDomain;
+		if (midDomain && !midDomain.includes(fromRoot)) add({
+			id: "msgid-mismatch",
+			title: "Message-ID domain does not match sender",
+			detail: `Message-ID was generated by "${midDomain}" while the message claims to originate from ${fromDomain}.`,
+			severity: "medium",
+			category: "routing",
+			weight: 9
+		});
+	} else if (!messageId) add({
+		id: "msgid-missing",
+		title: "Message-ID header missing",
+		detail: "Legitimate MTAs always assign a Message-ID. Its absence indicates hand-crafted or script-generated injection.",
+		severity: "medium",
+		category: "routing",
+		weight: 10
+	});
+	if (origin.infrastructure === "anonymized") add({
+		id: "anon-infra",
+		title: "Anonymizing infrastructure in origin path",
+		detail: `Origin ${origin.ip ?? ""} maps to ${origin.provider ?? "an anonymizing network"} (Tor/VPN/bulletproof hosting), indicating deliberate attribution evasion.`,
+		severity: "high",
+		category: "infrastructure",
+		weight: 15
+	});
+	if (origin.infrastructure === "residential") add({
+		id: "residential-origin",
+		title: "Residential origin for institutional mail",
+		detail: `Origin resolves to a consumer broadband allocation (${origin.provider ?? "unknown ISP"}) — consistent with a compromised host or botnet node.`,
+		severity: "medium",
+		category: "infrastructure",
+		weight: 11
+	});
+	const lowerAll = `${subject}\n${body}`.toLowerCase();
+	const hits = (list) => list.filter((p) => lowerAll.includes(p));
+	const urgency = hits(URGENCY);
+	if (urgency.length) add({
+		id: "urgency",
+		title: "Urgency and pressure language",
+		detail: `Detected ${urgency.length} coercion cue(s): ${urgency.slice(0, 4).join(", ")}.`,
+		severity: urgency.length > 2 ? "high" : "medium",
+		category: "content",
+		weight: Math.min(14, 5 + urgency.length * 3)
+	});
+	const cred = hits(CREDENTIAL);
+	if (cred.length) add({
+		id: "credential",
+		title: "Credential harvesting phrasing",
+		detail: `The message asks the recipient to authenticate or verify identity: ${cred.slice(0, 3).join(", ")}.`,
+		severity: "high",
+		category: "content",
+		weight: 16
+	});
+	const bec = hits(BEC);
+	if (bec.length) add({
+		id: "bec",
+		title: "Business email compromise indicators",
+		detail: `Financial-instruction language present: ${bec.slice(0, 4).join(", ")}.`,
+		severity: "critical",
+		category: "content",
+		weight: 18
+	});
+	if (/dear (customer|user|sir\/madam|valued)/i.test(lowerAll)) add({
+		id: "generic-greeting",
+		title: "Generic salutation",
+		detail: "The message addresses the recipient impersonally despite claiming an existing relationship.",
+		severity: "low",
+		category: "content",
+		weight: 4
+	});
+	const iocs = [];
+	const urls = extractUrls(body);
+	for (const url of urls) {
+		const host = hostOf(url);
+		const tld = host.split(".").pop() ?? "";
+		const shortener = SHORTENERS.includes(host);
+		const ipLiteral = /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
+		const badTld = SUSPICIOUS_TLD.includes(tld);
+		const mismatch = !!fromDomain && !host.endsWith(fromDomain);
+		const risk = shortener || ipLiteral || badTld ? "high" : mismatch ? "medium" : "low";
+		iocs.push({
+			type: "url",
+			value: url.length > 120 ? url.slice(0, 117) + "..." : url,
+			risk,
+			note: ipLiteral ? "Raw IP literal in link — no domain reputation possible" : shortener ? "URL shortener conceals the true destination" : badTld ? `High-abuse TLD ".${tld}"` : mismatch ? "Link host differs from sender domain" : "Aligned with sender domain"
+		});
+		if (ipLiteral) add({
+			id: `url-ip-${host}`,
+			title: "Link points to a raw IP address",
+			detail: `Hyperlink targets ${host} directly, bypassing domain reputation and TLS name validation.`,
+			severity: "high",
+			category: "content",
+			weight: 14
+		});
+		if (shortener) add({
+			id: `url-short-${host}`,
+			title: `Obfuscated link via ${host}`,
+			detail: "URL shortener hides the landing page from inspection and reputation systems.",
+			severity: "high",
+			category: "content",
+			weight: 12
+		});
+	}
+	const anchors = [...body.matchAll(/<a[^>]+href\s*=\s*["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)].map((m) => ({
+		href: m[1] ?? "",
+		text: (m[2] ?? "").replace(/<[^>]+>/g, "").trim()
+	})).find((a) => /https?:\/\//i.test(a.text) && hostOf(a.text) !== hostOf(a.href));
+	if (anchors) add({
+		id: "anchor-mismatch",
+		title: "Visible link text differs from href target",
+		detail: `Displayed "${hostOf(anchors.text)}" but navigates to "${hostOf(anchors.href)}" — hidden redirection.`,
+		severity: "critical",
+		category: "content",
+		weight: 20
+	});
+	for (const m of normalized.matchAll(/filename\*?=\s*"?([^";\n]+)"?/gi)) {
+		const name = (m[1] ?? "").trim();
+		const ext = name.split(".").pop()?.toLowerCase() ?? "";
+		const risky = RISKY_ATTACH.includes(ext);
+		const double = /\.(pdf|docx?|xlsx?|jpg|png)\.[a-z0-9]{2,4}$/i.test(name);
+		iocs.push({
+			type: "attachment",
+			value: name,
+			risk: risky || double ? "high" : "low",
+			note: double ? "Double extension disguising an executable payload" : risky ? `Executable or archive payload type ".${ext}"` : "Common document type"
+		});
+		if (risky || double) add({
+			id: `attach-${name}`,
+			title: `Dangerous attachment: ${name}`,
+			detail: double ? "Double file extension used to disguise an executable as a document." : `Attachment type ".${ext}" is commonly used for malware delivery.`,
+			severity: "critical",
+			category: "content",
+			weight: 18
+		});
+	}
+	if (origin.ip) iocs.push({
+		type: "ip",
+		value: origin.ip,
+		risk: origin.infrastructure === "anonymized" ? "high" : "medium",
+		note: `Originating node — ${origin.provider ?? "unclassified network"}`
+	});
+	if (fromDomain) iocs.push({
+		type: "domain",
+		value: fromDomain,
+		risk: findings.some((f) => f.id.startsWith("lookalike")) ? "high" : "medium",
+		note: "Sender domain"
+	});
+	if (replyTo) iocs.push({
+		type: "email",
+		value: replyTo,
+		risk: "high",
+		note: "Reply-To collection address"
+	});
+	const rawScore = findings.reduce((s, f) => s + f.weight, 0);
+	let score = Math.min(100, Math.round(rawScore));
+	if (auth.spf === "pass" && auth.dkim === "pass" && auth.dmarc === "pass") score = Math.max(0, score - 18);
+	const verdict = score >= 78 ? "fraud" : score >= 58 ? "phishing" : score >= 42 ? "impersonation" : score >= 22 ? "suspicious" : "legitimate";
+	const rationale = [];
+	let scenario = "Insufficient indicators for attribution";
+	let attrConfidence = 25;
+	const hasSpoof = findings.some((f) => [
+		"spf-fail",
+		"dmarc-fail",
+		"display-spoof"
+	].includes(f.id) || f.id.startsWith("lookalike"));
+	const compromised = auth.spf === "pass" && auth.dmarc === "pass" && score >= 42;
+	if (origin.infrastructure === "anonymized") {
+		scenario = "Actor operating behind anonymized infrastructure";
+		attrConfidence = 58;
+		rationale.push("Origin node belongs to an anonymizing or bulletproof network; true actor location is masked.");
+	} else if (compromised) {
+		scenario = "Likely compromised legitimate mailbox";
+		attrConfidence = 66;
+		rationale.push("Authentication passes for the claimed domain while content shows fraud indicators — consistent with account takeover rather than spoofing.");
+	} else if (hasSpoof) {
+		scenario = "Domain spoofing / lookalike infrastructure operated by the actor";
+		attrConfidence = 71;
+		rationale.push("Sender authentication or domain similarity indicates attacker-controlled infrastructure impersonating a trusted entity.");
+	} else if (score >= 22) {
+		scenario = "Opportunistic bulk sender or low-sophistication phishing";
+		attrConfidence = 44;
+		rationale.push("Content heuristics trigger without authentication forgery — typical of mass-mailed campaigns.");
+	} else {
+		scenario = "No adversarial attribution indicated";
+		attrConfidence = 30;
+		rationale.push("Authentication and routing are consistent with the claimed sender.");
+	}
+	if (origin.country) rationale.push(`Probable operating region: ${[origin.region, origin.country].filter(Boolean).join(", ")} (${origin.confidence}% geolocation confidence).`);
+	if (replyTo) rationale.push(`Actor-controlled collection address observed: ${replyTo}.`);
+	return {
+		id: (messageId ?? `case-${Date.now()}`).replace(/[<>]/g, "").slice(0, 64),
+		analyzedAt: (/* @__PURE__ */ new Date()).toISOString(),
+		headers,
+		subject,
+		fromDisplay,
+		fromAddress,
+		fromDomain,
+		replyTo,
+		returnPath,
+		messageId,
+		to: pick(headers, "to"),
+		date: pick(headers, "date"),
+		body,
+		hops,
+		auth,
+		findings: findings.sort((a, b) => b.weight - a.weight),
+		iocs,
+		origin,
+		score,
+		verdict,
+		attribution: {
+			scenario,
+			confidence: attrConfidence,
+			rationale
+		}
+	};
+}
+/**
+* DNS-over-HTTPS helper (Cloudflare).
+* Returns the first TXT answer string, or null on failure.
+*/
+async function dohLookup(name, type = "TXT") {
+	const url = `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(name)}&type=${type}`;
+	const res = await fetch(url, { headers: { Accept: "application/dns-json" } });
+	if (!res.ok) return null;
+	const answers = ((await res.json()).Answer ?? []).filter((a) => a.type === 16);
+	if (!answers.length) return null;
+	return (answers[0].data ?? "").replace(/^"|"$/g, "").trim();
+}
+/**
+* Extend a base Analysis with live DNS, RDAP, and geo enrichment.
+* All network calls are individually try/catch'd — failures produce no
+* findings (graceful degradation).
+*/
+async function analyzeEmailAsync(raw, opts = {}) {
+	const base = analyzeEmail(raw);
+	const liveGeoEnabled = opts.liveGeoEnabled ?? true;
+	const enrichment = {
+		spfDnsRecord: null,
+		dkimDnsRecord: null,
+		domainRegisteredAt: null,
+		domainAgeDays: null,
+		liveGeo: null
+	};
+	const extraFindings = [];
+	if (base.fromDomain) try {
+		const spfTxt = await dohLookup(base.fromDomain);
+		enrichment.spfDnsRecord = spfTxt;
+		if (spfTxt) {
+			const liveHardFail = /\s-all\b/.test(spfTxt);
+			const liveSoftFail = /\s~all\b/.test(spfTxt);
+			const headerPass = base.auth.spf === "pass";
+			const headerFail = base.auth.spf === "fail" || base.auth.spf === "softfail";
+			if (liveHardFail && headerPass) extraFindings.push({
+				id: "dns-spf-disagree",
+				title: "Authentication-Results disagrees with live SPF DNS record",
+				detail: `Live DNS shows the SPF policy for ${base.fromDomain} ends in -all (hard fail), but the Authentication-Results header reports spf=pass. This may indicate a forged or tampered Authentication-Results header.`,
+				severity: "critical",
+				category: "authentication",
+				weight: 20
+			});
+			else if (!liveHardFail && !liveSoftFail && headerFail) extraFindings.push({
+				id: "dns-spf-disagree",
+				title: "Authentication-Results disagrees with live SPF DNS record",
+				detail: `Live DNS shows the SPF policy for ${base.fromDomain} has no explicit fail qualifier, but the Authentication-Results header reports spf=${base.auth.spf}. The SPF policy may have been recently changed, or the header may have been manipulated.`,
+				severity: "critical",
+				category: "authentication",
+				weight: 20
+			});
+		}
+	} catch {}
+	if (base.fromDomain && base.auth.dkimDomain) {
+		const selector = base.headers.find((h) => h.name.toLowerCase() === "dkim-signature")?.value.match(/(?:^|;)\s*s=([^;\s]+)/i)?.[1] ?? null;
+		if (selector) {
+			const dkimName = `${selector}._domainkey.${base.auth.dkimDomain}`;
+			try {
+				const dkimTxt = await dohLookup(dkimName);
+				enrichment.dkimDnsRecord = dkimTxt;
+				const headerDkimPass = base.auth.dkim === "pass";
+				const headerDkimFail = base.auth.dkim === "fail";
+				if (dkimTxt === null && headerDkimPass) extraFindings.push({
+					id: "dns-dkim-disagree",
+					title: "Authentication-Results disagrees with live DKIM DNS record",
+					detail: `Live DNS query for ${dkimName} returned no TXT record, but the Authentication-Results header reports dkim=pass. This is a strong indicator that the Authentication-Results header was forged.`,
+					severity: "critical",
+					category: "authentication",
+					weight: 20
+				});
+				else if (dkimTxt !== null && headerDkimFail) extraFindings.push({
+					id: "dns-dkim-disagree",
+					title: "Authentication-Results disagrees with live DKIM DNS record",
+					detail: `Live DNS confirms a DKIM public key exists at ${dkimName}, but the Authentication-Results header reports dkim=fail. The message body or headers were likely altered in transit after signing.`,
+					severity: "critical",
+					category: "authentication",
+					weight: 20
+				});
+			} catch {}
+		}
+	}
+	if (base.fromDomain) try {
+		const rdapRes = await fetch(`https://rdap.org/domain/${encodeURIComponent(base.fromDomain)}`, { headers: { Accept: "application/json" } });
+		if (rdapRes.ok) {
+			const regEvent = ((await rdapRes.json()).events ?? []).find((e) => e.eventAction === "registration");
+			if (regEvent?.eventDate) {
+				enrichment.domainRegisteredAt = regEvent.eventDate;
+				const registeredMs = Date.parse(regEvent.eventDate);
+				if (!isNaN(registeredMs)) {
+					const ageDays = Math.floor((Date.now() - registeredMs) / 864e5);
+					enrichment.domainAgeDays = ageDays;
+					if (ageDays < 30) extraFindings.push({
+						id: "domain-age-new",
+						title: "Domain registered less than 30 days ago",
+						detail: `${base.fromDomain} was registered only ${ageDays} day(s) ago (${regEvent.eventDate.slice(0, 10)}). Newly registered domains are strongly associated with phishing and fraud campaigns.`,
+						severity: "high",
+						category: "infrastructure",
+						weight: 15
+					});
+					else if (ageDays < 365) extraFindings.push({
+						id: "domain-age-young",
+						title: "Domain registered less than 1 year ago",
+						detail: `${base.fromDomain} was registered ${ageDays} day(s) ago (${regEvent.eventDate.slice(0, 10)}). Young domains are common in phishing infrastructure before detection and takedown.`,
+						severity: "medium",
+						category: "infrastructure",
+						weight: 8
+					});
+				}
+			}
+		}
+	} catch {}
+	if (liveGeoEnabled && base.origin.ip && base.origin.ipClass === "public") try {
+		const geoRes = await fetch(`https://ipapi.co/${base.origin.ip}/json/`, { headers: { Accept: "application/json" } });
+		if (geoRes.ok) {
+			const geo = await geoRes.json();
+			if (!geo.error && geo.country_name) {
+				enrichment.liveGeo = {
+					country: geo.country_name ?? "Unknown",
+					region: geo.region ?? "Unknown",
+					org: geo.org ?? "Unknown",
+					lat: geo.latitude ?? 0,
+					lon: geo.longitude ?? 0
+				};
+				base.origin.country = geo.country_name ?? base.origin.country;
+				base.origin.region = geo.region ?? base.origin.region;
+				base.origin.provider = geo.org ?? base.origin.provider;
+				base.origin.latitude = geo.latitude ?? base.origin.latitude;
+				base.origin.longitude = geo.longitude ?? base.origin.longitude;
+				base.origin.confidence = 85;
+				base.origin.basis.push(`Live IP geo lookup: ${geo.org ?? "unknown org"} · ${geo.country_name ?? ""} (85% confidence)`);
+			}
+		}
+	} catch {}
+	const merged = [...base.findings, ...extraFindings].sort((a, b) => b.weight - a.weight);
+	const rawScore = merged.reduce((s, f) => s + f.weight, 0);
+	let score = Math.min(100, Math.round(rawScore));
+	if (base.auth.spf === "pass" && base.auth.dkim === "pass" && base.auth.dmarc === "pass") score = Math.max(0, score - 18);
+	const verdict = score >= 78 ? "fraud" : score >= 58 ? "phishing" : score >= 42 ? "impersonation" : score >= 22 ? "suspicious" : "legitimate";
+	return {
+		...base,
+		findings: merged,
+		score,
+		verdict,
+		liveEnrichment: enrichment
+	};
+}
+/**
+* Generates a formatted PDF forensic report using jsPDF.
+* Returns a Blob suitable for triggering a browser download.
+* This function is async because jsPDF is dynamically imported to keep
+* the initial bundle lean.
+*/
+async function buildPdfReport(a) {
+	const { jsPDF } = await import("../_libs/jspdf.mjs").then((n) => n.t);
+	const doc = new jsPDF({
+		unit: "mm",
+		format: "a4"
+	});
+	const PAGE_W = 210;
+	const MARGIN = 14;
+	const CONTENT_W = 182;
+	const LINE_H = 5.5;
+	const SECTION_GAP = 3;
+	let y = 18;
+	const checkPage = (needed = LINE_H) => {
+		if (y + needed > 282) {
+			doc.addPage();
+			y = 18;
+		}
+	};
+	const rule = () => {
+		checkPage(4);
+		doc.setDrawColor(60, 60, 70);
+		doc.setLineWidth(.3);
+		doc.line(MARGIN, y, 196, y);
+		y += 3;
+	};
+	const heading = (text, level = 1) => {
+		checkPage(10);
+		if (level === 1) {
+			doc.setFontSize(13);
+			doc.setFont("helvetica", "bold");
+			doc.setTextColor(40, 40, 50);
+		} else {
+			doc.setFontSize(10);
+			doc.setFont("helvetica", "bold");
+			doc.setTextColor(60, 80, 120);
+		}
+		doc.text(text, MARGIN, y);
+		y += 6.5;
+	};
+	const body = (text, indent = 0) => {
+		doc.setFontSize(8.5);
+		doc.setFont("helvetica", "normal");
+		doc.setTextColor(50, 50, 60);
+		const lines = doc.splitTextToSize(text, CONTENT_W - indent);
+		for (const line of lines) {
+			checkPage();
+			doc.text(line, MARGIN + indent, y);
+			y += LINE_H;
+		}
+	};
+	const kv = (key, value) => {
+		checkPage();
+		doc.setFontSize(8.5);
+		doc.setFont("helvetica", "bold");
+		doc.setTextColor(50, 50, 60);
+		doc.text(`${key}:`, MARGIN, y);
+		doc.setFont("helvetica", "normal");
+		const valLines = doc.splitTextToSize(value, 144);
+		doc.text(valLines, 52, y);
+		y += LINE_H * valLines.length;
+	};
+	const severityColor = (sev) => {
+		switch (sev) {
+			case "critical": return [
+				200,
+				40,
+				40
+			];
+			case "high": return [
+				210,
+				100,
+				20
+			];
+			case "medium": return [
+				180,
+				150,
+				20
+			];
+			case "low": return [
+				80,
+				140,
+				80
+			];
+			default: return [
+				100,
+				100,
+				120
+			];
+		}
+	};
+	doc.setFillColor(24, 24, 36);
+	doc.rect(0, 0, PAGE_W, 40, "F");
+	doc.setFontSize(18);
+	doc.setFont("helvetica", "bold");
+	doc.setTextColor(220, 220, 240);
+	doc.text("EMAIL THREAT & FORENSIC INTELLIGENCE REPORT", MARGIN, 20);
+	doc.setFontSize(9);
+	doc.setFont("helvetica", "normal");
+	doc.setTextColor(160, 160, 200);
+	doc.text(`Generated (UTC): ${a.analyzedAt}   ·   Case: ${a.id.slice(0, 40)}`, MARGIN, 29);
+	doc.setTextColor(220, 220, 240);
+	doc.setFontSize(11);
+	doc.text(`Verdict: ${a.verdict.toUpperCase()}   ·   Risk Score: ${a.score}/100`, MARGIN, 36);
+	y = 50;
+	rule();
+	heading("1. Message Identification");
+	kv("Subject", a.subject);
+	kv("From", `${a.fromDisplay ? `"${a.fromDisplay}" ` : ""}<${a.fromAddress ?? "unknown"}>`);
+	kv("To", a.to ?? "n/a");
+	kv("Reply-To", a.replyTo ?? "not set");
+	kv("Return-Path", a.returnPath ?? "not set");
+	kv("Message-ID", a.messageId ?? "absent");
+	kv("Date", a.date ?? "n/a");
+	y += SECTION_GAP;
+	rule();
+	heading("2. Sender Authentication");
+	kv("SPF", a.auth.spf);
+	kv("DKIM", a.auth.dkim);
+	kv("DMARC", a.auth.dmarc);
+	kv("DKIM signing domain", `${a.auth.dkimDomain ?? "none"} (alignment: ${a.auth.aligned ? "aligned" : "not aligned"})`);
+	if (a.liveEnrichment) {
+		y += 1;
+		heading("Live DNS Enrichment", 2);
+		kv("SPF DNS record", a.liveEnrichment.spfDnsRecord ?? "lookup failed / not run");
+		kv("DKIM DNS record", a.liveEnrichment.dkimDnsRecord ?? "lookup failed / not run");
+		kv("Domain registered", a.liveEnrichment.domainRegisteredAt ? `${a.liveEnrichment.domainRegisteredAt.slice(0, 10)} (${a.liveEnrichment.domainAgeDays} days ago)` : "lookup failed / not run");
+	}
+	y += SECTION_GAP;
+	rule();
+	heading("3. Relay Path Reconstruction");
+	if (a.hops.length === 0) body("No Received headers present — the transmission record is absent or was stripped.");
+	else for (const [i, h] of [...a.hops].reverse().entries()) {
+		checkPage(12);
+		heading(`Hop ${i + 1}: ${h.from ?? "?"} → ${h.by ?? "?"}`, 2);
+		kv("IP", `${h.ip ?? "—"} (${h.ipClass})`);
+		kv("Protocol", h.protocol ?? "unknown");
+		if (h.timestamp) kv("Timestamp", h.timestamp);
+		for (const note of h.notes) body(`⚠ ${note}`, 4);
+	}
+	y += SECTION_GAP;
+	rule();
+	heading("4. Origin Estimation");
+	kv("Earliest reliable node", a.origin.ip ?? "undetermined");
+	kv("Reverse host", a.origin.reverseHost ?? "n/a");
+	kv("Estimated location", [a.origin.region, a.origin.country].filter(Boolean).join(", ") || "undetermined");
+	kv("Network / provider", `${a.origin.provider ?? "unclassified"} (${a.origin.infrastructure})`);
+	kv("Geo confidence", `${a.origin.confidence}%`);
+	for (const b of a.origin.basis) body(`• ${b}`, 4);
+	y += SECTION_GAP;
+	rule();
+	heading("5. Findings");
+	if (a.findings.length === 0) body("No adverse findings.");
+	else for (const f of a.findings) {
+		checkPage(18);
+		const [r, g, b] = severityColor(f.severity);
+		doc.setFillColor(r, g, b);
+		doc.roundedRect(MARGIN, y - 3.5, 22, 5, 1, 1, "F");
+		doc.setFontSize(7);
+		doc.setFont("helvetica", "bold");
+		doc.setTextColor(255, 255, 255);
+		doc.text(f.severity.toUpperCase(), 15.5, y);
+		doc.setTextColor(80, 80, 100);
+		doc.setFontSize(7.5);
+		doc.setFont("helvetica", "normal");
+		doc.text(`${f.category}  ·  +${f.weight} risk`, 38, y);
+		y += LINE_H;
+		body(f.title.toUpperCase(), 0);
+		body(f.detail, 4);
+		y += 1.5;
+	}
+	y += SECTION_GAP;
+	rule();
+	heading("6. Indicators of Compromise");
+	if (a.iocs.length === 0) body("None extracted.");
+	else for (const ioc of a.iocs) {
+		checkPage();
+		doc.setFontSize(8.5);
+		doc.setFont("helvetica", "bold");
+		doc.setTextColor(60, 60, 80);
+		doc.text(`(${ioc.risk}) ${ioc.type}:`, MARGIN, y);
+		doc.setFont("helvetica", "normal");
+		const valLine = doc.splitTextToSize(`${ioc.value}  —  ${ioc.note}`, 152);
+		doc.text(valLine, 44, y);
+		y += LINE_H * valLine.length;
+	}
+	y += SECTION_GAP;
+	rule();
+	heading("7. Attribution Assessment");
+	kv("Scenario", a.attribution.scenario);
+	kv("Confidence", `${a.attribution.confidence}%`);
+	for (const r of a.attribution.rationale) body(`• ${r}`, 4);
+	y += SECTION_GAP;
+	rule();
+	heading("8. Evidentiary Note");
+	body("Analysis performed locally on the submitted message copy; no message content was transmitted to third parties (DNS-over-HTTPS, RDAP, and geo queries transmit only the sender domain and originating IP, never message content). Findings are probabilistic investigative indicators, not conclusive proof of identity.");
+	return doc.output("blob");
+}
+function buildReport(a) {
+	const line = "=".repeat(72);
+	const sev = (s) => s.toUpperCase().padEnd(8);
+	return [
+		line,
+		"EMAIL THREAT & FORENSIC INTELLIGENCE REPORT",
+		line,
+		`Case reference   : ${a.id}`,
+		`Generated (UTC)  : ${a.analyzedAt}`,
+		`Verdict          : ${a.verdict.toUpperCase()}  (risk score ${a.score}/100)`,
+		"",
+		"1. MESSAGE IDENTIFICATION",
+		`   Subject       : ${a.subject}`,
+		`   From          : ${a.fromDisplay ? `"${a.fromDisplay}" ` : ""}<${a.fromAddress ?? "unknown"}>`,
+		`   To            : ${a.to ?? "n/a"}`,
+		`   Reply-To      : ${a.replyTo ?? "n/a"}`,
+		`   Return-Path   : ${a.returnPath ?? "n/a"}`,
+		`   Message-ID    : ${a.messageId ?? "absent"}`,
+		`   Date          : ${a.date ?? "n/a"}`,
+		"",
+		"2. SENDER AUTHENTICATION",
+		`   SPF ${a.auth.spf} | DKIM ${a.auth.dkim} | DMARC ${a.auth.dmarc}`,
+		`   DKIM signing domain: ${a.auth.dkimDomain ?? "none"} (alignment: ${a.auth.aligned ? "aligned" : "not aligned"})`,
+		"",
+		"3. RELAY PATH RECONSTRUCTION",
+		...a.hops.length ? a.hops.map((h, i) => `   Hop ${i + 1}: from ${h.from ?? "?"} [${h.ip ?? "no ip"}] by ${h.by ?? "?"} via ${h.protocol ?? "?"}${h.timestamp ? ` at ${h.timestamp}` : ""}`) : ["   No Received headers present."],
+		"",
+		"4. ORIGIN ESTIMATION",
+		`   Earliest reliable node : ${a.origin.ip ?? "undetermined"}`,
+		`   Reverse host           : ${a.origin.reverseHost ?? "n/a"}`,
+		`   Estimated location     : ${[a.origin.region, a.origin.country].filter(Boolean).join(", ") || "undetermined"}`,
+		`   Network / provider     : ${a.origin.provider ?? "unclassified"} (${a.origin.infrastructure})`,
+		`   Geolocation confidence : ${a.origin.confidence}%`,
+		...a.origin.basis.map((b) => `   - ${b}`),
+		"",
+		"5. FINDINGS",
+		...a.findings.length ? a.findings.map((f) => `   [${sev(f.severity)}] ${f.title}\n      ${f.detail}`) : ["   No adverse findings."],
+		"",
+		"6. INDICATORS OF COMPROMISE",
+		...a.iocs.length ? a.iocs.map((i) => `   (${i.risk}) ${i.type}: ${i.value} — ${i.note}`) : ["   None extracted."],
+		"",
+		"7. ATTRIBUTION ASSESSMENT",
+		`   Scenario   : ${a.attribution.scenario}`,
+		`   Confidence : ${a.attribution.confidence}%`,
+		...a.attribution.rationale.map((r) => `   - ${r}`),
+		"",
+		"8. EVIDENTIARY NOTE",
+		"   Analysis performed locally on the submitted message copy; no content was",
+		"   transmitted to third parties. Findings are probabilistic investigative",
+		"   indicators, not conclusive proof of identity. Geolocation reflects network",
+		"   allocation data and may represent intermediary infrastructure.",
+		line
+	].join("\n");
+}
+var SAMPLE_EMAIL = `Received: from mx.institute.edu.in (mx.institute.edu.in [10.14.2.8])
+	by inbox.institute.edu.in with ESMTPS id 4Kz9Qm2Xy1z; Tue, 25 Aug 2026 09:41:12 +0530
+Received: from mail.secure-verify-hdfc-bank.top (unknown [45.148.10.77])
+	by mx.institute.edu.in with SMTP id 8Bn2Lk9Pq; Tue, 25 Aug 2026 09:41:08 +0530
+Authentication-Results: mx.institute.edu.in; spf=fail smtp.mailfrom=secure-verify-hdfc-bank.top; dkim=none; dmarc=fail header.from=hdfcbank.com
+Received-SPF: fail (mx.institute.edu.in: domain of secure-verify-hdfc-bank.top does not designate 45.148.10.77 as permitted sender)
+From: "HDFC Bank Security <alerts@hdfcbank.com>" <billing@secure-verify-hdfc-bank.top>
+Reply-To: recovery.desk.verify@mail-inbox-support.xyz
+Return-Path: <bounce-8823@secure-verify-hdfc-bank.top>
+To: accounts@institute.edu.in
+Subject: URGENT: Final warning - your account will be suspended within 24 hours
+Date: Tue, 25 Aug 2026 09:41:05 +0530
+Content-Type: multipart/mixed; boundary="b1"
+X-Mailer: PHPMailer 5.2.9
+
+--b1
+Content-Type: text/html
+
+<p>Dear Customer,</p>
+<p>Our records show a pending wire transfer with updated bank account details.
+You must verify your account immediately or access will be revoked.</p>
+<p><a href="http://45.148.10.77/hdfc/session/verify.php">https://netbanking.hdfcbank.com/login</a></p>
+<p>Alternatively use https://bit.ly/3xVerifyNow to validate your identity.</p>
+--b1
+Content-Type: application/octet-stream; name="Invoice_August.pdf.exe"
+Content-Disposition: attachment; filename="Invoice_August.pdf.exe"
+--b1--
+`;
+var SEVERITY_TOKEN = {
+	critical: "var(--critical)",
+	high: "var(--high)",
+	medium: "var(--medium)",
+	low: "var(--low)",
+	info: "var(--muted-foreground)"
+};
+function AuthPill({ label, state, dnsState }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "panel flex flex-col gap-1.5 px-4 py-3",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "flex items-center justify-between",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+				className: "label-mono",
+				children: label
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+				className: "font-mono text-sm uppercase",
+				style: { color: state === "pass" ? "var(--clean)" : state === "fail" ? "var(--critical)" : state === "softfail" ? "var(--high)" : "var(--muted-foreground)" },
+				children: state
+			})]
+		}), dnsState && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "flex items-center gap-1.5 mt-0.5",
+			children: dnsState === "pending" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "size-2.5 animate-spin text-muted-foreground" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+				className: "font-mono text-[0.55rem] text-muted-foreground",
+				children: "dns lookup…"
+			})] }) : dnsState === "verified" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCheck, { className: "size-2.5 text-green-500" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+				className: "font-mono text-[0.55rem] text-green-500",
+				children: "dns verified"
+			})] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleX, { className: "size-2.5 text-red-500" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+				className: "font-mono text-[0.55rem] text-red-500",
+				children: "dns disagrees"
+			})] })
+		})]
+	});
+}
+function Metric({ label, value }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "panel px-4 py-3",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+			className: "label-mono",
+			children: label
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+			className: "mt-1 break-all font-mono text-sm text-foreground",
+			children: value
+		})]
+	});
+}
+function Index() {
+	const [inputType, setInputType] = (0, import_react.useState)("upload");
+	const [raw, setRaw] = (0, import_react.useState)("");
+	const [fileMeta, setFileMeta] = (0, import_react.useState)(null);
+	const [isDragging, setIsDragging] = (0, import_react.useState)(false);
+	const [analysis, setAnalysis] = (0, import_react.useState)(null);
+	const [isRunning, setIsRunning] = (0, import_react.useState)(false);
+	const [isPdfGenerating, setIsPdfGenerating] = (0, import_react.useState)(false);
+	const report = (0, import_react.useMemo)(() => analysis ? buildReport(analysis) : "", [analysis]);
+	const run = (0, import_react.useCallback)(async (input) => {
+		const source = input.trim();
+		if (!source) return;
+		setIsRunning(true);
+		try {
+			const enriched = await analyzeEmailAsync(source);
+			setAnalysis(enriched);
+		} finally {
+			setIsRunning(false);
+		}
+	}, []);
+	const handleFileChange = (file) => {
+		if (!file) return;
+		setFileMeta({
+			name: file.name,
+			size: file.size
+		});
+		const reader = new FileReader();
+		reader.onload = (e) => {
+			const parsedText = e.target?.result || "";
+			setRaw(parsedText);
+			if (parsedText.trim()) run(parsedText);
+		};
+		reader.readAsText(file);
+	};
+	const handleLoadSample = () => {
+		setRaw(SAMPLE_EMAIL);
+		setFileMeta(null);
+		setInputType("paste");
+		run(SAMPLE_EMAIL);
+	};
+	const handleClear = () => {
+		setRaw("");
+		setFileMeta(null);
+		setAnalysis(null);
+	};
+	const download = () => {
+		if (!analysis) return;
+		const blob = new Blob([report], { type: "text/plain" });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = `forensic-report-${analysis.id.slice(0, 24) || "case"}.txt`;
+		a.click();
+		URL.revokeObjectURL(url);
+	};
+	const downloadPdf = async () => {
+		if (!analysis || isPdfGenerating) return;
+		setIsPdfGenerating(true);
+		try {
+			const blob = await buildPdfReport(analysis);
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement("a");
+			a.href = url;
+			a.download = `forensic-report-${analysis.id.slice(0, 24) || "case"}.pdf`;
+			a.click();
+			URL.revokeObjectURL(url);
+		} finally {
+			setIsPdfGenerating(false);
+		}
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("main", {
+		className: "mx-auto max-w-7xl px-5 py-10 md:px-8",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", {
+				className: "flex flex-col gap-6 border-b border-border pb-8 md:flex-row md:items-end md:justify-between",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+						className: "label-mono flex items-center gap-2",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Radar, { className: "size-3.5 text-primary" }), " forensic intelligence console"]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+						className: "mt-3 text-3xl font-semibold tracking-tight md:text-4xl",
+						children: "MailForensix — Email Threat Detection, Geolocation & Forensics"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground",
+						children: "Submit a raw email (headers and body) or upload an EML file to validate sender authentication, reconstruct the SMTP relay chain, extract indicators of compromise, estimate probable origin, and generate an evidentiary report. Analysis runs entirely in your browser."
+					})
+				] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "panel flex items-center gap-3 px-4 py-3",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, { className: "size-4 text-primary" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "label-mono",
+						children: "privacy mode"
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "font-mono text-xs text-foreground",
+						children: "Local processing · no upload"
+					})] })]
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
+				className: "mt-8 grid gap-6 lg:grid-cols-[1.35fr_1fr]",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "panel p-5",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-center justify-between mb-4",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+								className: "label-mono flex items-center gap-2",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Radar, { className: "size-3.5 text-primary" }), " raw message input"]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex gap-2",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+									variant: "ghost",
+									size: "sm",
+									onClick: handleLoadSample,
+									children: "Load sample case"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+									variant: "ghost",
+									size: "sm",
+									onClick: handleClear,
+									disabled: !raw && !fileMeta,
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Trash2, { className: "size-3.5" }), " Clear"]
+								})]
+							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tabs, {
+							value: inputType,
+							onValueChange: (val) => setInputType(val),
+							className: "w-full",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TabsList, {
+									className: "grid w-full grid-cols-2 mb-4",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TabsTrigger, {
+										value: "upload",
+										className: "flex items-center gap-2",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileUp, { className: "size-3.5" }), " Upload EML File"]
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TabsTrigger, {
+										value: "paste",
+										className: "flex items-center gap-2",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Mail, { className: "size-3.5" }), " Paste Raw Text"]
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TabsContent, {
+									value: "upload",
+									className: "outline-none",
+									children: fileMeta ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex flex-col items-center justify-center border border-dashed border-primary/50 bg-primary/5 rounded-lg p-10 text-center gap-4 transition-all duration-300",
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileText, { className: "size-8" })
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+												className: "font-mono text-sm font-medium text-foreground max-w-xs md:max-w-md truncate",
+												children: fileMeta.name
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+												className: "font-mono text-xs text-muted-foreground mt-1",
+												children: [(fileMeta.size / 1024).toFixed(2), " KB"]
+											})] }),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: "flex gap-2 mt-2",
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+													variant: "outline",
+													size: "sm",
+													onClick: () => {
+														setFileMeta(null);
+														setRaw("");
+													},
+													children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Trash2, { className: "size-3.5 mr-2" }), " Remove File"]
+												})
+											})
+										]
+									}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										onDragOver: (e) => {
+											e.preventDefault();
+											setIsDragging(true);
+										},
+										onDragLeave: () => setIsDragging(false),
+										onDrop: (e) => {
+											e.preventDefault();
+											setIsDragging(false);
+											const file = e.dataTransfer.files?.[0];
+											handleFileChange(file);
+										},
+										onClick: () => document.getElementById("eml-file-input")?.click(),
+										className: `flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-10 text-center cursor-pointer transition-all duration-300 ${isDragging ? "border-primary bg-primary/10 scale-[0.99] shadow-glow" : "border-border hover:border-primary/50 hover:bg-muted/30"}`,
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+												id: "eml-file-input",
+												type: "file",
+												accept: ".eml,message/rfc822,text/plain",
+												className: "hidden",
+												onChange: (e) => {
+													const file = e.target.files?.[0];
+													handleFileChange(file);
+												}
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+												className: `flex size-14 items-center justify-center rounded-full bg-muted text-muted-foreground mb-4 transition-colors ${isDragging ? "bg-primary/20 text-primary" : ""}`,
+												children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudUpload, { className: "size-8" })
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+												className: "text-sm font-medium text-foreground",
+												children: "Drag & drop your .eml file here"
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+												className: "text-xs text-muted-foreground mt-1.5",
+												children: "or click to browse from your computer"
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "label-mono mt-4 text-[0.6rem] px-2.5 py-1 rounded bg-muted/50 border",
+												children: "EML & RAW RFC-822 Supported"
+											})
+										]
+									})
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TabsContent, {
+									value: "paste",
+									className: "outline-none",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Textarea, {
+										value: raw,
+										onChange: (e) => setRaw(e.target.value),
+										spellCheck: false,
+										placeholder: "Paste the complete email source here — Received headers, Authentication-Results, From, Reply-To, Subject, then the body.",
+										className: "h-64 resize-none bg-background/60 font-mono text-xs leading-relaxed"
+									})
+								})
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "mt-6 flex flex-wrap items-center gap-3",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+									onClick: () => void run(raw),
+									disabled: !raw.trim() || isRunning,
+									children: isRunning ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "size-4 animate-spin" }), " Enriching…"] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Radar, { className: "size-4" }), " Analyse message"] })
+								}),
+								isRunning && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "flex items-center gap-1.5 font-mono text-xs text-muted-foreground",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "size-3 animate-spin" }), "Running live DNS · RDAP · geo lookups…"]
+								}),
+								!isRunning && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+									className: "font-mono text-xs text-muted-foreground",
+									children: raw ? `${raw.split("\n").length} lines · ${raw.length} bytes` : "awaiting input"
+								})
+							]
+						})
+					]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "panel flex flex-col items-center justify-center gap-6 p-6",
+					children: analysis ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RiskGauge, {
+							score: analysis.score,
+							verdict: analysis.verdict
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Separator, {}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "w-full space-y-2 text-center",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+									className: "label-mono",
+									children: "attribution assessment"
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+									className: "text-sm font-medium text-foreground",
+									children: analysis.attribution.scenario
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+									className: "font-mono text-xs text-primary",
+									children: [analysis.attribution.confidence, "% confidence"]
+								})
+							]
+						})
+					] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "space-y-3 text-center",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldAlert, { className: "mx-auto size-10 text-muted-foreground" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "text-sm text-muted-foreground",
+							children: "No case loaded. Submit a message to generate a fraud score, trace path and attribution assessment."
+						})]
+					})
+				})]
+			}),
+			analysis && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("section", {
+				className: "mt-8",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tabs, {
+					defaultValue: "overview",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TabsList, {
+							className: "flex-wrap",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TabsTrigger, {
+									value: "overview",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FingerprintPattern, { className: "size-3.5" }), " Overview"]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TabsTrigger, {
+									value: "trace",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Network, { className: "size-3.5" }), " Relay trace"]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TabsTrigger, {
+									value: "geo",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MapPin, { className: "size-3.5" }), " Geolocation"]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TabsTrigger, {
+									value: "iocs",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShieldAlert, { className: "size-3.5" }), " IOCs"]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TabsTrigger, {
+									value: "headers",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Mail, { className: "size-3.5" }), " Headers"]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TabsTrigger, {
+									value: "report",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileText, { className: "size-3.5" }), " Report"]
+								})
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TabsContent, {
+							value: "overview",
+							className: "mt-6 space-y-6",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "grid gap-3 sm:grid-cols-2 lg:grid-cols-4",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(AuthPill, {
+											label: "SPF",
+											state: analysis.auth.spf,
+											dnsState: isRunning ? "pending" : analysis.liveEnrichment ? analysis.findings.some((f) => f.id === "dns-spf-disagree") ? "disagrees" : analysis.liveEnrichment.spfDnsRecord !== null ? "verified" : null : null
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(AuthPill, {
+											label: "DKIM",
+											state: analysis.auth.dkim,
+											dnsState: isRunning ? "pending" : analysis.liveEnrichment ? analysis.findings.some((f) => f.id === "dns-dkim-disagree") ? "disagrees" : analysis.liveEnrichment.dkimDnsRecord !== null ? "verified" : null : null
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(AuthPill, {
+											label: "DMARC",
+											state: analysis.auth.dmarc
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(AuthPill, {
+											label: "Alignment",
+											state: analysis.auth.aligned ? "pass" : "fail"
+										})
+									]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "grid gap-3 md:grid-cols-2",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Metric, {
+											label: "subject",
+											value: analysis.subject
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Metric, {
+											label: "from",
+											value: `${analysis.fromDisplay ? `"${analysis.fromDisplay}" ` : ""}<${analysis.fromAddress ?? "unknown"}>`
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Metric, {
+											label: "reply-to",
+											value: analysis.replyTo ?? "not set"
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Metric, {
+											label: "return-path",
+											value: analysis.returnPath ?? "not set"
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Metric, {
+											label: "message-id",
+											value: analysis.messageId ?? "absent"
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Metric, {
+											label: "dkim d= domain",
+											value: analysis.auth.dkimDomain ?? "unsigned"
+										})
+									]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+									className: "label-mono",
+									children: [
+										"findings · ",
+										analysis.findings.length,
+										" indicator(s)"
+									]
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "mt-3 space-y-3",
+									children: [analysis.findings.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+										className: "panel px-4 py-6 text-center text-sm text-muted-foreground",
+										children: "No adverse indicators detected. Authentication and routing are consistent with the claimed sender."
+									}), analysis.findings.map((f) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "panel border-l-2 px-4 py-3",
+										style: { borderLeftColor: SEVERITY_TOKEN[f.severity] },
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+												className: "flex flex-wrap items-center gap-3",
+												children: [
+													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+														className: "font-mono text-[0.65rem] uppercase tracking-widest",
+														style: { color: SEVERITY_TOKEN[f.severity] },
+														children: f.severity
+													}),
+													/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+														className: "label-mono",
+														children: f.category
+													}),
+													/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+														className: "font-mono text-[0.65rem] text-muted-foreground",
+														children: [
+															"+",
+															f.weight,
+															" risk"
+														]
+													})
+												]
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+												className: "mt-1.5 text-sm font-medium text-foreground",
+												children: f.title
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+												className: "mt-1 text-sm leading-relaxed text-muted-foreground",
+												children: f.detail
+											})
+										]
+									}, f.id))]
+								})] }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "panel p-5",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+										className: "label-mono",
+										children: "attribution rationale"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", {
+										className: "mt-3 space-y-2",
+										children: analysis.attribution.rationale.map((r) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", {
+											className: "flex gap-2 text-sm text-muted-foreground",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "text-primary",
+												children: "›"
+											}), r]
+										}, r))
+									})]
+								})
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TabsContent, {
+							value: "trace",
+							className: "mt-6",
+							children: analysis.hops.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "panel px-4 py-6 text-center text-sm text-muted-foreground",
+								children: "No Received headers present — the transmission record is absent or was stripped."
+							}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ol", {
+								className: "space-y-4",
+								children: [...analysis.hops].reverse().map((hop, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", {
+									className: "panel relative p-5",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex flex-wrap items-center gap-3",
+											children: [
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: "flex size-7 items-center justify-center rounded-full border border-primary font-mono text-xs text-primary",
+													children: i + 1
+												}),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: "label-mono",
+													children: i === 0 ? "origin node" : i === analysis.hops.length - 1 ? "final delivery" : "intermediate relay"
+												}),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: "font-mono text-xs text-muted-foreground",
+													children: hop.protocol ? `via ${hop.protocol}` : "protocol unknown"
+												})
+											]
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "mt-3 grid gap-3 md:grid-cols-3",
+											children: [
+												/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+													className: "label-mono",
+													children: "from"
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+													className: "break-all font-mono text-sm",
+													children: hop.from ?? "—"
+												})] }),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+													className: "label-mono",
+													children: [
+														"ip (",
+														hop.ipClass,
+														")"
+													]
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+													className: "break-all font-mono text-sm text-primary",
+													children: hop.ip ?? "—"
+												})] }),
+												/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+													className: "label-mono",
+													children: "received by"
+												}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+													className: "break-all font-mono text-sm",
+													children: hop.by ?? "—"
+												})] })
+											]
+										}),
+										hop.timestamp && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+											className: "mt-3 font-mono text-xs text-muted-foreground",
+											children: hop.timestamp
+										}),
+										hop.notes.map((n) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+											className: "mt-2 font-mono text-xs",
+											style: { color: "var(--high)" },
+											children: ["⚠ ", n]
+										}, n))
+									]
+								}, hop.index))
+							})
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TabsContent, {
+							value: "geo",
+							className: "mt-6 space-y-6",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TraceMap, { origin: analysis.origin }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "grid gap-3 md:grid-cols-2 lg:grid-cols-4",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Metric, {
+											label: "origin ip",
+											value: analysis.origin.ip ?? "undetermined"
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Metric, {
+											label: "reverse host",
+											value: analysis.origin.reverseHost ?? "n/a"
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Metric, {
+											label: "network / provider",
+											value: analysis.origin.provider ?? "unclassified"
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Metric, {
+											label: "infrastructure type",
+											value: analysis.origin.infrastructure
+										})
+									]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "panel p-5",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+											className: "label-mono",
+											children: "estimation basis"
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", {
+											className: "mt-3 space-y-2",
+											children: analysis.origin.basis.map((b) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", {
+												className: "flex gap-2 text-sm text-muted-foreground",
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+													className: "text-primary",
+													children: "›"
+												}), b]
+											}, b))
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+											className: "mt-4 text-xs leading-relaxed text-muted-foreground",
+											children: "Geolocation reflects network allocation intelligence and may represent intermediary infrastructure rather than the actor's physical position. Treat all values as investigative leads requiring corroboration."
+										})
+									]
+								})
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TabsContent, {
+							value: "iocs",
+							className: "mt-6",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "panel divide-y divide-border",
+								children: [analysis.iocs.map((ioc, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex flex-wrap items-center gap-4 px-4 py-3",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: "label-mono w-24",
+											children: ioc.type
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: "min-w-0 flex-1 break-all font-mono text-sm text-foreground",
+											children: ioc.value
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: "font-mono text-[0.65rem] uppercase tracking-widest",
+											style: { color: ioc.risk === "high" ? "var(--critical)" : ioc.risk === "medium" ? "var(--medium)" : "var(--clean)" },
+											children: ioc.risk
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+											className: "w-full text-xs text-muted-foreground md:w-72",
+											children: ioc.note
+										})
+									]
+								}, `${ioc.type}-${i}`)), analysis.iocs.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+									className: "px-4 py-6 text-center text-sm text-muted-foreground",
+									children: "No indicators extracted from this message."
+								})]
+							})
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TabsContent, {
+							value: "headers",
+							className: "mt-6",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "panel divide-y divide-border",
+								children: analysis.headers.map((h, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "grid gap-1 px-4 py-3 md:grid-cols-[220px_1fr]",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "label-mono",
+										children: h.name
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "break-all font-mono text-xs text-foreground",
+										children: h.value
+									})]
+								}, `${h.name}-${i}`))
+							})
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TabsContent, {
+							value: "report",
+							className: "mt-6 space-y-4",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex flex-wrap gap-3",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+										onClick: download,
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Download, { className: "size-4" }), " Download .txt"]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+										onClick: () => void downloadPdf(),
+										disabled: isPdfGenerating,
+										children: isPdfGenerating ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "size-4 animate-spin" }), " Generating PDF…"] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileDown, { className: "size-4" }), " Download PDF"] })
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+										variant: "secondary",
+										onClick: () => navigator.clipboard?.writeText(report),
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Copy, { className: "size-4" }), " Copy to clipboard"]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+										className: "rounded-md border px-3 py-2 font-mono text-xs",
+										style: {
+											color: verdictColor(analysis.verdict),
+											borderColor: verdictColor(analysis.verdict)
+										},
+										children: ["case ", analysis.id.slice(0, 28) || "unreferenced"]
+									})
+								]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("pre", {
+								className: "panel max-h-[36rem] overflow-auto p-5 font-mono text-xs leading-relaxed text-foreground",
+								children: report
+							})]
+						})
+					]
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("footer", {
+				className: "mt-14 border-t border-border pt-6 text-xs leading-relaxed text-muted-foreground",
+				children: "Findings are probabilistic investigative indicators, not conclusive proof of identity. Preserve the original message and the generated report together to maintain chain of custody, and handle personal data in accordance with your organisation's retention and privacy policy."
+			})
+		]
+	});
+}
+//#endregion
+export { Index as component };
