@@ -1,0 +1,23 @@
+From: "PayPal Invoicing Support" <invoicing@paypa1-security-alert.com>
+To: accounting@enterprise.com
+Subject: URGENT: Overdue Invoice #98214 - Account Restricted
+Date: Tue, 25 Aug 2026 14:45:15 +0000
+Message-ID: <invoice-98214.20260825@paypa1-security-alert.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Received: from mail.evil-relay.xyz (185.220.101.5) by relay01.mx-forward.net (192.0.2.1) with ESMTPS; Tue, 25 Aug 2026 14:45:16 +0000
+Received: from bad-host.darknet.ru (194.26.29.112) by mail.evil-relay.xyz (185.220.101.5); Tue, 25 Aug 2026 14:45:14 +0000
+Authentication-Results: mx.enterprise.com; spf=fail (sender IP is 185.220.101.5) smtp.mailfrom=invoicing@paypa1-security-alert.com; dkim=fail; dmarc=fail
+
+Dear Valued Customer,
+
+We detected an unauthorized billing update on your PayPal account.
+Your account has been temporarily restricted and invoice #98214 for $4,850.00 is overdue.
+
+To restore access and verify your account credentials, click the link below immediately:
+https://paypa1-security-login.xyz/invoice-pay?id=98214
+
+Failure to verify identity within 24 hours will result in permanent account suspension.
+
+PayPal Global Invoicing Security
+

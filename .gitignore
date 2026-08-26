@@ -1,23 +1,18 @@
-# dependencies
-node_modules
-/node_modules
-frontend/node_modules
-
-# build outputs
-dist
-.output
-.tanstack
-.wrangler
-build
-
-# environment and logs
+__pycache__/
+*.py[cod]
+*$py.class
 .env
-.env.local
-*.log
-__pycache__
-*.pyc
+.venv/
+env/
+venv/
+node_modules/
+dist/
+build/
+backend/ml/data/*
+!backend/ml/data/.gitkeep
+backend/ml/models/*
+!backend/ml/models/.gitkeep
+*.mmdb
 
-# IDE / OS
-.DS_Store
-.idea
-.vscode
+backend/.venv
+backend/.venv311
