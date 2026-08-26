@@ -1,0 +1,22 @@
+﻿From: "PayPal Security Center" <service@paypa1-security-alert.com>
+To: target.user@enterprise.com
+Subject: URGENT: Unauthorized Account Access - Immediate Action Required
+Date: Tue, 25 Aug 2026 14:22:10 +0000
+Message-ID: <894239842.20260825@paypa1-security-alert.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Received: from mail.evil-relay.xyz (185.220.101.5) by relay01.mx-forward.net (192.0.2.1) with ESMTPS; Tue, 25 Aug 2026 14:22:11 +0000
+Received: from bad-host.darknet.ru (194.26.29.112) by mail.evil-relay.xyz (185.220.101.5); Tue, 25 Aug 2026 14:22:08 +0000
+Authentication-Results: mx.enterprise.com; spf=fail (sender IP is 185.220.101.5) smtp.mailfrom=service@paypa1-security-alert.com; dkim=fail; dmarc=fail
+
+Dear Valued Customer,
+
+We detected an unauthorized login attempt to your PayPal account from an unrecognized device in Moscow, Russia.
+Your account has been temporarily restricted for your protection.
+
+To restore your access and prevent permanent account termination, you must verify your identity within 24 hours:
+https://paypa1-security-login.xyz/verification?session=984321
+
+Failure to verify will result in irreversible suspension.
+
+PayPal Security Team

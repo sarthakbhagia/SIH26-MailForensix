@@ -1,0 +1,272 @@
+{
+  "report_id": "fffa7139-5aee-4fad-bca4-007da12caf75",
+  "version": "1.0",
+  "platform": "PhishGuard Forensic Threat Intelligence Platform",
+  "generated_at": "2026-08-26T14:40:50.798478+00:00",
+  "email_metadata": {
+    "id": "b7504cb3-a307-43ee-a8a2-25053c10200a",
+    "sender": "PayPal Security Center <service@paypa1-security-alert.com>",
+    "recipients": [
+      "target.user@enterprise.com"
+    ],
+    "subject": "URGENT: Unauthorized Account Access - Immediate Action Required",
+    "date": "2026-08-26T14:40:47.865181",
+    "message_id": "<894239842.20260825@paypa1-security-alert.com>",
+    "hashes": {
+      "sha256": "c7c675fe4d4feceb592e90e5599f7db088d3bc8c91323f5d7fb4bf2207f6ed93",
+      "sha1": "83c456eae3ce582c470ee7aba9f3968646d77396",
+      "md5": "49cedb436ac413ff5023acbd98273333"
+    }
+  },
+  "threat_assessment": {
+    "overall_risk_score": 67.8,
+    "severity": "medium",
+    "recommended_action": "Quarantine \u2014 significant threat indicators present",
+    "risk_factors": [
+      {
+        "name": "NLP Threat Classification",
+        "weight": 0.35,
+        "details": "Classification: Phishing (confidence: 100.0%)",
+        "severity": "critical",
+        "raw_score": 100.0,
+        "weighted_score": 35.0
+      },
+      {
+        "name": "Authentication Verification",
+        "weight": 0.25,
+        "details": "SPF: none, DKIM: none, DMARC: none",
+        "severity": "critical",
+        "raw_score": 91.0,
+        "weighted_score": 22.75
+      },
+      {
+        "name": "IP & Geo Intelligence",
+        "weight": 0.2,
+        "details": "Originating IP: 194.26.29.112 (standard)",
+        "severity": "low",
+        "raw_score": 0.0,
+        "weighted_score": 0.0
+      },
+      {
+        "name": "Link Analysis",
+        "weight": 0.1,
+        "details": "URLs analyzed: 1, Phishing: 1",
+        "severity": "critical",
+        "raw_score": 100.0,
+        "weighted_score": 10.0
+      },
+      {
+        "name": "Attachment Analysis",
+        "weight": 0.1,
+        "details": "Total attachments: 0",
+        "severity": "low",
+        "raw_score": 0.0,
+        "weighted_score": 0.0
+      }
+    ]
+  },
+  "nlp_classification": {
+    "label": "Phishing",
+    "confidence": 100.0,
+    "details": {
+      "probabilities": {
+        "Phishing": 75.8,
+        "BEC/Fraud": 0.0,
+        "Legitimate": 12.9,
+        "Suspicious": 11.3,
+        "Impersonation": 0.0
+      },
+      "urgency_score": 9.1,
+      "bec_indicators": [],
+      "impersonation_signals": []
+    }
+  },
+  "authentication": {
+    "spf": "none",
+    "dkim": "none",
+    "dmarc": "none",
+    "summary": "N/A",
+    "raw_auth": {
+      "spf": "none",
+      "dkim": "none",
+      "dmarc": "none",
+      "policy": "none"
+    }
+  },
+  "infrastructure_and_network": {
+    "relay_path": [
+      {
+        "ip": "185.220.101.5",
+        "by_host": "",
+        "protocol": "SMTP",
+        "from_host": "",
+        "timestamp": "",
+        "hop_number": 2,
+        "is_private": false,
+        "delay_seconds": 0.0
+      },
+      {
+        "ip": "194.26.29.112",
+        "by_host": "",
+        "protocol": "SMTP",
+        "from_host": "",
+        "timestamp": "",
+        "hop_number": 1,
+        "is_private": false,
+        "delay_seconds": 0.0
+      }
+    ],
+    "geo_data": [
+      {
+        "ip": "194.26.29.112",
+        "asn": "AS9999",
+        "isp": "Bulletproof Hosting Ltd",
+        "org": "Bulletproof Transit RU",
+        "city": "Moscow",
+        "region": "Moscow",
+        "country": "Russia",
+        "latitude": 55.7558,
+        "longitude": 37.6173,
+        "confidence": "high",
+        "is_private": false,
+        "country_code": "RU",
+        "infrastructure_type": "hosting"
+      },
+      {
+        "ip": "185.220.101.5",
+        "asn": "AS197071",
+        "isp": "Tor Exit Node Network",
+        "org": "Tor Exit Router",
+        "city": "Frankfurt",
+        "region": "Bavaria",
+        "country": "Germany",
+        "latitude": 50.1109,
+        "longitude": 8.6821,
+        "confidence": "high",
+        "is_private": false,
+        "country_code": "DE",
+        "infrastructure_type": "tor_exit_node"
+      }
+    ],
+    "domain_intel": {}
+  },
+  "indicators_of_compromise": [
+    {},
+    {},
+    {}
+  ],
+  "attribution": {
+    "category": "Unknown",
+    "confidence": 50.0,
+    "campaign_id": "N/A",
+    "cluster_id": "N/A",
+    "details": {
+      "links": [
+        {
+          "source": "email:b7504cb3-a307-43ee-a8a2-25053c10200a",
+          "target": "domain:paypa1-security-alert.com",
+          "weight": 1.0,
+          "relationship": "sent_from"
+        },
+        {
+          "source": "email:b7504cb3-a307-43ee-a8a2-25053c10200a",
+          "target": "ip:185.220.101.5",
+          "weight": 0.8,
+          "hop_number": 2,
+          "relationship": "relayed_through"
+        },
+        {
+          "source": "email:b7504cb3-a307-43ee-a8a2-25053c10200a",
+          "target": "ip:194.26.29.112",
+          "weight": 0.8,
+          "hop_number": 1,
+          "relationship": "relayed_through"
+        },
+        {
+          "source": "ip:185.220.101.5",
+          "target": "asn:197071",
+          "weight": 0.5,
+          "relationship": "belongs_to_asn"
+        },
+        {
+          "source": "ip:194.26.29.112",
+          "target": "asn:9999",
+          "weight": 0.5,
+          "relationship": "belongs_to_asn"
+        }
+      ],
+      "nodes": [
+        {
+          "id": "asn:197071",
+          "org": "Tor Exit Router",
+          "val": 5,
+          "type": "asn",
+          "color": "#10B981",
+          "label": "AS197071 (Tor Exit Router)",
+          "risk_score": null
+        },
+        {
+          "id": "asn:9999",
+          "org": "Bulletproof Transit RU",
+          "val": 5,
+          "type": "asn",
+          "color": "#10B981",
+          "label": "AS9999 (Bulletproof Transit RU)",
+          "risk_score": null
+        },
+        {
+          "id": "domain:paypa1-security-alert.com",
+          "val": 6,
+          "type": "domain",
+          "color": "#8B5CF6",
+          "label": "paypa1-security-alert.com",
+          "age_days": -1,
+          "registrar": "Unknown",
+          "risk_score": null,
+          "is_newly_registered": false
+        },
+        {
+          "id": "email:b7504cb3-a307-43ee-a8a2-25053c10200a",
+          "val": 8,
+          "type": "email",
+          "color": "#3B82F6",
+          "label": "Email: URGENT: Unauthorized Account Access -...",
+          "sender": "PayPal Security Center <service@paypa1-security-alert.com>",
+          "subject": "URGENT: Unauthorized Account Access - Immediate Action Required",
+          "risk_score": 67.8,
+          "analyzed_at": "2026-08-26T14:40:48.757443+00:00"
+        },
+        {
+          "id": "ip:185.220.101.5",
+          "isp": "Tor Exit Node Network",
+          "val": 4,
+          "city": "Frankfurt",
+          "type": "ip",
+          "color": "#EF4444",
+          "label": "185.220.101.5",
+          "country": "Germany",
+          "risk_score": null,
+          "infrastructure_type": "tor_exit_node"
+        },
+        {
+          "id": "ip:194.26.29.112",
+          "isp": "Bulletproof Hosting Ltd",
+          "val": 4,
+          "city": "Moscow",
+          "type": "ip",
+          "color": "#EF4444",
+          "label": "194.26.29.112",
+          "country": "Russia",
+          "risk_score": null,
+          "infrastructure_type": "hosting"
+        }
+      ]
+    }
+  },
+  "chain_of_custody": {
+    "ingested_at": "2026-08-26T14:40:47.865181",
+    "analyzed_at": "2026-08-26T14:40:47.865181",
+    "hash_verification": "MATCH - Cryptographically Verified",
+    "integrity": "VALID"
+  }
+}

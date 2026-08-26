@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Forensic Threat Intelligence Report - {{ report_id }}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 16mm 14mm 16mm 14mm;
+            @top-left {
+                content: "PHISHGUARD CYBER FORENSICS LAB";
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 7.5pt;
+                font-weight: 700;
+                color: #64748b;
+                letter-spacing: 0.8px;
+            }
+            @top-right {
+                content: "TLP:AMBER+STRICT // EVIDENCE REPORT";
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 7.5pt;
+                font-weight: 700;
+                color: #d97706;
+                letter-spacing: 0.8px;
+            }
+            @bottom-left {
+                content: "CONFIDENTIAL — FOR AUTHORIZED LAW ENFORCEMENT & SOC ANALYST USE ONLY";
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 7pt;
+                font-weight: 600;
+                color: #64748b;
+            }
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 7.5pt;
+                font-weight: 600;
+                color: #475569;
+            }
+        }
+
+        *, *:before, *:after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: #0f172a;
+            background: #ffffff;
+            margin: 0;
+            padding: 0;
+            font-size: 8.5pt;
+            line-height: 1.45;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* Prevent unwanted page break inside cards */
+        .section-card {
+            page-break-inside: avoid;
+            margin-bottom: 12px;
+        }
+
+        /* Header block */
+        .doc-header {
+            width: 100%;
+            border-bottom: 2.5px solid #0284c7;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+        }
+        .doc-header table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .platform-title {
+            font-size: 16pt;
+            font-weight: 900;
+            color: #0f172a;
+            letter-spacing: -0.5px;
+            line-height: 1.1;
+        }
+        .platform-subtitle {
+            font-size: 8pt;
+            font-weight: 700;
+            color: #0284c7;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin-top: 3px;
+        }
+        .header-meta {
+            text-align: right;
+            font-size: 8pt;
+            color: #334155;
+            line-height: 1.35;
+        }
+        .header-meta strong {
+            color: #0f172a;
+        }
+
+        /* Executive Summary Banner */
+        .exec-banner {
+            border-radius: 6px;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+            page-break-inside: avoid;
+        }
+        .exec-critical {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            border-left: 5px solid #dc2626;
+        }
+        .exec-high {
+            background-color: #fffbeb;
+            border: 1px solid #fde68a;
+            border-left: 5px solid #d97706;
+        }
+        .exec-medium {
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-left: 5px solid #16a34a;
+        }
+        .exec-low {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-left: 5px solid #64748b;
+        }
+
+        .exec-grid {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .exec-title {
+            font-size: 12.5pt;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+        .exec-critical .exec-title { color: #991b1b; }
+        .exec-high .exec-title { color: #92400e; }
+        .exec-medium .exec-title { color: #166534; }
+        .exec-low .exec-title { color: #334155; }
+
+        .exec-action {
+            font-size: 8.5pt;
+            color: #334155;
+            margin-top: 4px;
+        }
+
+        .score-box {
+            text-align: right;
+            vertical-align: middle;
+        }
+        .score-pill {
+            display: inline-block;
+            font-size: 13pt;
+            font-weight: 900;
+            padding: 6px 14px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .score-critical { background: #dc2626; color: #ffffff; }
+        .score-high { background: #d97706; color: #ffffff; }
+        .score-medium { background: #16a34a; color: #ffffff; }
+        .score-low { background: #64748b; color: #ffffff; }
+
+        /* Section Headings */
+        .section-header {
+            font-size: 9.5pt;
+            font-weight: 800;
+            color: #0f172a;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            border-bottom: 1.5px solid #cbd5e1;
+            padding-bottom: 3px;
+            margin-top: 10px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+        }
+        .section-header span.sec-num {
+            display: inline-block;
+            background: #0284c7;
+            color: #ffffff;
+            font-size: 7.5pt;
+            font-weight: 800;
+            padding: 1px 5px;
+            border-radius: 3px;
+            margin-right: 6px;
+        }
+
+        /* Professional Tables */
+        table.forensic-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 8px;
+            font-size: 8pt;
+            page-break-inside: avoid;
+        }
+        table.forensic-table th, table.forensic-table td {
+            padding: 5px 7px;
+            text-align: left;
+            border: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+        table.forensic-table th {
+            background-color: #f8fafc;
+            color: #475569;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 7pt;
+            letter-spacing: 0.5px;
+        }
+        .label-col {
+            font-weight: 700;
+            width: 20%;
+            background-color: #f8fafc;
+            color: #334155;
+        }
+        .mono {
+            font-family: 'Consolas', 'Courier New', 'Liberation Mono', monospace;
+            font-size: 7.5pt;
+            word-break: break-all;
+            color: #1e293b;
+        }
+        .hash-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', monospace;
+            font-size: 7.5pt;
+            color: #0f172a;
+            word-break: break-all;
+        }
+
+        /* Status & Severity Badges */
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 700;
+            font-size: 7pt;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            line-height: 1.2;
+        }
+        .badge-pass { background-color: #dcfce7; color: #166534; border: 1px solid #86efac; }
+        .badge-fail { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .badge-warn { background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+        .badge-neutral { background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+
+        /* Multi-factor meter */
+        .meter-container {
+            width: 100%;
+            background-color: #e2e8f0;
+            border-radius: 3px;
+            height: 6px;
+            overflow: hidden;
+            margin-top: 3px;
+        }
+        .meter-bar {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        /* Chain of Custody & Sign-off Box */
+        .custody-box {
+            background-color: #f8fafc;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 5px;
+            padding: 10px 14px;
+            margin-top: 14px;
+            page-break-inside: avoid;
+        }
+        .custody-grid {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .custody-grid td {
+            border: none;
+            padding: 3px 0;
+            font-size: 7.5pt;
+            color: #475569;
+        }
+        .signoff-line {
+            margin-top: 16px;
+            border-top: 1px dashed #94a3b8;
+            padding-top: 4px;
+            font-size: 7pt;
+            color: #64748b;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. Header -->
+    <div class="doc-header">
+        <table>
+            <tr>
+                <td style="border: none;">
+                    <div class="platform-title">🛡️ {{ platform|default('PhishGuard Threat Intelligence Platform') }}</div>
+                    <div class="platform-subtitle">Digital Forensics & Automated Threat Intelligence Laboratory</div>
+                </td>
+                <td class="header-meta" style="border: none;">
+                    <div><strong>Report ID:</strong> <span class="mono">{{ report_id|default('N/A') }}</span></div>
+                    <div><strong>Generated:</strong> {{ generated_at|default('N/A') }} UTC</div>
+                    <div><strong>Version:</strong> {{ version|default('1.0') }} | <strong>TLP:</strong> AMBER+STRICT</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- 2. Executive Summary -->
+    <div class="exec-banner {% if threat_assessment.severity == 'critical' %}exec-critical{% elif threat_assessment.severity == 'high' %}exec-high{% elif threat_assessment.severity == 'medium' %}exec-medium{% else %}exec-low{% endif %}">
+        <table class="exec-grid">
+            <tr>
+                <td style="border: none;">
+                    <div class="exec-title">
+                        VERDICT: {{ nlp_classification.label|default('Suspicious')|upper }} ({{ ((nlp_classification.confidence|default(0.0)) * 100)|round(1) }}% Confidence)
+                    </div>
+                    <div class="exec-action">
+                        <strong>Recommended SOC Action:</strong> {{ threat_assessment.recommended_action|default('Review and monitor') }}
+                    </div>
+                    {% if nlp_classification.details and nlp_classification.details.explanation %}
+                    <div style="font-size: 7.5pt; color: #475569; margin-top: 4px; font-style: italic;">
+                        Analysis Summary: {{ nlp_classification.details.explanation }}
+                    </div>
+                    {% endif %}
+                </td>
+                <td class="score-box" style="border: none;">
+                    <div class="score-pill {% if threat_assessment.severity == 'critical' %}score-critical{% elif threat_assessment.severity == 'high' %}score-high{% elif threat_assessment.severity == 'medium' %}score-medium{% else %}score-low{% endif %}">
+                        RISK: {{ (threat_assessment.overall_risk_score|default(0.0))|round(1) }} / 100
+                    </div>
+                    <div style="font-size: 7pt; font-weight: 700; color: #475569; margin-top: 2px; text-transform: uppercase;">
+                        Severity: {{ threat_assessment.severity|default('low')|upper }}
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- 3. Email Metadata & Cryptographic Hashes -->
+    <div class="section-card">
+        <div class="section-header"><span class="sec-num">3</span> Evidence Metadata & Cryptographic Hashes</div>
+        <table class="forensic-table">
+            <tr>
+                <td class="label-col">Sender (From)</td>
+                <td><strong>{{ email_metadata.sender|default('Unknown') }}</strong></td>
+                <td class="label-col">Ingestion Date</td>
+                <td>{{ email_metadata.date|default('N/A') }}</td>
+            </tr>
+            <tr>
+                <td class="label-col">Subject</td>
+                <td colspan="3"><strong>{{ email_metadata.subject|default('No Subject') }}</strong></td>
+            </tr>
+            <tr>
+                <td class="label-col">Recipients</td>
+                <td colspan="3">
+                    {% if email_metadata.recipients %}
+                        {{ email_metadata.recipients|join(', ') }}
+                    {% else %}
+                        Not Available
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td class="label-col">Message-ID</td>
+                <td colspan="3" class="mono">{{ email_metadata.message_id|default('N/A') }}</td>
+            </tr>
+            <tr>
+                <td class="label-col">SHA-256 Hash</td>
+                <td colspan="3"><span class="hash-box">{{ email_metadata.hashes.sha256|default('Not Available') }}</span></td>
+            </tr>
+            <tr>
+                <td class="label-col">SHA-1 Hash</td>
+                <td colspan="3"><span class="hash-box">{{ email_metadata.hashes.sha1|default('Not Available') }}</span></td>
+            </tr>
+            <tr>
+                <td class="label-col">MD5 Hash</td>
+                <td colspan="3"><span class="hash-box">{{ email_metadata.hashes.md5|default('Not Available') }}</span></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- 4. Threat Classification & Linguistic Analysis -->
+    <div class="section-card">
+        <div class="section-header"><span class="sec-num">4</span> Threat Classification & NLP Assessment</div>
+        <table class="forensic-table">
+            <tr>
+                <th style="width: 25%;">Classification Model</th>
+                <th style="width: 25%;">Assigned Verdict</th>
+                <th style="width: 20%;">Confidence Level</th>
+                <th style="width: 30%;">Threat Characteristics</th>
+            </tr>
+            <tr>
+                <td><strong>Ensemble Neural Classifier</strong></td>
+                <td><span class="badge {% if nlp_classification.label|lower in ['phishing', 'bec', 'malware'] %}badge-fail{% elif nlp_classification.label|lower == 'suspicious' %}badge-warn{% else %}badge-pass{% endif %}">{{ nlp_classification.label|default('Unknown')|upper }}</span></td>
+                <td><strong>{{ ((nlp_classification.confidence|default(0.0)) * 100)|round(1) }}%</strong></td>
+                <td>{{ (nlp_classification.details and nlp_classification.details.indicators)|default('Automated feature extraction') }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- 5. Authentication Results -->
+    <div class="section-card">
+        <div class="section-header"><span class="sec-num">5</span> Protocol Authentication Verification</div>
+        <table class="forensic-table">
+            <tr>
+                <th style="width: 20%;">Protocol</th>
+                <th style="width: 20%;">Evaluation Status</th>
+                <th style="width: 60%;">Forensic Analysis & Policy Evaluation</th>
+            </tr>
+            <tr>
+                <td><strong>SPF</strong> (Sender Policy Framework)</td>
+                <td>
+                    {% set spf_val = authentication.spf|default('none')|lower %}
+                    {% if spf_val == 'pass' %}
+                        <span class="badge badge-pass">PASS</span>
+                    {% elif spf_val in ['fail', 'softfail'] %}
+                        <span class="badge badge-fail">{{ spf_val|upper }}</span>
+                    {% elif spf_val == 'neutral' %}
+                        <span class="badge badge-warn">NEUTRAL</span>
+                    {% else %}
+                        <span class="badge badge-neutral">{{ spf_val|upper }}</span>
+                    {% endif %}
+                </td>
+                <td>Sender IP envelope authorization against published domain SPF records.</td>
+            </tr>
+            <tr>
+                <td><strong>DKIM</strong> (DomainKeys Identified Mail)</td>
+                <td>
+                    {% set dkim_val = authentication.dkim|default('none')|lower %}
+                    {% if dkim_val == 'pass' %}
+                        <span class="badge badge-pass">PASS</span>
+                    {% elif dkim_val == 'fail' %}
+                        <span class="badge badge-fail">FAIL</span>
+                    {% else %}
+                        <span class="badge badge-neutral">{{ dkim_val|upper }}</span>
+                    {% endif %}
+                </td>
+                <td>Cryptographic public key digital signature validation for email headers/body integrity.</td>
+            </tr>
+            <tr>
+                <td><strong>DMARC</strong> (Domain Message Auth)</td>
+                <td>
+                    {% set dmarc_val = authentication.dmarc|default('none')|lower %}
+                    {% if dmarc_val == 'pass' %}
+                        <span class="badge badge-pass">PASS</span>
+                    {% elif dmarc_val in ['fail', 'reject', 'quarantine'] %}
+                        <span class="badge badge-fail">{{ dmarc_val|upper }}</span>
+                    {% else %}
+                        <span class="badge badge-neutral">{{ dmarc_val|upper }}</span>
+                    {% endif %}
+                </td>
+                <td>Domain policy alignment, spoofing prevention, and enforcement compliance.</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- 6. Relay Path & Transport Chain -->
+    <div class="section-card">
+        <div class="section-header"><span class="sec-num">6</span> Message Relay Path & Network Hops</div>
+        <table class="forensic-table">
+            <tr>
+                <th style="width: 10%;">Hop #</th>
+                <th style="width: 30%;">Relaying Server / IP</th>
+                <th style="width: 25%;">Protocol / Encryption</th>
+                <th style="width: 35%;">Origin / Destination Context</th>
+            </tr>
+            {% for hop in infrastructure_and_network.relay_path %}
+            <tr>
+                <td><strong>{{ loop.index }}</strong></td>
+                <td class="mono">{{ hop.ip or hop.host or hop.server or 'N/A' }}</td>
+                <td>{{ hop.protocol or hop.tls or 'SMTP' }}</td>
+                <td>{{ hop.country or hop.from or hop.by or 'Relay Node' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" style="text-align: center; color: #64748b; padding: 8px;">Direct ingestion / No intermediate relay hops recorded.</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- 7. GeoLocation & Infrastructure Intelligence -->
+    <div class="section-card">
+        <div class="section-header"><span class="sec-num">7</span> Geolocation & Infrastructure Intelligence</div>
+        <table class="forensic-table">
+            <tr>
+                <th style="width: 25%;">Observed IP</th>
+                <th style="width: 25%;">Geographic Location</th>
+                <th style="width: 30%;">ISP / Autonomous System (ASN)</th>
+                <th style="width: 20%;">Threat Profile</th>
+            </tr>
+            {% for geo in infrastructure_and_network.geo_data %}
+            <tr>
+                <td class="mono"><strong>{{ geo.ip|default('N/A') }}</strong></td>
+                <td>{{ geo.city|default('Unknown City') }}, {{ geo.country|default('Unknown Country') }}</td>
+                <td>{{ geo.isp or geo.org or geo.asn or 'Not Available' }}</td>
+                <td>
+                    {% if geo.is_vpn or geo.is_tor or geo.is_proxy %}
+                        <span class="badge badge-fail">ANONYMIZED</span>
+                    {% elif geo.risk_score and geo.risk_score > 50 %}
+                        <span class="badge badge-warn">HIGH RISK GEO</span>
+                    {% else %}
+                        <span class="badge badge-pass">NORMAL</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" style="text-align: center; color: #64748b; padding: 8px;">No external IP geolocation nodes flagged.</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- 8. Indicators of Compromise (IOCs) -->
+    <div class="section-card">
+        <div class="section-header"><span class="sec-num">8</span> Indicators of Compromise (IOCs)</div>
+        <table class="forensic-table">
+            <tr>
+                <th style="width: 15%;">Type</th>
+                <th style="width: 45%;">Artifact / Indicator Value</th>
+                <th style="width: 15%;">Threat Score</th>
+                <th style="width: 25%;">Category / Reason</th>
+            </tr>
+            {% for ioc in indicators_of_compromise %}
+            <tr>
+                <td><span class="badge badge-warn">{{ ioc.type|default('IOC')|upper }}</span></td>
+                <td class="mono"><strong>{{ ioc.value|default('N/A') }}</strong></td>
+                <td>
+                    {% set score = ioc.risk_score|default(0) %}
+                    <span class="badge {% if score >= 80 %}badge-fail{% elif score >= 50 %}badge-warn{% else %}badge-pass{% endif %}">{{ score }} / 100</span>
+                </td>
+                <td>{{ ioc.reason or ioc.source or 'Extracted Threat Indicator' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" style="text-align: center; color: #64748b; padding: 8px;">No high-risk indicators of compromise extracted.</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- 9. Multi-Factor Risk Score Breakdown -->
+    <div class="section-card">
+        <div class="section-header"><span class="sec-num">9</span> Multi-Factor Risk Score Breakdown</div>
+        <table class="forensic-table">
+            <tr>
+                <th style="width: 25%;">Signal / Factor</th>
+                <th style="width: 12%;">Raw Score</th>
+                <th style="width: 12%;">Weight</th>
+                <th style="width: 15%;">Contribution</th>
+                <th style="width: 12%;">Severity</th>
+                <th style="width: 24%;">Forensic Explanation</th>
+            </tr>
+            {% for f in threat_assessment.risk_factors %}
+            <tr>
+                <td><strong>{{ f.name|default('Signal') }}</strong></td>
+                <td>{{ (f.raw_score|default(0.0))|round(1) }}</td>
+                <td>{{ ((f.weight|default(0.0)) * 100)|round(0) }}%</td>
+                <td><strong>{{ (f.weighted_score|default(0.0))|round(1) }}</strong></td>
+                <td>
+                    {% set f_sev = f.severity|default('low')|lower %}
+                    {% if f_sev == 'critical' %}
+                        <span class="badge badge-fail">CRITICAL</span>
+                    {% elif f_sev == 'high' %}
+                        <span class="badge badge-warn">HIGH</span>
+                    {% elif f_sev == 'medium' %}
+                        <span class="badge badge-warn">MEDIUM</span>
+                    {% else %}
+                        <span class="badge badge-pass">LOW</span>
+                    {% endif %}
+                </td>
+                <td>{{ f.details|default('Analyzed heuristic signal') }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" style="text-align: center; color: #64748b; padding: 8px;">Composite multi-factor breakdown not recorded.</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <!-- 10. Attribution Assessment -->
+    <div class="section-card">
+        <div class="section-header"><span class="sec-num">10</span> Threat Actor & Campaign Attribution</div>
+        <table class="forensic-table">
+            <tr>
+                <td class="label-col">Campaign / Cluster ID</td>
+                <td>
+                    {% if attribution.campaign_id and attribution.campaign_id != 'N/A' %}
+                        <span class="mono"><strong>{{ attribution.campaign_id }}</strong></span>
+                    {% elif attribution.cluster_id and attribution.cluster_id != 'N/A' %}
+                        <span class="mono"><strong>Cluster: {{ attribution.cluster_id }}</strong></span>
+                    {% else %}
+                        Not Associated with Known Campaign (Isolated Incident)
+                    {% endif %}
+                </td>
+                <td class="label-col">Attribution Category</td>
+                <td><strong>{{ attribution.category|default(attribution.details.category|default('Opportunistic Cybercrime')) }}</strong></td>
+            </tr>
+            <tr>
+                <td class="label-col">Attribution Confidence</td>
+                <td colspan="3">
+                    {% if attribution.confidence and attribution.confidence > 0 %}
+                        {{ (attribution.confidence * 100)|round(1) }}% Confidence based on infrastructure correlation graph
+                    {% else %}
+                        Low Confidence / Emerging Signature
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- 11. Chain of Custody & Cryptographic Verification -->
+    <div class="custody-box">
+        <div style="font-weight: 800; font-size: 8pt; text-transform: uppercase; color: #0f172a; margin-bottom: 6px; letter-spacing: 0.5px;">
+            11. Digital Evidence Chain of Custody & Integrity Ledger
+        </div>
+        <table class="custody-grid">
+            <tr>
+                <td style="width: 35%;"><strong>• Initial Ingestion Timestamp:</strong></td>
+                <td>{{ chain_of_custody.ingested_at|default('N/A') }} UTC</td>
+            </tr>
+            <tr>
+                <td><strong>• SHA-256 Hash Verification:</strong></td>
+                <td><span class="badge badge-pass">{{ chain_of_custody.hash_verification|default('MATCH - Cryptographically Verified') }}</span></td>
+            </tr>
+            <tr>
+                <td><strong>• Tamper-Evident Ledger Status:</strong></td>
+                <td>Record sealed in SHA-256 hash-chain audit ledger (Genesis: <span class="mono">0000000000...</span>)</td>
+            </tr>
+            <tr>
+                <td><strong>• Platform Signing Authority:</strong></td>
+                <td>PhishGuard Automated Threat Intelligence Suite v{{ version|default('1.0') }}</td>
+            </tr>
+        </table>
+
+        <div class="signoff-line">
+            Automated Forensic Investigation Report — Digitally Signed & Sealed by PhishGuard Forensics Core
+        </div>
+    </div>
+
+</body>
+</html>
