@@ -7,6 +7,9 @@ from typing import List, Optional
 import geoip2.database
 import dns.asyncresolver
 import asyncwhois
+import httpx
+
+from app.config import settings
 
 MAXMIND_DB_PATH = "data/GeoLite2-City.mmdb"
 
@@ -14,11 +17,15 @@ VPN_ASN_PATTERNS = [
     "NordVPN", "ExpressVPN", "CyberGhost", "Surfshark",
     "IPVanish", "Private Internet Access", "VyprVPN",
     "Hotspot Shield", "ProtonVPN", "Windscribe",
+    "Mullvad", "M247", "Datacamp", "HideMyAss",
 ]
 
-CLOUD_ASN_KEYWORDS = ["Amazon", "Amazon.com", "Microsoft", "Google",
-                      "Google Cloud", "Azure", "DigitalOcean",
-                      "Hetzner", "OVH", "Linode", "Scaleway"]
+CLOUD_ASN_KEYWORDS = [
+    "Amazon", "Amazon.com", "AWS", "Microsoft", "Google",
+    "Google Cloud", "Azure", "DigitalOcean", "Hetzner",
+    "OVH", "Linode", "Scaleway", "Cloudflare", "Leaseweb",
+    "Vultr", "Contabo", "Oracle", "Alibaba",
+]
 
 TOR_EXIT_NODE_FILE = "data/tor_exit_nodes.txt"
 
@@ -38,6 +45,11 @@ class IPGeoResult:
     is_private: bool
     infrastructure_type: str
     confidence: str
+    vpn: bool = False
+    proxy: bool = False
+    tor: bool = False
+    hosting: bool = False
+    source: str = "maxmind"
 
 
 @dataclass
@@ -68,87 +80,116 @@ class GeoIntelligence:
     def __init__(self, maxmind_db_path: str = MAXMIND_DB_PATH):
         self.reader = None
         self._tor_exit_nodes: set[str] | None = None
+        self.ipinfo_token = getattr(settings, "IPINFO_TOKEN", "").strip()
+        self._ipinfo_cache: dict[str, IPGeoResult] = {}
         db_path = maxmind_db_path
         try:
             self.reader = geoip2.database.Reader(db_path)
         except Exception:
             self.reader = None
 
+    @staticmethod
+    def _is_valid_public_ip(ip_str: str) -> bool:
+        if not ip_str or not isinstance(ip_str, str):
+            return False
+        clean_ip = ip_str.strip("[]() \t\n\r")
+        if not clean_ip or clean_ip.lower() in ("unknown", "none", "null", "ip unavailable"):
+            return False
+        try:
+            ip_obj = ipaddress.ip_address(clean_ip)
+            if (
+                ip_obj.is_private
+                or ip_obj.is_loopback
+                or ip_obj.is_link_local
+                or ip_obj.is_unspecified
+                or ip_obj.is_multicast
+                or ip_obj.is_reserved
+            ):
+                return False
+            if ip_obj in ipaddress.ip_network("100.64.0.0/10"):
+                return False
+            return True
+        except ValueError:
+            return False
+
+    def _extract_originating_ip(
+        self,
+        relay_hops: list[dict],
+        headers: dict | None = None,
+    ) -> str:
+        headers = headers or {}
+
+        # 1. Check explicit client originating IP headers if present
+        for h_key in ["x-originating-ip", "x-sender-ip"]:
+            for k, v in headers.items():
+                if k.lower() == h_key and isinstance(v, str):
+                    cand_match = re.search(
+                        r'((?:[0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}|(?:\d{1,3}\.){3}\d{1,3})',
+                        v,
+                    )
+                    if cand_match and self._is_valid_public_ip(cand_match.group(1)):
+                        return cand_match.group(1)
+
+        # 2. Check relay hops from origin (earliest) to destination
+        for hop in relay_hops:
+            ip_str = (hop.get("ip") or "").strip("[]() \t\n\r")
+            from_host = (hop.get("from") or "").lower()
+            by_host = (hop.get("by") or "").lower()
+            received_raw = str(hop.get("received") or "").lower()
+
+            if self._is_valid_public_ip(ip_str):
+                # Identify Gmail / Google webmail where client IP is omitted by design
+                is_google_host = any(
+                    g in from_host or g in by_host
+                    for g in ["google.com", "gmail.com", "googlemail.com"]
+                )
+                if is_google_host and ("with http" in received_raw or (len(relay_hops) == 1 and "mail.google.com" in from_host)):
+                    return "IP Unavailable"
+                return ip_str
+
+        return "IP Unavailable"
+
     async def analyze(
         self,
         relay_hops: list[dict],
         sender_domain: str,
+        email_headers: dict | None = None,
     ) -> GeoIntelResult:
-        originating_ip = await self._extract_originating_ip(relay_hops)
+        originating_ip = self._extract_originating_ip(relay_hops, headers=email_headers)
         geo_locations: list[IPGeoResult] = []
         infrastructure_flags: list[str] = []
 
-        # Geolocate all public relay IPs
+        # Geolocate all public and private relay IPs
         for hop in relay_hops:
             ip_str = hop.get("ip", "")
             if not ip_str:
                 continue
-            try:
-                ip_obj = ipaddress.ip_address(ip_str)
-                if ip_obj.is_private:
-                    geo_locations.append(
-                        IPGeoResult(
-                            ip=ip_str,
-                            country="Private",
-                            country_code="PR",
-                            region="Private",
-                            city="Private",
-                            latitude=0.0,
-                            longitude=0.0,
-                            isp="Private",
-                            asn="Private",
-                            org="Private",
-                            is_private=True,
-                            infrastructure_type="residential",
-                            confidence="high",
-                        )
-                    )
-                    continue
-                geo_result = await self._geolocate_ip(ip_str)
-                infra = self._classify_infrastructure(geo_result)
-                if infra:
-                    infrastructure_flags.append(infra)
-                geo_locations.append(geo_result)
-            except ValueError:
-                pass
+            geo_result = await self._geolocate_ip(ip_str)
+            if geo_result.infrastructure_type and geo_result.infrastructure_type not in ("residential", "unavailable"):
+                if geo_result.infrastructure_type not in infrastructure_flags:
+                    infrastructure_flags.append(geo_result.infrastructure_type)
+            geo_locations.append(geo_result)
 
         # Domain intelligence
         domain_intel = await self._analyze_domain(sender_domain) if sender_domain else None
 
         # Location confidence
-        location_confidence = self._compute_location_confidence(infrastructure_flags)
+        if originating_ip == "IP Unavailable":
+            location_confidence = "unavailable"
+        else:
+            location_confidence = self._compute_location_confidence(infrastructure_flags)
 
         # IP reputation score
         ip_reputation = self._compute_ip_reputation(infrastructure_flags)
 
-        originating = originating_ip or "unknown"
-
         return GeoIntelResult(
-            originating_ip=originating,
+            originating_ip=originating_ip,
             geo_locations=geo_locations,
             domain_intel=domain_intel,
             infrastructure_flags=infrastructure_flags,
             location_confidence=location_confidence,
             ip_reputation_score=ip_reputation,
         )
-
-    async def _extract_originating_ip(self, relay_hops: list[dict]) -> str:
-        for hop in relay_hops:
-            ip_str = hop.get("ip", "")
-            if not ip_str:
-                continue
-            try:
-                ip_obj = ipaddress.ip_address(ip_str)
-                if not ip_obj.is_private:
-                    return ip_str
-            except ValueError:
-                continue
-        return "unknown"
 
     def _is_tor_exit_node(self, ip_str: str) -> bool:
         if not ip_str:
@@ -159,7 +200,122 @@ class GeoIntelligence:
             return True
         return False
 
+    async def _query_ipinfo(self, ip_str: str) -> IPGeoResult | None:
+        if not self.ipinfo_token or self.ipinfo_token.lower() in ("your_token_here", "your_key_here", "change_me", "none", ""):
+            return None
+
+        if ip_str in self._ipinfo_cache:
+            return self._ipinfo_cache[ip_str]
+
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                url = f"https://ipinfo.io/{ip_str}?token={self.ipinfo_token}"
+                resp = await client.get(url)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    loc_parts = str(data.get("loc", "0,0")).split(",")
+                    lat = float(loc_parts[0]) if len(loc_parts) > 0 else 0.0
+                    lon = float(loc_parts[1]) if len(loc_parts) > 1 else 0.0
+
+                    country_code = data.get("country", "?")
+                    region = data.get("region", "Unknown")
+                    city = data.get("city", "Unknown")
+                    org_field = data.get("org", "Unknown") or "Unknown"
+
+                    asn = org_field.split()[0] if org_field.startswith("AS") else "?"
+                    org_name = " ".join(org_field.split()[1:]) if org_field.startswith("AS") else org_field
+                    isp = org_name or org_field
+
+                    # Determine infrastructure signals
+                    is_tor = self._is_tor_exit_node(ip_str) or "tor" in org_field.lower()
+                    is_vpn = self._classify_infrastructure_by_org(org_field) == "known_vpn" or "vpn" in org_field.lower()
+                    is_proxy = "proxy" in org_field.lower() or "anonymizer" in org_field.lower()
+                    is_hosting = (
+                        self._classify_infrastructure_by_org(org_field) in ("hosting", "aws_cloud", "gcp", "azure", "cloud")
+                        or any(k in org_field.lower() for k in ["hosting", "data center", "datacenter", "cloud", "server", "vps"])
+                    )
+
+                    infra = (
+                        "tor_exit_node" if is_tor
+                        else "known_vpn" if is_vpn
+                        else "proxy" if is_proxy
+                        else "hosting" if is_hosting
+                        else self._classify_infrastructure_by_org(org_field) or "residential"
+                    )
+
+                    confidence = "high" if not (is_tor or is_vpn or is_proxy) else "low"
+
+                    res = IPGeoResult(
+                        ip=ip_str,
+                        country=country_code,
+                        country_code=country_code,
+                        region=region,
+                        city=city,
+                        latitude=lat,
+                        longitude=lon,
+                        isp=isp,
+                        asn=asn,
+                        org=org_name,
+                        is_private=False,
+                        infrastructure_type=infra,
+                        confidence=confidence,
+                        vpn=is_vpn,
+                        proxy=is_proxy,
+                        tor=is_tor,
+                        hosting=is_hosting,
+                        source="ipinfo",
+                    )
+                    self._ipinfo_cache[ip_str] = res
+                    return res
+        except Exception:
+            return None
+        return None
+
     async def _geolocate_ip(self, ip_str: str) -> IPGeoResult:
+        if ip_str == "IP Unavailable":
+            return IPGeoResult(
+                ip="IP Unavailable",
+                country="Unknown",
+                country_code="?",
+                region="Unknown",
+                city="Unknown",
+                latitude=0.0,
+                longitude=0.0,
+                isp="Unknown",
+                asn="?",
+                org="Unknown",
+                is_private=False,
+                infrastructure_type="unavailable",
+                confidence="low",
+                vpn=False,
+                proxy=False,
+                tor=False,
+                hosting=False,
+                source="unavailable",
+            )
+
+        if not self._is_valid_public_ip(ip_str):
+            return IPGeoResult(
+                ip=ip_str,
+                country="Private",
+                country_code="PR",
+                region="Private",
+                city="Private",
+                latitude=0.0,
+                longitude=0.0,
+                isp="Private Network",
+                asn="Private",
+                org="Private Network",
+                is_private=True,
+                infrastructure_type="residential",
+                confidence="high",
+                vpn=False,
+                proxy=False,
+                tor=False,
+                hosting=False,
+                source="internal",
+            )
+
         if self._is_tor_exit_node(ip_str):
             return IPGeoResult(
                 ip=ip_str,
@@ -175,7 +331,13 @@ class GeoIntelligence:
                 is_private=False,
                 infrastructure_type="tor_exit_node",
                 confidence="high",
+                vpn=False,
+                proxy=False,
+                tor=True,
+                hosting=False,
+                source="threat_feed",
             )
+
         if ip_str.startswith("194.26."):
             return IPGeoResult(
                 ip=ip_str,
@@ -191,8 +353,19 @@ class GeoIntelligence:
                 is_private=False,
                 infrastructure_type="hosting",
                 confidence="high",
+                vpn=False,
+                proxy=False,
+                tor=False,
+                hosting=True,
+                source="threat_feed",
             )
 
+        # 1. Attempt IPinfo API lookup
+        ipinfo_res = await self._query_ipinfo(ip_str)
+        if ipinfo_res:
+            return ipinfo_res
+
+        # 2. Fallback to local MaxMind GeoLite2 database
         if not self.reader:
             return IPGeoResult(
                 ip=ip_str,
@@ -208,21 +381,41 @@ class GeoIntelligence:
                 is_private=False,
                 infrastructure_type="residential",
                 confidence="low",
+                vpn=False,
+                proxy=False,
+                tor=False,
+                hosting=False,
+                source="fallback",
             )
 
         try:
             response = self.reader.city(ip_str)
-            country = response.country.name or "Unknown"
-            country_code = response.country.iso_code or "?"
-            region = response.subdivision.name or "Unknown"
-            city = response.city.name or "Unknown"
-            lat = response.location.latitude or 0.0
-            lon = response.location.longitude or 0.0
-            isp = response.traits.isp or "Unknown"
-            asn = str(response.traits.autonomous_system_number or "?")
-            org = response.traits.autonomous_system_organization or "Unknown"
+            country = getattr(response.country, "name", "Unknown") or "Unknown"
+            country_code = getattr(response.country, "iso_code", "?") or "?"
+            region = getattr(response.subdivisions.most_specific, "name", "Unknown") if response.subdivisions else "Unknown"
+            region = region or "Unknown"
+            city = getattr(response.city, "name", "Unknown") or "Unknown"
+            lat = getattr(response.location, "latitude", 0.0) or 0.0
+            lon = getattr(response.location, "longitude", 0.0) or 0.0
+            isp = getattr(response.traits, "isp", "Unknown") or "Unknown"
+            asn = str(getattr(response.traits, "autonomous_system_number", "?") or "?")
+            org = getattr(response.traits, "autonomous_system_organization", "Unknown") or "Unknown"
 
-            infra = self._classify_infrastructure_by_org(org)
+            is_tor = self._is_tor_exit_node(ip_str) or "tor" in org.lower()
+            is_vpn = self._classify_infrastructure_by_org(org) == "known_vpn" or "vpn" in org.lower()
+            is_proxy = "proxy" in org.lower() or "anonymizer" in org.lower()
+            is_hosting = (
+                self._classify_infrastructure_by_org(org) in ("hosting", "aws_cloud", "gcp", "azure", "cloud")
+                or any(k in org.lower() for k in ["hosting", "data center", "datacenter", "cloud", "server"])
+            )
+
+            infra = (
+                "tor_exit_node" if is_tor
+                else "known_vpn" if is_vpn
+                else "proxy" if is_proxy
+                else "hosting" if is_hosting
+                else self._classify_infrastructure_by_org(org) or "residential"
+            )
             confidence = self._infer_confidence(org, infra)
 
             return IPGeoResult(
@@ -239,6 +432,11 @@ class GeoIntelligence:
                 is_private=False,
                 infrastructure_type=infra,
                 confidence=confidence,
+                vpn=is_vpn,
+                proxy=is_proxy,
+                tor=is_tor,
+                hosting=is_hosting,
+                source="maxmind",
             )
         except Exception:
             return IPGeoResult(
@@ -255,7 +453,13 @@ class GeoIntelligence:
                 is_private=False,
                 infrastructure_type="residential",
                 confidence="low",
+                vpn=False,
+                proxy=False,
+                tor=False,
+                hosting=False,
+                source="fallback",
             )
+
 
     @staticmethod
     def _classify_infrastructure_by_org(org: str) -> str | None:

@@ -61,7 +61,8 @@ class AnalysisPipeline:
                 email_headers.get("received_hops", [])
             ),
             self.geo_intel.analyze(
-                email_headers.get("received_hops", []), sender_domain
+                email_headers.get("received_hops", []), sender_domain,
+                email_headers=email_headers,
             ),
             asyncio.to_thread(self.nlp_classifier.classify,
                               email.subject, email.body_text, email.sender, email_headers),
@@ -140,9 +141,29 @@ class AnalysisPipeline:
             },
             auth_status={
                 "spf": getattr(getattr(header_result, "spf", None), "status", "none"),
+                "spf_status": getattr(getattr(header_result, "spf", None), "status", "none"),
+                "spf_domain": getattr(getattr(header_result, "spf", None), "domain", ""),
+                "spf_ip": getattr(getattr(header_result, "spf", None), "ip", ""),
+                "spf_record": getattr(getattr(header_result, "spf", None), "record", ""),
+                "spf_details": getattr(getattr(header_result, "spf", None), "details", ""),
+
                 "dkim": getattr(getattr(header_result, "dkim", None), "status", "none"),
+                "dkim_status": getattr(getattr(header_result, "dkim", None), "status", "none"),
+                "dkim_domain": getattr(getattr(header_result, "dkim", None), "domain", ""),
+                "dkim_selector": getattr(getattr(header_result, "dkim", None), "selector", ""),
+                "dkim_details": getattr(getattr(header_result, "dkim", None), "details", ""),
+
                 "dmarc": getattr(getattr(header_result, "dmarc", None), "status", "none"),
+                "dmarc_status": getattr(getattr(header_result, "dmarc", None), "status", "none"),
+                "dmarc_domain": getattr(getattr(header_result, "dmarc", None), "domain", ""),
+                "dmarc_policy": getattr(getattr(header_result, "dmarc", None), "policy", "none"),
                 "policy": getattr(getattr(header_result, "dmarc", None), "policy", "none"),
+                "alignment_spf": getattr(getattr(header_result, "dmarc", None), "alignment_spf", False),
+                "alignment_dkim": getattr(getattr(header_result, "dmarc", None), "alignment_dkim", False),
+                "dmarc_record": getattr(getattr(header_result, "dmarc", None), "record", ""),
+                "dmarc_details": getattr(getattr(header_result, "dmarc", None), "details", ""),
+
+                "auth_confidence_score": getattr(header_result, "auth_confidence_score", 100.0),
             },
             relay_path=relay_hops_dict,
             geo_data=geo_data_dict,

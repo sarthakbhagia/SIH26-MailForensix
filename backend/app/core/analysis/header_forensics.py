@@ -35,6 +35,7 @@ class DMARCResult:
     alignment_spf: bool
     alignment_dkim: bool
     record: str
+    details: str = ""
 
 
 @dataclass
@@ -76,10 +77,11 @@ class HeaderForensics:
         received_hops: list[dict],
     ) -> HeaderForensicsResult:
 
-        sender_domain, _ = email.utils.parseaddr(sender)
+        _, sender_email = email.utils.parseaddr(sender)
+        sender_domain = sender_email.split("@")[-1] if "@" in sender_email else (sender_email or sender)
         spf = await self._validate_spf(sender_domain, parsed_headers)
         dkim = await self._verify_dkim(raw_eml, parsed_headers, sender_domain)
-        dmarc = await self._check_dmarc(sender_domain, spf, dkim)
+        dmarc = await self._check_dmarc(sender_domain, spf, dkim, headers=parsed_headers)
         relay_path = self._reconstruct_relay_path(received_hops)
         anomalies = self._detect_anomalies(parsed_headers, relay_path, sender_domain)
         auth_score = self._compute_auth_confidence(spf, dkim, dmarc, anomalies)
@@ -94,34 +96,100 @@ class HeaderForensics:
         )
 
     async def _validate_spf(self, domain: str, headers: dict) -> SPFResult:
-        ip = ""
+        if not domain or not domain.strip():
+            return SPFResult(
+                status="unavailable",
+                domain="",
+                ip="",
+                record="",
+                details="No sender domain available for SPF validation",
+            )
+
+        clean_domain = domain.strip().lower()
+        
+        # 1. Check Received-SPF header if present
+        received_spf = ""
+        for k, v in headers.items():
+            if k.lower() == "received-spf" and isinstance(v, str):
+                received_spf = v
+                break
+
+        if received_spf:
+            status_match = re.match(r"^\s*([a-zA-Z]+)", received_spf)
+            client_ip_match = re.search(r"client-ip=([^\s;]+)", received_spf, re.IGNORECASE)
+            domain_match = re.search(r"domain of ([^\s;()]+)", received_spf, re.IGNORECASE)
+            
+            raw_status = status_match.group(1).lower() if status_match else "none"
+            client_ip = client_ip_match.group(1).strip("[]()") if client_ip_match else ""
+            spf_domain = domain_match.group(1) if domain_match else clean_domain
+
+            status_map = {
+                "pass": "pass",
+                "softfail": "softfail",
+                "fail": "fail",
+                "neutral": "neutral",
+                "none": "none",
+                "permerror": "fail",
+                "temperror": "unavailable",
+            }
+            status = status_map.get(raw_status, "none")
+            return SPFResult(
+                status=status,
+                domain=spf_domain,
+                ip=client_ip,
+                record=received_spf[:200],
+                details=f"SPF {status} verified from Received-SPF header",
+            )
+
+        # 2. Check Authentication-Results header
+        auth_results = ""
+        for k, v in headers.items():
+            if k.lower() == "authentication-results" and isinstance(v, str):
+                auth_results = v
+                break
+
+        if auth_results:
+            spf_match = re.search(r"\bspf=([a-zA-Z]+)", auth_results, re.IGNORECASE)
+            if spf_match:
+                raw_status = spf_match.group(1).lower()
+                status_map = {
+                    "pass": "pass",
+                    "softfail": "softfail",
+                    "fail": "fail",
+                    "neutral": "neutral",
+                    "none": "none",
+                    "permerror": "fail",
+                    "temperror": "unavailable",
+                }
+                status = status_map.get(raw_status, "none")
+                ip_match = re.search(r"sender IP is ([^\s;()]+)", auth_results, re.IGNORECASE)
+                client_ip = ip_match.group(1) if ip_match else ""
+                return SPFResult(
+                    status=status,
+                    domain=clean_domain,
+                    ip=client_ip,
+                    record=auth_results[:200],
+                    details=f"SPF {status} verified from Authentication-Results header",
+                )
+
+        # 3. Live DNS lookup using checkdmarc / dnspython
         try:
-            try:
-                from checkdmarc.spf import get_spf_record
-            except ImportError:
-                from checkdmarc import get_spf_record
-
-            record, parsed = get_spf_record(domain)
-            mechanisms = parsed.get("mechanisms", [])
-            ip = ""
-            for mechan in mechanisms:
-                tag = mechan.get("tag")
-                value = mechan.get("value", "")
-                if tag in ("ip4", "ip6", "a", "mx"):
-                    ip = value
-                elif tag == "include":
-                    ip = await self._resolve_include(value, domain)
-
-            qualifier = parsed.get("qualifier", "?")
-            status_map = {"+": "pass", "~": "softfail", "-": "fail", "?": "none"}
-            status = status_map.get(qualifier, "none")
+            import checkdmarc
+            res = await asyncio.wait_for(
+                asyncio.to_thread(checkdmarc.check_spf, clean_domain, timeout=2.0),
+                timeout=3.0,
+            )
+            record_str = res.get("record", "")
+            parsed = res.get("parsed", {})
+            all_action = parsed.get("all", "none")
+            status = "pass" if res.get("valid") else (all_action if all_action in ("softfail", "fail", "neutral", "pass") else "none")
 
             return SPFResult(
                 status=status,
-                domain=domain,
-                ip=ip,
-                record=str(record),
-                details=f"SPF {status} for domain {domain}",
+                domain=clean_domain,
+                ip="",
+                record=str(record_str)[:200],
+                details=f"SPF {status} published for {clean_domain}",
             )
         except Exception:
             pass
@@ -129,71 +197,77 @@ class HeaderForensics:
         # Fallback: query TXT record manually with dnspython
         try:
             resolver = dns.resolver.Resolver()
-            answers = resolver.resolve(domain, "TXT")
+            resolver.timeout = 2.0
+            resolver.lifetime = 2.0
+            answers = await asyncio.wait_for(
+                asyncio.to_thread(resolver.resolve, clean_domain, "TXT"),
+                timeout=3.0,
+            )
             txt_value = ""
             for rdata in answers:
-                txt_value += "".join(str(p) for rdata in answers for p in rdata.strings) or ""
+                txt_value += "".join(p.decode("utf-8", errors="ignore") if isinstance(p, bytes) else str(p) for p in rdata.strings)
 
-            # Simple SPF parsing
-            spf_match = re.search(r"v=spf1\s+([^\s]+)", txt_value)
+            spf_match = re.search(r"v=spf1\s+(.*)", txt_value)
             if not spf_match:
                 return SPFResult(
                     status="none",
-                    domain=domain,
+                    domain=clean_domain,
                     ip="",
-                    record=txt_value,
-                    details="No valid SPF record found",
+                    record=txt_value[:200],
+                    details="No valid SPF record found in DNS",
                 )
 
             mechanisms = spf_match.group(1)
-            ip = ""
-            for mechan_match in re.finditer(r"(ip4|ip6|a|mx|include)[:\s]+([^\s]+)", mechanisms):
-                tag = mechan_match.group(1)
-                value = mechan_match.group(2)
-                if tag in ("ip4",):
-                    ip = value
-                    break
-
-            qualifier_match = re.search(r"[+\~-]$", mechanisms)
-            qualifier = qualifier_match.group(0) if qualifier_match else "?"
-            status_map = {"+": "pass", "~": "softfail", "-": "fail", "?": "none"}
-            status = status_map.get(qualifier, "none")
+            qualifier_match = re.search(r"([+\~-])all\b", mechanisms)
+            qualifier = qualifier_match.group(1) if qualifier_match else "?"
+            status_map = {"+": "pass", "~": "softfail", "-": "fail", "?": "neutral"}
+            status = status_map.get(qualifier, "neutral")
 
             return SPFResult(
                 status=status,
-                domain=domain,
-                ip=ip,
+                domain=clean_domain,
+                ip="",
                 record=txt_value[:200],
-                details=f"SPF {status} (fallback parse)",
+                details=f"SPF {status} (parsed from DNS TXT record)",
             )
         except Exception:
             return SPFResult(
                 status="none",
-                domain=domain,
+                domain=clean_domain,
                 ip="",
                 record="",
-                details="SPF validation failed",
+                details="SPF record not found in DNS",
             )
-
-    async def _resolve_include(self, include_domain: str, base_domain: str) -> str:
-        try:
-            resolver = dns.resolver.Resolver()
-            answers = resolver.resolve(include_domain, "TXT")
-            for rdata in answers:
-                txt = "".join(str(p) for p in rdata.strings)
-                spf_match = re.search(r"v=spf1\s+([^\s]+)", txt)
-                if spf_match:
-                    return spf_match.group(1)[:100]
-            return ""
-        except Exception:
-            return ""
 
     async def _verify_dkim(
         self, raw_eml: bytes, headers: dict, domain: str
     ) -> DKIMResult:
         try:
-            dkim_sig = headers.get("dkim-signature", "")
+            dkim_sig = ""
+            for k, v in headers.items():
+                if k.lower() == "dkim-signature" and isinstance(v, str):
+                    dkim_sig = v
+                    break
+
+            auth_results = ""
+            for k, v in headers.items():
+                if k.lower() == "authentication-results" and isinstance(v, str):
+                    auth_results = v
+                    break
+
             if not dkim_sig:
+                if auth_results:
+                    dkim_match = re.search(r"\bdkim=([a-zA-Z]+)", auth_results, re.IGNORECASE)
+                    if dkim_match:
+                        raw_status = dkim_match.group(1).lower()
+                        status = "pass" if raw_status == "pass" else ("fail" if raw_status == "fail" else "none")
+                        return DKIMResult(
+                            status=status,
+                            domain=domain,
+                            selector="",
+                            details=f"DKIM {status} from Authentication-Results header",
+                        )
+
                 return DKIMResult(
                     status="none",
                     domain="",
@@ -201,90 +275,159 @@ class HeaderForensics:
                     details="No DKIM-Signature header found",
                 )
 
-            dkimpy.verify(raw_eml)
-
             selector_match = re.search(r"s=([^\s;]+)", dkim_sig)
             domain_match = re.search(r"d=([^\s;]+)", dkim_sig)
 
             selector = selector_match.group(1) if selector_match else ""
             signed_domain = domain_match.group(1) if domain_match else domain
 
-            return DKIMResult(
-                status="pass",
-                domain=signed_domain,
-                selector=selector,
-                details="DKIM signature verified cryptographically",
-            )
-        except Exception as e:
-            dkim_match = re.search(r"s=([^\s;]+)", dkim_sig)
-            dkim_domain = dkim_match.group(1) if dkim_match else domain
+            # Attempt cryptographic verification with dkimpy
+            verified = False
+            try:
+                verified = dkimpy.verify(raw_eml)
+            except Exception:
+                verified = False
+
+            if verified:
+                return DKIMResult(
+                    status="pass",
+                    domain=signed_domain,
+                    selector=selector,
+                    details="DKIM signature verified cryptographically",
+                )
+
+            # If cryptographic verification failed, check if receiving MTA recorded dkim=pass
+            if auth_results:
+                dkim_match = re.search(r"\bdkim=([a-zA-Z]+)", auth_results, re.IGNORECASE)
+                if dkim_match and dkim_match.group(1).lower() == "pass":
+                    return DKIMResult(
+                        status="pass",
+                        domain=signed_domain,
+                        selector=selector,
+                        details="DKIM verified by receiving MTA (Authentication-Results)",
+                    )
+
             return DKIMResult(
                 status="fail",
-                domain=dkim_domain,
+                domain=signed_domain,
+                selector=selector,
+                details="DKIM signature verification failed",
+            )
+        except Exception as e:
+            return DKIMResult(
+                status="fail",
+                domain=domain,
                 selector="",
-                details=f"DKIM verification failed: {str(e)[:100]}",
+                details=f"DKIM verification error: {str(e)[:100]}",
             )
 
     async def _check_dmarc(
-        self, domain: str, spf: SPFResult, dkim: DKIMResult
+        self, domain: str, spf: SPFResult, dkim: DKIMResult, headers: dict | None = None
     ) -> DMARCResult:
-        org_domain = ".".join(domain.split(".")[-2:])
-        try:
-            try:
-                from checkdmarc.dmarc import get_dmarc_record
-            except ImportError:
-                from checkdmarc import get_dmarc_record
-
-            dmarc_record, parsed = get_dmarc_record(f"_dmarc.{org_domain}")
-
-            policy = parsed.get("policy", "none")
-            alignment_spf = parsed.get("alignment_spf", False)
-            alignment_dkim = parsed.get("alignment_dkim", False)
-            record_str = str(dmarc_record)
-
+        if not domain or not domain.strip():
             return DMARCResult(
-                status="pass",
-                policy=policy,
-                domain=org_domain,
-                alignment_spf=alignment_spf,
-                alignment_dkim=alignment_dkim,
-                record=record_str,
-            )
-        except Exception:
-            return DMARCResult(
-                status="none",
+                status="unavailable",
                 policy="none",
-                domain=domain,
+                domain="",
                 alignment_spf=False,
                 alignment_dkim=False,
                 record="",
+                details="No domain available for DMARC evaluation",
             )
+
+        headers = headers or {}
+        clean_domain = domain.strip().lower()
+        org_domain = ".".join(clean_domain.split(".")[-2:]) if "." in clean_domain else clean_domain
+
+        # 1. Check Authentication-Results header
+        auth_results = ""
+        for k, v in headers.items():
+            if k.lower() == "authentication-results" and isinstance(v, str):
+                auth_results = v
+                break
+
+        if auth_results:
+            dmarc_match = re.search(r"\bdmarc=([a-zA-Z]+)", auth_results, re.IGNORECASE)
+            if dmarc_match:
+                raw_status = dmarc_match.group(1).lower()
+                status = "pass" if raw_status == "pass" else ("fail" if raw_status == "fail" else "none")
+                policy_match = re.search(r"(?:action|p)=([a-zA-Z]+)", auth_results, re.IGNORECASE)
+                policy = policy_match.group(1).lower() if policy_match else "none"
+
+                alignment_spf = (spf.status == "pass")
+                alignment_dkim = (dkim.status == "pass")
+
+                return DMARCResult(
+                    status=status,
+                    policy=policy,
+                    domain=clean_domain,
+                    alignment_spf=alignment_spf,
+                    alignment_dkim=alignment_dkim,
+                    record="",
+                    details=f"DMARC {status} from Authentication-Results header",
+                )
+
+        # 2. Live DNS check with checkdmarc
+        try:
+            import checkdmarc
+            res = await asyncio.wait_for(
+                asyncio.to_thread(checkdmarc.check_dmarc, org_domain, timeout=2.0),
+                timeout=3.0,
+            )
+            record_str = res.get("record", "")
+            tags = res.get("tags", {})
+            policy = tags.get("p", {}).get("value", "none")
+
+            spf_aligned = (spf.status == "pass" and bool(spf.domain and (spf.domain.lower() == org_domain or org_domain in spf.domain.lower())))
+            dkim_aligned = (dkim.status == "pass" and bool(dkim.domain and (dkim.domain.lower() == org_domain or org_domain in dkim.domain.lower())))
+
+            status = "pass" if (spf_aligned or dkim_aligned) else ("fail" if (spf.status in ("fail", "softfail") or dkim.status == "fail") else "none")
+
+            return DMARCResult(
+                status=status,
+                policy=policy,
+                domain=org_domain,
+                alignment_spf=spf_aligned,
+                alignment_dkim=dkim_aligned,
+                record=record_str,
+                details=f"DMARC {status} (policy: {policy})",
+            )
+        except Exception:
+            pass
+
+        return DMARCResult(
+            status="none",
+            policy="none",
+            domain=clean_domain,
+            alignment_spf=False,
+            alignment_dkim=False,
+            record="",
+            details="No DMARC record found in DNS",
+        )
 
     def _reconstruct_relay_path(self, received_hops: list[dict]) -> list[RelayHop]:
         hops = []
         for i, hop in enumerate(received_hops):
             from_host = hop.get("from", "")
             by_host = hop.get("by", "")
-            ip = hop.get("ip", "")
+            ip = hop.get("ip", "").strip("[]()")
             protocol = hop.get("protocol", "SMTP")
 
-            timestamp = ""
-            received_val = hop.get("received", "")
-            ts_match = re.search(
-                r";\\s*([^\\]*)$", received_val
-            )
-            if ts_match:
-                timestamp = ts_match.group(1).strip()
+            timestamp = hop.get("timestamp", "")
+            if not timestamp:
+                received_val = hop.get("received", "")
+                ts_match = re.search(r";\s*([^;]+)$", received_val)
+                if ts_match:
+                    timestamp = ts_match.group(1).strip()
 
-            ip_match = re.search(r"\[?([\d.]+)\]?", ip)
-            extracted_ip = ip_match.group(1) if ip_match else ip
-
+            extracted_ip = ip
             is_private = False
-            try:
-                import ipaddress
-                is_private = ipaddress.ip_address(extracted_ip).is_private
-            except Exception:
-                is_private = False
+            if extracted_ip:
+                try:
+                    import ipaddress
+                    is_private = ipaddress.ip_address(extracted_ip).is_private
+                except Exception:
+                    is_private = False
 
             hops.append(
                 RelayHop(

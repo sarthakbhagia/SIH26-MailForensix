@@ -9,8 +9,22 @@ class NLPResult(BaseModel):
 
 class AuthResult(BaseModel):
     spf_status: str = "none"
+    spf_domain: Optional[str] = ""
+    spf_ip: Optional[str] = ""
+    spf_record: Optional[str] = ""
+    spf_details: Optional[str] = ""
     dkim_status: str = "none"
+    dkim_domain: Optional[str] = ""
+    dkim_selector: Optional[str] = ""
+    dkim_details: Optional[str] = ""
     dmarc_status: str = "none"
+    dmarc_policy: Optional[str] = "none"
+    dmarc_domain: Optional[str] = ""
+    dmarc_record: Optional[str] = ""
+    dmarc_details: Optional[str] = ""
+    alignment_spf: Optional[bool] = False
+    alignment_dkim: Optional[bool] = False
+    auth_confidence_score: Optional[float] = 100.0
     details: Dict[str, Any] = {}
 
 class GeoLocation(BaseModel):
@@ -26,6 +40,11 @@ class GeoLocation(BaseModel):
     org: Optional[str] = "Unknown"
     confidence: Optional[Union[str, float]] = "low"
     infrastructure_type: Optional[str] = "residential"
+    vpn: Optional[bool] = False
+    proxy: Optional[bool] = False
+    tor: Optional[bool] = False
+    hosting: Optional[bool] = False
+    source: Optional[str] = "maxmind"
 
 class RelayHop(BaseModel):
     hop_number: Optional[int] = 1

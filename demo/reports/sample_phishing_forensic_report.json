@@ -1,21 +1,21 @@
 {
-  "report_id": "fffa7139-5aee-4fad-bca4-007da12caf75",
+  "report_id": "e9b1305f-9eee-42fe-8153-b98f39603ef1",
   "version": "1.0",
   "platform": "PhishGuard Forensic Threat Intelligence Platform",
-  "generated_at": "2026-08-26T14:40:50.798478+00:00",
+  "generated_at": "2026-08-26T16:40:52.075727+00:00",
   "email_metadata": {
-    "id": "b7504cb3-a307-43ee-a8a2-25053c10200a",
+    "id": "9f108806-7292-481b-9b3f-b540f7a358c6",
     "sender": "PayPal Security Center <service@paypa1-security-alert.com>",
     "recipients": [
       "target.user@enterprise.com"
     ],
     "subject": "URGENT: Unauthorized Account Access - Immediate Action Required",
-    "date": "2026-08-26T14:40:47.865181",
+    "date": "2026-08-26T16:40:49.256891",
     "message_id": "<894239842.20260825@paypa1-security-alert.com>",
     "hashes": {
-      "sha256": "c7c675fe4d4feceb592e90e5599f7db088d3bc8c91323f5d7fb4bf2207f6ed93",
-      "sha1": "83c456eae3ce582c470ee7aba9f3968646d77396",
-      "md5": "49cedb436ac413ff5023acbd98273333"
+      "sha256": "069b8f887031350dee0b19b49538612ca4fba1cc22cc388f399220d623867b8b",
+      "sha1": "35c72e5253d8745d7cdcffa57716cc131c76cd98",
+      "md5": "72d455e430e6e50c3e615b1425341e96"
     }
   },
   "threat_assessment": {
@@ -163,20 +163,20 @@
     "details": {
       "links": [
         {
-          "source": "email:b7504cb3-a307-43ee-a8a2-25053c10200a",
+          "source": "email:9f108806-7292-481b-9b3f-b540f7a358c6",
           "target": "domain:paypa1-security-alert.com",
           "weight": 1.0,
           "relationship": "sent_from"
         },
         {
-          "source": "email:b7504cb3-a307-43ee-a8a2-25053c10200a",
+          "source": "email:9f108806-7292-481b-9b3f-b540f7a358c6",
           "target": "ip:185.220.101.5",
           "weight": 0.8,
           "hop_number": 2,
           "relationship": "relayed_through"
         },
         {
-          "source": "email:b7504cb3-a307-43ee-a8a2-25053c10200a",
+          "source": "email:9f108806-7292-481b-9b3f-b540f7a358c6",
           "target": "ip:194.26.29.112",
           "weight": 0.8,
           "hop_number": 1,
@@ -226,7 +226,7 @@
           "is_newly_registered": false
         },
         {
-          "id": "email:b7504cb3-a307-43ee-a8a2-25053c10200a",
+          "id": "email:9f108806-7292-481b-9b3f-b540f7a358c6",
           "val": 8,
           "type": "email",
           "color": "#3B82F6",
@@ -234,7 +234,7 @@
           "sender": "PayPal Security Center <service@paypa1-security-alert.com>",
           "subject": "URGENT: Unauthorized Account Access - Immediate Action Required",
           "risk_score": 67.8,
-          "analyzed_at": "2026-08-26T14:40:48.757443+00:00"
+          "analyzed_at": "2026-08-26T16:40:50.189946+00:00"
         },
         {
           "id": "ip:185.220.101.5",
@@ -264,8 +264,8 @@
     }
   },
   "chain_of_custody": {
-    "ingested_at": "2026-08-26T14:40:47.865181",
-    "analyzed_at": "2026-08-26T14:40:47.865181",
+    "ingested_at": "2026-08-26T16:40:49.256891",
+    "analyzed_at": "2026-08-26T16:40:49.256891",
     "hash_verification": "MATCH - Cryptographically Verified",
     "integrity": "VALID"
   }

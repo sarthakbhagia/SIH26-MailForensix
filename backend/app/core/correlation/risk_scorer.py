@@ -235,13 +235,16 @@ class RiskScorer:
     def _extract_geo_details(self, geo_result: Any) -> str:
         if not geo_result:
             return "Geo intel unavailable"
-        orig_ip = getattr(geo_result, "originating_ip", "unknown")
+        orig_ip = getattr(geo_result, "originating_ip", "IP Unavailable")
         infra = getattr(geo_result, "infrastructure_flags", [])
         if isinstance(geo_result, dict):
-            orig_ip = geo_result.get("originating_ip", "unknown")
+            orig_ip = geo_result.get("originating_ip", "IP Unavailable")
             infra = geo_result.get("infrastructure_flags", [])
         
-        infra_str = ", ".join(infra) if infra else "standard"
+        if orig_ip == "IP Unavailable":
+            return "Originating IP: Unavailable (Webmail/Internal Relay)"
+        
+        infra_str = ", ".join(infra) if infra else "residential/standard"
         return f"Originating IP: {orig_ip} ({infra_str})"
 
     def _enhance_ip_risk(self, base_risk: float, threat_intel: ThreatIntelReport) -> float:

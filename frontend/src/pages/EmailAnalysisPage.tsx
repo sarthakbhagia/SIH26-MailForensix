@@ -47,26 +47,28 @@ export default function EmailAnalysisPage() {
   const authResult = (mAnalysis as any)?.auth_result || {};
 
   const spf = {
-    status: (authStatus.spf || authResult.spf_status || 'none') as 'pass' | 'fail' | 'none' | 'softfail',
-    domain: senderDomain || '',
-    ip: (mAnalysis as any)?.geo_data?.[0]?.ip || '',
-    record: authStatus.spf_record || '',
+    status: (authResult.spf_status || authStatus.spf_status || authStatus.spf || 'unavailable') as any,
+    domain: authResult.spf_domain || authStatus.spf_domain || senderDomain || '',
+    ip: authResult.spf_ip || authStatus.spf_ip || (mAnalysis as any)?.geo_data?.[0]?.ip || '',
+    record: authResult.spf_record || authStatus.spf_record || '',
+    details: authResult.spf_details || authStatus.spf_details || '',
   };
 
   const dkim = {
-    status: (authStatus.dkim || authResult.dkim_status || 'none') as 'pass' | 'fail' | 'none',
-    domain: senderDomain || '',
-    selector: authStatus.dkim_selector || 'default',
-    details: authStatus.dkim_details || '',
+    status: (authResult.dkim_status || authStatus.dkim_status || authStatus.dkim || 'unavailable') as any,
+    domain: authResult.dkim_domain || authStatus.dkim_domain || senderDomain || '',
+    selector: authResult.dkim_selector || authStatus.dkim_selector || 'default',
+    details: authResult.dkim_details || authStatus.dkim_details || '',
   };
 
   const dmarc = {
-    status: (authStatus.dmarc || authResult.dmarc_status || 'none') as 'pass' | 'fail' | 'none',
-    policy: (authStatus.policy || 'none') as 'none' | 'quarantine' | 'reject',
-    domain: senderDomain || '',
-    alignment_spf: authStatus.spf === 'pass',
-    alignment_dkim: authStatus.dkim === 'pass',
-    record: authStatus.dmarc_record || '',
+    status: (authResult.dmarc_status || authStatus.dmarc_status || authStatus.dmarc || 'unavailable') as any,
+    policy: (authResult.dmarc_policy || authStatus.dmarc_policy || authStatus.policy || 'none') as any,
+    domain: authResult.dmarc_domain || authStatus.dmarc_domain || senderDomain || '',
+    alignment_spf: Boolean(authResult.alignment_spf ?? authStatus.alignment_spf ?? (authResult.spf_status === 'pass' || authStatus.spf === 'pass')),
+    alignment_dkim: Boolean(authResult.alignment_dkim ?? authStatus.alignment_dkim ?? (authResult.dkim_status === 'pass' || authStatus.dkim === 'pass')),
+    record: authResult.dmarc_record || authStatus.dmarc_record || '',
+    details: authResult.dmarc_details || authStatus.dmarc_details || '',
   };
 
   const hops = ((mAnalysis as any)?.relay_path || []).map((hop: any, idx: number) => ({

@@ -70,6 +70,7 @@ async def upload_batch(
     return responses
 
 
+@router.get("", response_model=EmailListResponse)
 @router.get("/", response_model=EmailListResponse)
 async def list_emails(
     page: int = 1, 

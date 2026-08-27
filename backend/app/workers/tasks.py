@@ -121,6 +121,9 @@ def enrich_threat_intel_task(
                             "recommended_action": boosted_risk.recommended_action,
                         }
 
+                    from sqlalchemy.orm.attributes import flag_modified
+                    flag_modified(analysis, "ip_reputation")
+                    flag_modified(analysis, "risk_breakdown")
                     await session.commit()
             return {"status": "enriched", "email_id": email_id, "apis_queried": report.apis_queried}
         finally:

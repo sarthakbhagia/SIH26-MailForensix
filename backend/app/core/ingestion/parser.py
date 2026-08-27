@@ -93,12 +93,34 @@ class EmailParser:
         received_headers = msg.get_all("Received", [])
         
         for idx, header in enumerate(received_headers):
-            hop = {"hop_number": len(received_headers) - idx}
-            ips = re.findall(r'\b(?:\d{1,3}\.){3}\d{1,3}\b', header)
-            if ips:
-                hop["ip"] = ips[0]
-            else:
-                hop["ip"] = ""
+            hop = {
+                "hop_number": len(received_headers) - idx,
+                "received": header
+            }
+
+            from_match = re.search(r'from\s+([^\s;()]+)', header, re.IGNORECASE)
+            by_match = re.search(r'by\s+([^\s;()]+)', header, re.IGNORECASE)
+            hop["from"] = from_match.group(1) if from_match else ""
+            hop["by"] = by_match.group(1) if by_match else ""
+
+            # Extract IPv4 or IPv6 address
+            ip_candidates = re.findall(
+                r'[\[\(]?((?:[0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}|::1|(?:\d{1,3}\.){3}\d{1,3})[\]\)]?',
+                header
+            )
+            valid_ip = ""
+            for cand in ip_candidates:
+                cand_clean = cand.strip('[]()')
+                if not cand_clean:
+                    continue
+                try:
+                    import ipaddress
+                    ipaddress.ip_address(cand_clean)
+                    valid_ip = cand_clean
+                    break
+                except Exception:
+                    continue
+            hop["ip"] = valid_ip
                 
             date_match = re.search(r';\s*(.+)$', header)
             if date_match:
