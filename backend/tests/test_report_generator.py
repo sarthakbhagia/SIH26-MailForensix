@@ -118,7 +118,7 @@ def mock_report_db():
         email_id=eid,
         composite_risk_score=94.5,
         nlp_label="Phishing",
-        nlp_confidence=0.98,
+        nlp_confidence=98.0,
         nlp_details={"explanation": "Credential harvesting lure detected."},
         auth_status={"spf": "fail", "dkim": "fail", "dmarc": "fail"},
         risk_breakdown={
@@ -178,7 +178,7 @@ async def test_generate_json_report(mock_report_db):
     # 4. NLP classification
     nlp = report["nlp_classification"]
     assert nlp["label"] == "Phishing"
-    assert nlp["confidence"] == 0.98
+    assert nlp["confidence"] == 98.0
     assert "details" in nlp
 
     # 5. Authentication
@@ -238,7 +238,7 @@ async def test_generate_pdf_report(mock_report_db):
 
 @pytest.mark.asyncio
 async def test_render_html_template(mock_report_db):
-    """Verify HTML template renders all sections cleanly."""
+    """Verify HTML template renders all sections cleanly without double percentage formatting."""
     db, eid = mock_report_db
     generator = ReportGenerator()
 
@@ -250,6 +250,86 @@ async def test_render_html_template(mock_report_db):
     assert "94.5" in html
     assert "http://phish-login.com" in html
     assert "CONFIDENTIAL" in html
+    # Verify confidence formatting is 98.0% and NOT 9800.0%
+    assert "98.0%" in html or "98%" in html
+    assert "9800" not in html
+
+
+@pytest.mark.parametrize(
+    "conf_input,expected_str,forbidden_str",
+    [
+        (0.0, "0.0%", "000.0%"),
+        (25.0, "25.0%", "2500.0%"),
+        (45.0, "45.0%", "4500.0%"),
+        (75.0, "75.0%", "7500.0%"),
+        (100.0, "100.0%", "10000.0%"),
+        # Fractional inputs normalized to canonical scale
+        (0.25, "25.0%", "2500.0%"),
+        (0.45, "45.0%", "4500.0%"),
+        (0.75, "75.0%", "7500.0%"),
+        (1.0, "100.0%", "10000.0%"),
+    ],
+)
+@pytest.mark.asyncio
+async def test_confidence_percentage_values(conf_input, expected_str, forbidden_str):
+    """Verify 0%, 25%, 45%, 75%, and 100% confidence values render cleanly in HTML and PDF reports."""
+    db = MockReportDbSession()
+    eid = uuid4()
+    email = Email(
+        id=eid,
+        sender="tester@security-audit.com",
+        recipients=["analyst@corp.com"],
+        subject="Threat Analysis Validation",
+        raw_hash_sha256="a" * 64,
+        raw_hash_sha1="a" * 40,
+        raw_hash_md5="a" * 32,
+        headers={"Message-ID": "<audit@test.com>"},
+        status=EmailStatus.analyzed,
+        ingested_at=datetime.now(timezone.utc).replace(tzinfo=None),
+    )
+    analysis = AnalysisResult(
+        id=uuid4(),
+        email_id=eid,
+        composite_risk_score=float(conf_input if conf_input > 1.0 else conf_input * 100.0),
+        nlp_label="Phishing",
+        nlp_confidence=float(conf_input),
+        attribution_confidence=float(conf_input),
+        nlp_details={"explanation": f"Test confidence {expected_str}"},
+        auth_status={"spf": "pass", "dkim": "pass", "dmarc": "pass"},
+        risk_breakdown={
+            "overall_score": float(conf_input if conf_input > 1.0 else conf_input * 100.0),
+            "severity": "medium",
+            "recommended_action": "Review",
+            "factors": [
+                {"name": "NLP Threat Classification", "raw_score": 50.0, "weight": 0.35, "weighted_score": 17.5, "severity": "medium", "details": "Test factor"},
+            ],
+        },
+        iocs=[],
+        relay_path=[],
+        geo_data=[],
+    )
+    db.add(email)
+    db.add(analysis)
+
+    generator = ReportGenerator()
+
+    # 1. Test JSON data assembly
+    report_json = await generator.generate_json(email_id=eid, db=db)
+    expected_numeric = float(conf_input if conf_input > 1.0 or conf_input == 0.0 else conf_input * 100.0)
+    assert report_json["nlp_classification"]["confidence"] == expected_numeric
+    assert report_json["attribution"]["confidence"] == expected_numeric
+
+    # 2. Test HTML rendering
+    html = generator._render_html(report_json)
+    assert expected_str in html
+    assert forbidden_str not in html
+
+    # 3. Test PDF fallback generation
+    pdf_bytes = generator._generate_pdf_fallback(report_json)
+    assert isinstance(pdf_bytes, bytes)
+    assert len(pdf_bytes) > 1000
+    assert pdf_bytes.startswith(b"%PDF-")
+
 
 
 @pytest.mark.asyncio

@@ -16,6 +16,7 @@ import { useCreateCase } from '@/hooks/useCases';
 import { CaseSeverity } from '@/types/case';
 import CaseList from '@/components/cases/CaseList';
 import CaseDetail from '@/components/cases/CaseDetail';
+import { cn } from '@/lib/utils';
 
 export default function CasesPage() {
   const { caseId } = useParams<{ caseId?: string }>();
@@ -83,7 +84,7 @@ export default function CasesPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto pb-10">
       {/* If a case is selected, render CaseDetail; otherwise render CaseList */}
       {selectedCaseId ? (
         <CaseDetail caseId={selectedCaseId} onBack={handleBackToList} />
@@ -97,61 +98,68 @@ export default function CasesPage() {
 
       {/* New Case Creation Modal */}
       <Dialog open={isNewCaseModalOpen} onOpenChange={setIsNewCaseModalOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg panel p-6">
           <form onSubmit={handleCreateCaseSubmit} className="space-y-4">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-base">
-                <FolderPlus className="w-5 h-5 text-primary" />
+              <DialogTitle className="flex items-center gap-2 text-base font-bold text-foreground">
+                <FolderPlus className="size-5 text-primary" />
                 Create Investigation Case
               </DialogTitle>
-              <DialogDescription className="text-xs">
+              <DialogDescription className="text-xs text-muted-foreground">
                 Initialize a new cybersecurity threat investigation ledger to correlate emails, IOCs, and analyst notes.
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-3 py-2">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">
-                  Case Title <span className="text-destructive">*</span>
+                <label className="label-mono text-[9px] block">
+                  CASE TITLE <span className="text-critical">*</span>
                 </label>
                 <Input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Operation SpearPhish: CFO Credential Harvesting Campaign"
-                  className="text-xs h-9 bg-background/60"
+                  className="text-xs h-8 font-mono bg-background/60 border-border"
                   required
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">
-                  Case Description & Threat Context
+                <label className="label-mono text-[9px] block">
+                  THREAT CONTEXT & DESCRIPTION
                 </label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Summarize initial trigger, affected targets, observed tactics, or suspect infrastructure..."
                   rows={3}
-                  className="w-full text-xs rounded-md bg-background/60 border border-border/60 p-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-all resize-y"
+                  className="w-full text-xs rounded bg-background/60 border border-border p-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-all resize-y font-mono"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-foreground">
-                    Initial Severity
+                  <label className="label-mono text-[9px] block">
+                    SEVERITY TIER
                   </label>
-                  <div className="flex items-center bg-background/60 border border-border/60 rounded-md p-0.5">
+                  <div className="flex items-center bg-surface border border-border rounded p-0.5">
                     {(['low', 'medium', 'high', 'critical'] as const).map((sev) => (
                       <button
                         type="button"
                         key={sev}
                         onClick={() => setSeverity(sev)}
-                        className={`flex-1 text-[11px] font-medium py-1 rounded uppercase text-[10px] transition-colors ${
+                        className={cn(
+                          'flex-1 font-mono text-[9px] font-bold py-1 rounded uppercase transition-colors',
                           severity === sev
-                            ? 'bg-primary text-primary-foreground font-bold shadow-sm'
+                            ? sev === 'critical'
+                              ? 'bg-critical text-black shadow-sm'
+                              : sev === 'high'
+                              ? 'bg-high text-black shadow-sm'
+                              : sev === 'medium'
+                              ? 'bg-medium text-black shadow-sm'
+                              : 'bg-clean text-black shadow-sm'
                             : 'text-muted-foreground hover:text-foreground'
-                        }`}
+                        )}
                       >
                         {sev}
                       </button>
@@ -160,50 +168,50 @@ export default function CasesPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-foreground">
-                    Assigned Analyst
+                  <label className="label-mono text-[9px] block">
+                    ASSIGNED ANALYST
                   </label>
                   <div className="relative">
-                    <User className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                    <User className="absolute left-2.5 top-2 size-3.5 text-muted-foreground" />
                     <Input
                       value={assignedTo}
                       onChange={(e) => setAssignedTo(e.target.value)}
                       placeholder="Lead Analyst"
-                      className="text-xs h-9 pl-8 bg-background/60"
+                      className="text-xs h-8 pl-8 font-mono bg-background/60 border-border"
                     />
                   </div>
                 </div>
               </div>
 
               {formError && (
-                <div className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-md p-2">
+                <div className="text-xs font-mono text-critical bg-critical/10 border border-critical/20 rounded p-2">
                   {formError}
                 </div>
               )}
             </div>
 
-            <DialogFooter className="gap-2 pt-2">
+            <DialogFooter className="gap-2 pt-2 border-t border-border/50">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => setIsNewCaseModalOpen(false)}
-                className="text-xs"
+                className="text-xs font-mono border-border"
               >
-                Cancel
+                CANCEL
               </Button>
               <Button
                 type="submit"
                 size="sm"
                 disabled={!title.trim() || createCaseMutation.isPending}
-                className="text-xs gap-1.5"
+                className="text-xs font-mono font-bold gap-1.5"
               >
                 {createCaseMutation.isPending ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <Loader2 className="size-3.5 animate-spin" />
                 ) : (
-                  <Plus className="w-3.5 h-3.5" />
+                  <Plus className="size-3.5" />
                 )}
-                <span>Initialize Case</span>
+                <span>INITIALIZE CASE</span>
               </Button>
             </DialogFooter>
           </form>
@@ -212,4 +220,5 @@ export default function CasesPage() {
     </div>
   );
 }
+
 

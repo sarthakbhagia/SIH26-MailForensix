@@ -1,14 +1,13 @@
 import { useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Activity, CalendarDays, Inbox } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CalendarDays, Inbox } from 'lucide-react';
 
-interface IngestionTimelineProps {
+export interface IngestionTimelineProps {
   timeline?: { date: string; ingested: number; threats: number }[];
   isLoading?: boolean;
 }
 
-export default function IngestionTimeline({ timeline, isLoading = false }: IngestionTimelineProps) {
+export function IngestionTimeline({ timeline, isLoading = false }: IngestionTimelineProps) {
   const chartData = useMemo(() => {
     if (timeline && timeline.length > 0) {
       return timeline.map((item) => {
@@ -48,95 +47,95 @@ export default function IngestionTimeline({ timeline, isLoading = false }: Inges
   const totalThreats = chartData.reduce((acc, curr) => acc + curr.threats, 0);
 
   return (
-    <Card className="bg-card/60 backdrop-blur-md border border-border/50 shadow-sm">
-      <CardHeader className="border-b border-border/40 pb-3.5 pt-4 px-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="space-y-0.5">
-            <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-              <CalendarDays className="w-4 h-4 text-primary" />
-              7-Day Ingestion & Detection Velocity
-            </CardTitle>
-            <p className="text-xs text-muted-foreground">
-              Daily telemetry tracking volume of processed emails vs. flagged high-risk threats.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-4 text-xs font-mono">
-            <span className="flex items-center gap-1.5 text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">
-              <span className="w-2 h-2 rounded-full bg-sky-400" />
-              {totalIngested} Ingested
-            </span>
-            <span className="flex items-center gap-1.5 text-red-400 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20">
-              <span className="w-2 h-2 rounded-full bg-red-400" />
-              {totalThreats} Threats Flagged
-            </span>
-          </div>
+    <div className="panel p-4 sm:p-5 space-y-4">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/50 pb-3">
+        <div className="space-y-0.5">
+          <h3 className="text-sm font-semibold tracking-tight text-foreground flex items-center gap-2">
+            <CalendarDays className="size-4 text-primary" />
+            7-Day Ingestion & Threat Detection Velocity
+          </h3>
+          <p className="label-mono text-[10px]">DIURNAL ENVELOPE VOLUMES VS. SUSPICIOUS INCIDENTS</p>
         </div>
-      </CardHeader>
 
-      <CardContent className="pt-6 px-4 pb-4">
+        <div className="flex items-center gap-2.5 font-mono text-[11px]">
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-primary/10 text-primary border border-primary/25">
+            <span className="size-1.5 rounded-full bg-primary animate-pulse" />
+            {totalIngested} Ingested
+          </span>
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-critical/10 text-critical border border-critical/25">
+            <span className="size-1.5 rounded-full bg-critical" />
+            {totalThreats} Threats Flagged
+          </span>
+        </div>
+      </div>
+
+      {/* Chart Canvas */}
+      <div className="pt-2">
         {isLoading && (
-          <div className="h-[280px] w-full flex flex-col items-center justify-center gap-2 text-muted-foreground">
-            <Activity className="w-6 h-6 animate-spin text-primary" />
-            <span className="text-xs font-medium">Aggregating 7-day telemetry...</span>
+          <div className="h-[250px] w-full flex flex-col items-center justify-center gap-2 text-muted-foreground">
+            <div className="size-8 rounded-full border-2 border-muted border-t-primary animate-spin" />
+            <span className="label-mono text-[10px] mt-2">AGGREGATING VELOCITY TIME-SERIES...</span>
           </div>
         )}
 
         {!isLoading && totalIngested === 0 && totalThreats === 0 && (
-          <div className="h-[280px] w-full flex flex-col items-center justify-center p-6 text-center text-muted-foreground">
-            <Inbox className="w-9 h-9 opacity-40 mb-2" />
-            <p className="text-xs font-semibold text-foreground">No ingestion telemetry in the last 7 days</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5 max-w-[280px]">
-              Ingested email files will automatically populate real-time daily volume curves here.
+          <div className="h-[250px] w-full flex flex-col items-center justify-center p-6 text-center text-muted-foreground">
+            <Inbox className="size-8 opacity-40 mb-2" />
+            <p className="text-xs font-semibold text-foreground">No ingestion telemetry recorded in the last 7 days</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5 max-w-[260px]">
+              Ingested messages will automatically generate real-time volume velocity contours here.
             </p>
           </div>
         )}
 
         {!isLoading && (totalIngested > 0 || totalThreats > 0) && (
-          <div className="h-[280px] w-full">
+          <div className="h-[250px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorIngested" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#38bdf8" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="#00e5ff" stopOpacity={0.35} />
+                    <stop offset="95%" stopColor="#00e5ff" stopOpacity={0.0} />
                   </linearGradient>
                   <linearGradient id="colorThreats" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.5} />
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="#ff3366" stopOpacity={0.45} />
+                    <stop offset="95%" stopColor="#ff3366" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
                 <XAxis
                   dataKey="name"
-                  stroke="#888"
-                  fontSize={11}
+                  stroke="var(--muted-foreground)"
+                  fontFamily="var(--font-mono, monospace)"
+                  fontSize={10}
                   tickLine={false}
                   axisLine={false}
-                  dy={10}
+                  dy={8}
                 />
                 <YAxis
-                  stroke="#888"
-                  fontSize={11}
+                  stroke="var(--muted-foreground)"
+                  fontFamily="var(--font-mono, monospace)"
+                  fontSize={10}
                   tickLine={false}
                   axisLine={false}
                   allowDecimals={false}
                 />
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.5)" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
                 <Tooltip
                   content={({ active, payload, label }) => {
                     if (active && payload && payload.length) {
                       const data = payload[0].payload;
                       return (
-                        <div className="bg-popover/95 backdrop-blur-md border border-border/80 shadow-lg rounded-lg p-3 text-xs min-w-[140px]">
-                          <p className="font-semibold text-foreground mb-2 border-b border-border/40 pb-1">
+                        <div className="panel p-3 text-xs shadow-xl min-w-[150px]">
+                          <p className="font-semibold text-foreground mb-2 border-b border-border/50 pb-1 font-mono text-[11px]">
                             {label} ({data.date})
                           </p>
-                          <div className="space-y-1 font-mono">
-                            <div className="flex items-center justify-between text-sky-400">
+                          <div className="space-y-1 font-mono text-[10px]">
+                            <div className="flex items-center justify-between text-primary">
                               <span>Total Ingested:</span>
                               <span className="font-bold">{data.ingested}</span>
                             </div>
-                            <div className="flex items-center justify-between text-red-400">
+                            <div className="flex items-center justify-between text-critical">
                               <span>Threats Detected:</span>
                               <span className="font-bold">{data.threats}</span>
                             </div>
@@ -151,7 +150,7 @@ export default function IngestionTimeline({ timeline, isLoading = false }: Inges
                   type="monotone"
                   dataKey="ingested"
                   name="Total Ingested"
-                  stroke="#38bdf8"
+                  stroke="#00e5ff"
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#colorIngested)"
@@ -160,7 +159,7 @@ export default function IngestionTimeline({ timeline, isLoading = false }: Inges
                   type="monotone"
                   dataKey="threats"
                   name="Threats Detected"
-                  stroke="#ef4444"
+                  stroke="#ff3366"
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#colorThreats)"
@@ -169,9 +168,12 @@ export default function IngestionTimeline({ timeline, isLoading = false }: Inges
             </ResponsiveContainer>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
+
+export default IngestionTimeline;
+
 
 

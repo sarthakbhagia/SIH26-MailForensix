@@ -80,41 +80,42 @@ export default function ReportDownload({ emailId, disabled }: ReportDownloadProp
         <Button
           onClick={handleDownloadPdf}
           disabled={isDisabled || isDownloadingPdf}
-          className="h-9 text-xs px-3.5 gap-2 font-medium bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-all"
+          className="h-8 text-xs font-mono font-bold px-3.5 gap-2"
         >
           {isDownloadingPdf ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="size-3.5 animate-spin" />
           ) : downloadSuccess === 'pdf' ? (
-            <Check className="w-4 h-4 text-emerald-400" />
+            <Check className="size-3.5 text-clean" />
           ) : (
-            <FileDown className="w-4 h-4" />
+            <FileDown className="size-3.5" />
           )}
-          <span>{isDownloadingPdf ? 'Generating PDF...' : 'Download Forensic PDF'}</span>
+          <span>{isDownloadingPdf ? 'GENERATING PDF...' : 'DOWNLOAD PDF'}</span>
         </Button>
 
         <Button
           variant="outline"
           onClick={handleDownloadJson}
           disabled={isDisabled || isDownloadingJson}
-          className="h-9 text-xs px-3.5 gap-2 font-medium border-border/70 hover:bg-muted shadow-sm transition-all"
+          className="h-8 text-xs font-mono font-bold px-3.5 gap-2 border-border bg-surface hover:bg-muted"
         >
           {isDownloadingJson ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="size-3.5 animate-spin" />
           ) : downloadSuccess === 'json' ? (
-            <Check className="w-4 h-4 text-emerald-400" />
+            <Check className="size-3.5 text-clean" />
           ) : (
-            <FileCode className="w-4 h-4" />
+            <FileCode className="size-3.5" />
           )}
-          <span>{isDownloadingJson ? 'Exporting JSON...' : 'Export JSON'}</span>
+          <span>{isDownloadingJson ? 'EXPORTING JSON...' : 'EXPORT JSON'}</span>
         </Button>
       </div>
 
       {errorMsg && (
-        <div className="flex items-center gap-1.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-1.5 mt-1">
-          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+        <div className="flex items-center gap-1.5 text-xs text-critical bg-critical/10 border border-critical/20 rounded px-3 py-1.5 mt-1 font-mono">
+          <AlertCircle className="size-3.5 shrink-0" />
           <span>{errorMsg}</span>
         </div>
       )}
     </div>
   );
 }
+

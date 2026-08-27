@@ -38,8 +38,8 @@ export function TraceMap({ hops, onHopSelect }: TraceMapProps) {
 
   const lineColor =
     hops.length > 0 && hops[hops.length - 1].infrastructureType === "known_vpn"
-      ? "#ef4444"
-      : "#3b82f6";
+      ? "#ff3366"
+      : "#00e5ff";
 
   return (
     <div className="w-full h-full relative">
@@ -84,8 +84,8 @@ export function TraceMap({ hops, onHopSelect }: TraceMapProps) {
                 width: "16px",
                 height: "16px",
                 borderRadius: "50%",
-                backgroundColor: hop.riskScore > 70 ? "#ef4444" : hop.riskScore > 40 ? "#f59e0b" : "#22c55e",
-                border: "2px solid white",
+                backgroundColor: hop.riskScore > 70 ? "#ff3366" : hop.riskScore > 40 ? "#ffb020" : "#00e5ff",
+                border: "2px solid rgba(255, 255, 255, 0.8)",
                 cursor: "pointer",
               }}
             />
@@ -99,23 +99,23 @@ export function TraceMap({ hops, onHopSelect }: TraceMapProps) {
             anchor="bottom"
             onClose={() => setSelectedHop(null)}
           >
-            <div className="min-w-[180px] p-2 text-foreground">
-              <div className="font-bold text-sm mb-1">
+            <div className="min-w-[180px] p-2 text-foreground font-mono text-xs panel">
+              <div className="font-bold text-sm mb-1 text-primary">
                 Hop #{selectedHop.index + 1}
               </div>
-              <div className="text-xs">
-                <strong>IP:</strong> {selectedHop.hostname || "N/A"}
+              <div>
+                <strong className="text-muted-foreground">IP:</strong> {selectedHop.hostname || "N/A"}
               </div>
-              <div className="text-xs">
-                <strong>Type:</strong> {selectedHop.infrastructureType}
+              <div>
+                <strong className="text-muted-foreground">Type:</strong> {selectedHop.infrastructureType}
               </div>
               {selectedHop.delay !== undefined && (
-                <div className="text-xs">
-                  <strong>Delay:</strong> {selectedHop.delay}s
+                <div>
+                  <strong className="text-muted-foreground">Delay:</strong> {selectedHop.delay}s
                 </div>
               )}
-              <div className="text-xs">
-                <strong>Score:</strong> {selectedHop.riskScore}
+              <div>
+                <strong className="text-muted-foreground">Score:</strong> {selectedHop.riskScore}
               </div>
             </div>
           </Popup>
@@ -123,4 +123,4 @@ export function TraceMap({ hops, onHopSelect }: TraceMapProps) {
       </Map>
     </div>
   );
-}
+}

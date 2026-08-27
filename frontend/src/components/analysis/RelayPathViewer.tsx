@@ -1,85 +1,50 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { RelayHop } from '@/types/analysis';
+import { RelayHopNode } from '@/components/forensics/RelayHopNode';
+import { Route, Layers } from 'lucide-react';
 
-interface RelayHop {
-  hop_number: number;
-  from_host: string;
-  by_host: string;
-  ip: string;
-  timestamp: string;
-  protocol: string;
-  delay_seconds: number;
-  is_private: boolean;
-  infrastructure_type: string;
-  anomalies: any[];
+export interface RelayPathViewerProps {
+  hops: RelayHop[];
 }
 
-export function RelayPathViewer({ hops }: { hops: RelayHop[] }) {
+export function RelayPathViewer({ hops }: RelayPathViewerProps) {
+  if (!hops || hops.length === 0) {
+    return (
+      <div className="panel p-8 text-center text-muted-foreground">
+        <Route className="size-8 mx-auto opacity-40 mb-2" />
+        <p className="text-sm font-medium text-foreground">No relay path data recorded</p>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Header transmission trace was not available in this message.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Relay Path ({hops.length} Hops)</CardTitle>
-      </CardHeader>
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h3 className="text-sm font-semibold tracking-tight text-foreground flex items-center gap-2">
+            <Layers className="size-4 text-primary" />
+            Transmission Hop Sequence ({hops.length} {hops.length === 1 ? 'Hop' : 'Hops'})
+          </h3>
+          <p className="label-mono text-[10px] mt-0.5">CHRONOLOGICAL MTA RELAY ROUTING LEDGER</p>
+        </div>
+      </div>
 
-      <CardContent>
-        {hops.map((hop, index) => {
-          const isPrivate = hop.is_private;
-          const infraClass = isPrivate
-            ? "bg-gray-100 text-gray-800"
-            : hop.infrastructure_type === "known_vpn"
-              ? "bg-red-100 text-red-800"
-              : hop.infrastructure_type === "aws_cloud"
-                ? "bg-orange-100 text-orange-800"
-                : "bg-green-100 text-green-800";
-
-          const delayStr = hop.delay_seconds > 0
-            ? `─── ${hop.delay_seconds.toFixed(1)}s delay`
-            : "";
-
-          const anomalyBads = hop.anomalies
-            .filter((a) => a.severity === "critical" || a.severity === "warning")
-            .map((a) => (
-              <span key={a.type} className="text-red-600 text-xs font-medium">
-                {a.type}
-              </span>
-            ));
-
-          return (
-            <div key={index} className="flex items-start gap-4 pb-4 border-b last:border-0">
-              <span className="font-medium text-sm flex-1">
-                {index + 1}├─ {hop.by_host || hop.ip}
-              </span>
-
-              <Badge
-                variant="outline"
-                className={infraClass}
-              >
-                {hop.infrastructure_type || "unknown"}
-              </Badge>
-
-              <span className="text-xs text-muted-foreground ml-2">
-                {hop.timestamp}
-              </span>
-
-              {delayStr && (
-                <span className="text-xs ml-2 text-muted-foreground">
-                  {delayStr}
-                </span>
-              )}
-
-              <span className="text-xs text-gray-500 ml-auto">
-                {hop.ip}
-              </span>
-
-              {anomalyBads.length > 0 && (
-                <div className="ml-4 text-right">
-                  {anomalyBads}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </CardContent>
-    </Card>
+      <div className="space-y-3">
+        {hops.map((hop, index) => (
+          <RelayHopNode
+            key={index}
+            hop={hop}
+            index={index}
+            totalHops={hops.length}
+            isOrigin={index === 0}
+            isDestination={index === hops.length - 1}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
+
+export default RelayPathViewer;

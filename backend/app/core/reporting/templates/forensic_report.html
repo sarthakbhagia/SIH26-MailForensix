@@ -304,7 +304,7 @@
                 </td>
                 <td class="header-meta" style="border: none;">
                     <div><strong>Report ID:</strong> <span class="mono">{{ report_id|default('N/A') }}</span></div>
-                    <div><strong>Generated:</strong> {{ generated_at|default('N/A') }} UTC</div>
+                    <div><strong>Generated:</strong> {{ generated_at|default('N/A') }}</div>
                     <div><strong>Version:</strong> {{ version|default('1.0') }} | <strong>TLP:</strong> AMBER+STRICT</div>
                 </td>
             </tr>
@@ -317,7 +317,7 @@
             <tr>
                 <td style="border: none;">
                     <div class="exec-title">
-                        VERDICT: {{ nlp_classification.label|default('Suspicious')|upper }} ({{ ((nlp_classification.confidence|default(0.0)) * 100)|round(1) }}% Confidence)
+                        VERDICT: {{ nlp_classification.label|default('Suspicious')|upper }} ({{ (nlp_classification.confidence|default(0.0))|round(1) }}% Confidence)
                     </div>
                     <div class="exec-action">
                         <strong>Recommended SOC Action:</strong> {{ threat_assessment.recommended_action|default('Review and monitor') }}
@@ -396,7 +396,7 @@
             <tr>
                 <td><strong>Ensemble Neural Classifier</strong></td>
                 <td><span class="badge {% if nlp_classification.label|lower in ['phishing', 'bec', 'malware'] %}badge-fail{% elif nlp_classification.label|lower == 'suspicious' %}badge-warn{% else %}badge-pass{% endif %}">{{ nlp_classification.label|default('Unknown')|upper }}</span></td>
-                <td><strong>{{ ((nlp_classification.confidence|default(0.0)) * 100)|round(1) }}%</strong></td>
+                <td><strong>{{ (nlp_classification.confidence|default(0.0))|round(1) }}%</strong></td>
                 <td>{{ (nlp_classification.details and nlp_classification.details.indicators)|default('Automated feature extraction') }}</td>
             </tr>
         </table>
@@ -606,7 +606,7 @@
                 <td class="label-col">Attribution Confidence</td>
                 <td colspan="3">
                     {% if attribution.confidence and attribution.confidence > 0 %}
-                        {{ (attribution.confidence * 100)|round(1) }}% Confidence based on infrastructure correlation graph
+                        {{ (attribution.confidence|default(0.0))|round(1) }}% Confidence based on infrastructure correlation graph
                     {% else %}
                         Low Confidence / Emerging Signature
                     {% endif %}
@@ -623,7 +623,11 @@
         <table class="custody-grid">
             <tr>
                 <td style="width: 35%;"><strong>• Initial Ingestion Timestamp:</strong></td>
-                <td>{{ chain_of_custody.ingested_at|default('N/A') }} UTC</td>
+                <td>{{ chain_of_custody.ingested_at|default('N/A') }}</td>
+            </tr>
+            <tr>
+                <td><strong>• Analysis Completed Timestamp:</strong></td>
+                <td>{{ chain_of_custody.analyzed_at|default('N/A') }}</td>
             </tr>
             <tr>
                 <td><strong>• SHA-256 Hash Verification:</strong></td>

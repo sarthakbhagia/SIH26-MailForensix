@@ -1,8 +1,8 @@
 import { X, ExternalLink, ShieldAlert, Globe, Server, Mail, Building, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
 import { GraphNode } from '../../types/graph';
+import { cn } from '../../lib/utils';
 
 interface NodeDetailPanelProps {
   node: GraphNode;
@@ -16,19 +16,19 @@ export default function NodeDetailPanel({
   const getIcon = () => {
     switch (node.type) {
       case 'email':
-        return <Mail className="h-5 w-5 text-blue-400" />;
+        return <Mail className="size-4 text-primary" />;
       case 'domain':
-        return <Globe className="h-5 w-5 text-purple-400" />;
+        return <Globe className="size-4 text-purple-400" />;
       case 'ip':
-        return <Server className="h-5 w-5 text-red-400" />;
+        return <Server className="size-4 text-critical" />;
       case 'asn':
-        return <Building className="h-5 w-5 text-emerald-400" />;
+        return <Building className="size-4 text-clean" />;
       case 'registrar':
-        return <Building className="h-5 w-5 text-amber-400" />;
+        return <Building className="size-4 text-amber-400" />;
       case 'campaign':
-        return <Users className="h-5 w-5 text-pink-400" />;
+        return <Users className="size-4 text-pink-400" />;
       default:
-        return <Globe className="h-5 w-5 text-slate-400" />;
+        return <Globe className="size-4 text-muted-foreground" />;
     }
   };
 
@@ -37,71 +37,77 @@ export default function NodeDetailPanel({
   };
 
   return (
-    <div className="w-80 md:w-96 bg-card/95 backdrop-blur border-l border-border h-full flex flex-col shadow-2xl z-10 animate-in slide-in-from-right duration-200">
+    <div className="w-80 md:w-96 panel h-full flex flex-col shadow-2xl z-10 animate-in slide-in-from-right duration-200 border-l border-border p-0">
       {/* Panel Header */}
-      <div className="p-4 border-b border-border flex items-center justify-between bg-muted/40">
+      <div className="p-3.5 border-b border-border/50 flex items-center justify-between bg-surface-2/60">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="p-1.5 rounded-md bg-background border border-border shrink-0">
+          <div className="p-1.5 rounded bg-surface border border-border shrink-0">
             {getIcon()}
           </div>
           <div className="min-w-0">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-              {node.type} Node
+            <span className="label-mono text-[9px] block">
+              {node.type} NODE
             </span>
-            <h3 className="text-sm font-semibold truncate text-foreground" title={node.label}>
+            <h3 className="text-xs font-bold truncate text-foreground font-mono" title={node.label}>
               {node.label}
             </h3>
           </div>
         </div>
-        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 text-muted-foreground hover:text-foreground">
-          <X className="h-4 w-4" />
+        <Button variant="ghost" size="icon" onClick={onClose} className="h-7 w-7 text-muted-foreground hover:text-foreground">
+          <X className="size-4" />
         </Button>
       </div>
 
       {/* Panel Body */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
+      <div className="flex-1 overflow-y-auto p-3.5 space-y-3.5 text-xs">
         {/* Risk Score Banner */}
         {node.risk_score !== undefined && node.risk_score !== null && (
-          <div className="flex items-center justify-between p-3 rounded-lg bg-background border border-border">
+          <div className="flex items-center justify-between p-2.5 rounded bg-surface border border-border">
             <div className="flex items-center gap-2 text-muted-foreground">
-              <ShieldAlert className="h-4 w-4 text-amber-500" />
-              <span className="font-medium">Threat Risk Score</span>
+              <ShieldAlert className="size-3.5 text-medium" />
+              <span className="label-mono text-[10px]">THREAT RISK SCORE</span>
             </div>
-            <Badge
-              variant={node.risk_score >= 80 ? 'destructive' : node.risk_score >= 50 ? 'outline' : 'secondary'}
-              className="text-xs font-bold px-2 py-0.5"
+            <span
+              className={cn(
+                'font-mono text-xs font-bold px-2 py-0.5 rounded border',
+                node.risk_score >= 75
+                  ? 'bg-critical/15 text-critical border-critical/30'
+                  : node.risk_score >= 50
+                  ? 'bg-high/15 text-high border-high/30'
+                  : 'bg-clean/15 text-clean border-clean/30'
+              )}
             >
               {Math.round(node.risk_score)} / 100
-            </Badge>
+            </span>
           </div>
         )}
 
         {/* Email Node Details */}
         {node.type === 'email' && (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             <div>
-              <span className="text-muted-foreground block text-[11px] mb-1">Subject</span>
-              <p className="font-medium text-foreground bg-background p-2.5 rounded border border-border/60">
+              <span className="label-mono text-[9px] block mb-1">SUBJECT</span>
+              <p className="font-medium text-foreground bg-surface p-2.5 rounded border border-border text-xs">
                 {node.subject || node.label}
               </p>
             </div>
             <div>
-              <span className="text-muted-foreground block text-[11px] mb-1">Sender</span>
-              <p className="font-mono text-[11px] text-foreground bg-background p-2 rounded border border-border/60 break-all">
+              <span className="label-mono text-[9px] block mb-1">SENDER</span>
+              <p className="font-mono text-xs text-foreground bg-surface p-2 rounded border border-border break-all">
                 {node.sender || 'Unknown'}
               </p>
             </div>
             {node.analyzed_at && (
               <div>
-                <span className="text-muted-foreground block text-[11px] mb-1">Analyzed At</span>
-                <p className="text-foreground">{new Date(node.analyzed_at).toLocaleString()}</p>
+                <span className="label-mono text-[9px] block mb-1">ANALYZED AT</span>
+                <p className="text-foreground font-mono text-xs">{new Date(node.analyzed_at).toLocaleString()}</p>
               </div>
             )}
             <div className="pt-2">
               <Link to={`/emails/${getCleanEmailId(node.id)}`}>
-                <Button className="w-full gap-2 h-9 text-xs" size="sm">
-                  View Full Forensics Analysis
-                  <ExternalLink className="h-3.5 w-3.5" />
+                <Button className="w-full gap-2 h-8 text-xs font-mono font-semibold" size="sm">
+                  VIEW FULL FORENSICS
+                  <ExternalLink className="size-3.5" />
                 </Button>
               </Link>
             </div>
@@ -112,25 +118,25 @@ export default function NodeDetailPanel({
         {node.type === 'ip' && (
           <div className="space-y-2.5">
             <div className="grid grid-cols-2 gap-2">
-              <div className="p-2.5 bg-background rounded border border-border/60">
-                <span className="text-muted-foreground block text-[10px]">Country</span>
-                <span className="font-semibold text-foreground">{node.country || 'Unknown'}</span>
+              <div className="p-2 bg-surface rounded border border-border">
+                <span className="label-mono text-[9px] block">COUNTRY</span>
+                <span className="font-semibold text-foreground text-xs">{node.country || 'Unknown'}</span>
               </div>
-              <div className="p-2.5 bg-background rounded border border-border/60">
-                <span className="text-muted-foreground block text-[10px]">City</span>
-                <span className="font-semibold text-foreground">{node.city || 'Unknown'}</span>
+              <div className="p-2 bg-surface rounded border border-border">
+                <span className="label-mono text-[9px] block">CITY</span>
+                <span className="font-semibold text-foreground text-xs">{node.city || 'Unknown'}</span>
               </div>
             </div>
-            <div className="p-2.5 bg-background rounded border border-border/60">
-              <span className="text-muted-foreground block text-[10px]">ISP / Organization</span>
-              <span className="font-medium text-foreground">{node.isp || 'Unknown'}</span>
+            <div className="p-2 bg-surface rounded border border-border">
+              <span className="label-mono text-[9px] block">ISP / ORGANIZATION</span>
+              <span className="font-mono text-xs text-foreground">{node.isp || 'Unknown'}</span>
             </div>
             {node.infrastructure_type && node.infrastructure_type !== 'unknown' && (
-              <div className="flex items-center justify-between p-2 bg-amber-500/10 border border-amber-500/30 rounded text-amber-400">
-                <span>Infrastructure Type:</span>
-                <Badge variant="outline" className="text-[10px] uppercase font-bold border-amber-500/40 text-amber-400">
+              <div className="flex items-center justify-between p-2 bg-amber-500/10 border border-amber-500/30 rounded text-amber-400 font-mono text-xs">
+                <span>Infrastructure:</span>
+                <span className="uppercase font-bold text-[10px]">
                   {node.infrastructure_type}
-                </Badge>
+                </span>
               </div>
             )}
           </div>
@@ -139,25 +145,25 @@ export default function NodeDetailPanel({
         {/* Domain Node Details */}
         {node.type === 'domain' && (
           <div className="space-y-2.5">
-            <div className="p-2.5 bg-background rounded border border-border/60">
-              <span className="text-muted-foreground block text-[10px]">Domain Name</span>
-              <span className="font-mono font-medium text-foreground">{node.label}</span>
+            <div className="p-2.5 bg-surface rounded border border-border">
+              <span className="label-mono text-[9px] block">DOMAIN NAME</span>
+              <span className="font-mono font-medium text-foreground text-xs">{node.label}</span>
             </div>
-            <div className="p-2.5 bg-background rounded border border-border/60">
-              <span className="text-muted-foreground block text-[10px]">Registrar</span>
-              <span className="font-medium text-foreground">{node.registrar || 'Unknown'}</span>
+            <div className="p-2.5 bg-surface rounded border border-border">
+              <span className="label-mono text-[9px] block">REGISTRAR</span>
+              <span className="font-mono text-xs text-foreground">{node.registrar || 'Unknown'}</span>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <div className="p-2.5 bg-background rounded border border-border/60">
-                <span className="text-muted-foreground block text-[10px]">Domain Age</span>
-                <span className="font-semibold text-foreground">
-                  {node.age_days !== undefined && node.age_days >= 0 ? `${node.age_days} days` : 'Unknown'}
+              <div className="p-2 bg-surface rounded border border-border">
+                <span className="label-mono text-[9px] block">DOMAIN AGE</span>
+                <span className="font-mono text-xs font-semibold text-foreground">
+                  {node.age_days !== undefined && node.age_days >= 0 ? `${node.age_days}d` : 'Unknown'}
                 </span>
               </div>
-              <div className="p-2.5 bg-background rounded border border-border/60">
-                <span className="text-muted-foreground block text-[10px]">Newly Registered</span>
-                <span className={`font-bold ${node.is_newly_registered ? 'text-rose-400' : 'text-emerald-400'}`}>
-                  {node.is_newly_registered ? 'Yes (< 30 days)' : 'No'}
+              <div className="p-2 bg-surface rounded border border-border">
+                <span className="label-mono text-[9px] block">NEWLY REGISTERED</span>
+                <span className={cn('font-mono text-xs font-bold', node.is_newly_registered ? 'text-critical' : 'text-clean')}>
+                  {node.is_newly_registered ? 'YES (< 30d)' : 'NO'}
                 </span>
               </div>
             </div>
@@ -167,13 +173,13 @@ export default function NodeDetailPanel({
         {/* ASN Node Details */}
         {node.type === 'asn' && (
           <div className="space-y-2.5">
-            <div className="p-2.5 bg-background rounded border border-border/60">
-              <span className="text-muted-foreground block text-[10px]">Autonomous System</span>
-              <span className="font-mono font-medium text-foreground">{node.label}</span>
+            <div className="p-2.5 bg-surface rounded border border-border">
+              <span className="label-mono text-[9px] block">AUTONOMOUS SYSTEM</span>
+              <span className="font-mono font-medium text-foreground text-xs">{node.label}</span>
             </div>
-            <div className="p-2.5 bg-background rounded border border-border/60">
-              <span className="text-muted-foreground block text-[10px]">Organization</span>
-              <span className="font-medium text-foreground">{node.org || 'Unknown'}</span>
+            <div className="p-2.5 bg-surface rounded border border-border">
+              <span className="label-mono text-[9px] block">ORGANIZATION</span>
+              <span className="font-medium text-foreground text-xs">{node.org || 'Unknown'}</span>
             </div>
           </div>
         )}
@@ -181,28 +187,28 @@ export default function NodeDetailPanel({
         {/* Campaign Node Details */}
         {node.type === 'campaign' && (
           <div className="space-y-3">
-            <div className="p-3 bg-pink-500/10 border border-pink-500/30 rounded-lg">
-              <span className="text-pink-400 font-bold block text-xs mb-1">
-                Campaign Confidence: {node.confidence || 85}%
+            <div className="p-3 bg-pink-500/10 border border-pink-500/30 rounded">
+              <span className="text-pink-400 font-bold font-mono block text-xs mb-1">
+                CAMPAIGN CONFIDENCE: {node.confidence || 85}%
               </span>
-              <p className="text-slate-300 text-[11px] leading-relaxed">
+              <p className="text-foreground/90 text-xs leading-relaxed">
                 {node.summary || 'Coordinated attack campaign detected across shared threat infrastructure.'}
               </p>
             </div>
 
-            <div className="p-2.5 bg-background rounded border border-border/60">
-              <span className="text-muted-foreground block text-[10px]">Correlated Email Cases</span>
-              <span className="font-bold text-foreground text-sm">{node.email_count || 2} emails linked</span>
+            <div className="p-2.5 bg-surface rounded border border-border">
+              <span className="label-mono text-[9px] block">CORRELATED EMAIL EVIDENCE</span>
+              <span className="font-mono font-bold text-foreground text-xs">{node.email_count || 2} emails linked</span>
             </div>
           </div>
         )}
 
         {/* Raw Attributes Dump for Deep Investigation */}
-        <div className="pt-2 border-t border-border">
-          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block mb-1.5">
-            Node Attributes
+        <div className="pt-2 border-t border-border/50">
+          <span className="label-mono text-[9px] block mb-1.5">
+            NODE METADATA ATTRIBUTES
           </span>
-          <div className="bg-slate-950 p-2.5 rounded border border-border font-mono text-[10px] text-slate-300 max-h-36 overflow-y-auto space-y-1">
+          <div className="bg-background/80 p-2.5 rounded border border-border font-mono text-[10px] text-muted-foreground max-h-36 overflow-y-auto space-y-0.5">
             <div>ID: {node.id}</div>
             <div>Type: {node.type}</div>
             {Object.entries(node)
@@ -218,3 +224,4 @@ export default function NodeDetailPanel({
     </div>
   );
 }
+

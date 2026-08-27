@@ -11,6 +11,7 @@ from app.models.audit_log import AuditLog
 from app.models.email_case import Case, CaseEmail, CaseNote, CaseSeverity, CaseStatus, Email
 from app.schemas.case import CaseCreate, CaseNoteCreate, CaseUpdate
 from app.services.audit_service import AuditService
+from app.core.utils.timezone import to_iso_utc, now_utc
 
 logger = logging.getLogger(__name__)
 
@@ -383,7 +384,7 @@ class CaseService:
         if case.created_at:
             events.append({
                 "type": "case_created",
-                "timestamp": case.created_at.isoformat(),
+                "timestamp": to_iso_utc(case.created_at),
                 "actor": case.assigned_to or "System",
                 "title": f"Case Created: {case.title}",
                 "severity": str(case.severity),
@@ -393,7 +394,7 @@ class CaseService:
         # 2. Linked emails
         emails = await self.get_case_emails(db, cid)
         for email in emails:
-            ts = email.ingested_at.isoformat() if email.ingested_at else case.created_at.isoformat()
+            ts = to_iso_utc(email.ingested_at) if email.ingested_at else to_iso_utc(case.created_at)
             events.append({
                 "type": "email_linked",
                 "timestamp": ts,
@@ -410,7 +411,7 @@ class CaseService:
         # 3. Analyst Notes
         notes = await self.get_case_notes(db, cid)
         for note in notes:
-            ts = note.created_at.isoformat() if note.created_at else case.created_at.isoformat()
+            ts = to_iso_utc(note.created_at) if note.created_at else to_iso_utc(case.created_at)
             events.append({
                 "type": "note_added",
                 "timestamp": ts,
@@ -430,7 +431,7 @@ class CaseService:
         for audit in audit_logs:
             # Avoid duplicate note/link logs if already represented
             if audit.action not in ("case_created", "case_note_added"):
-                ts = audit.timestamp.isoformat() if audit.timestamp else case.created_at.isoformat()
+                ts = to_iso_utc(audit.timestamp) if audit.timestamp else to_iso_utc(case.created_at)
                 events.append({
                     "type": "audit_event",
                     "action": audit.action,

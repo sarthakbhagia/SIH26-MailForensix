@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, Radio, RefreshCw } from 'lucide-react';
+import { AlertTriangle, Radio, RefreshCw, Cpu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 import StatsCards from '@/components/dashboard/StatsCards';
@@ -33,52 +33,59 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto pb-10">
       {/* Top SOC Dashboard Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border/40 pb-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">SOC Command Center</h1>
-            <span className="flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-mono">
-              <Radio className="w-3 h-3 animate-pulse" />
-              Live Telemetry
-            </span>
-          </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Real-time threat monitoring, automated NLP email classification, and incident ledger.
-          </p>
-        </div>
+      <div className="panel relative p-5 overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                <Cpu className="size-5 text-primary" />
+                SOC Command Center
+              </h1>
 
-        <div className="flex items-center gap-3">
-          <div className="text-[11px] text-muted-foreground font-mono hidden md:block">
-            Updated {lastRefreshed.toLocaleTimeString()}
+              <span className="flex items-center gap-1.5 text-[10px] font-mono px-2 py-0.5 rounded border border-primary/30 bg-primary/10 text-primary">
+                <Radio className="size-3 animate-pulse" />
+                LIVE TELEMETRY STREAM
+              </span>
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Real-time threat monitoring, automated NLP email classification, and tactical incident ledger.
+            </p>
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleManualRefresh}
-            disabled={isFetching}
-            className="h-8 text-xs gap-1.5 font-medium border-border/60 bg-card/60 hover:bg-muted/60"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
-            <span>{isFetching ? 'Refreshing...' : 'Refresh'}</span>
-          </Button>
+          <div className="flex items-center gap-3">
+            <div className="label-mono text-[10px] hidden md:block">
+              SYNCED {lastRefreshed.toLocaleTimeString()}
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleManualRefresh}
+              disabled={isFetching}
+              className="h-8 text-xs font-mono gap-1.5 border-border bg-surface hover:bg-muted"
+            >
+              <RefreshCw className={`size-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+              <span>{isFetching ? 'Syncing...' : 'Sync Feed'}</span>
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Error Banner */}
       {isError && (
-        <div className="flex items-center justify-between p-3.5 rounded-xl border border-destructive/40 bg-destructive/10 text-destructive text-xs">
+        <div className="panel p-4 border-critical/40 bg-critical/10 text-critical text-xs flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <AlertTriangle className="size-4 shrink-0" />
             <span>Failed to sync live dashboard statistics with the backend API.</span>
           </div>
           <Button
             variant="outline"
             size="sm"
             onClick={() => refetch()}
-            className="h-7 text-xs border-destructive/40 hover:bg-destructive/20 text-destructive"
+            className="h-7 text-xs font-mono border-critical/40 hover:bg-critical/20 text-critical"
           >
             Retry Connection
           </Button>
@@ -109,5 +116,6 @@ export default function DashboardPage() {
     </div>
   );
 }
+
 
 

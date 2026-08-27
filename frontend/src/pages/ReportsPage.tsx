@@ -10,15 +10,13 @@ import {
   RefreshCw,
   Search,
 } from 'lucide-react';
-
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
 import { EmailSummary } from '@/types/email';
 import ReportPreview from '@/components/reports/ReportPreview';
 import ReportDownload from '@/components/reports/ReportDownload';
+import { cn } from '@/lib/utils';
 
 export default function ReportsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -45,7 +43,6 @@ export default function ReportsPage() {
   // Filter emails based on search query and risk status
   const filteredEmails = useMemo(() => {
     return emails.filter((email) => {
-      // Must be analyzed or have a risk score for report generation
       const matchesSearch =
         searchQuery === '' ||
         (email.subject || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -54,15 +51,9 @@ export default function ReportsPage() {
 
       if (!matchesSearch) return false;
 
-      if (statusFilter === 'critical') {
-        return (email.risk_score || 0) >= 90;
-      }
-      if (statusFilter === 'high') {
-        return (email.risk_score || 0) >= 75 && (email.risk_score || 0) < 90;
-      }
-      if (statusFilter === 'analyzed') {
-        return email.status === 'analyzed';
-      }
+      if (statusFilter === 'critical') return (email.risk_score || 0) >= 90;
+      if (statusFilter === 'high') return (email.risk_score || 0) >= 75 && (email.risk_score || 0) < 90;
+      if (statusFilter === 'analyzed') return email.status === 'analyzed';
       return true;
     });
   }, [emails, searchQuery, statusFilter]);
@@ -88,143 +79,125 @@ export default function ReportsPage() {
   const renderRiskBadge = (score?: number) => {
     if (score === undefined || score === null) {
       return (
-        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+        <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-surface border border-border text-muted-foreground">
           Pending
-        </Badge>
-      );
-    }
-    if (score >= 90) {
-      return (
-        <Badge
-          variant="destructive"
-          className="text-[10px] font-bold px-1.5 py-0 bg-red-500/20 text-red-400 border-red-500/40 uppercase"
-        >
-          Critical ({score.toFixed(0)})
-        </Badge>
+        </span>
       );
     }
     if (score >= 75) {
       return (
-        <Badge
-          variant="secondary"
-          className="text-[10px] font-bold px-1.5 py-0 bg-amber-500/20 text-amber-400 border-amber-500/40 uppercase"
-        >
-          High ({score.toFixed(0)})
-        </Badge>
+        <span className="font-mono text-[9px] font-bold px-1.5 py-0.5 rounded bg-critical/15 text-critical border border-critical/30 uppercase">
+          Risk {score.toFixed(0)}
+        </span>
       );
     }
     if (score >= 50) {
       return (
-        <Badge
-          variant="outline"
-          className="text-[10px] font-bold px-1.5 py-0 bg-yellow-500/20 text-yellow-400 border-yellow-500/40 uppercase"
-        >
-          Medium ({score.toFixed(0)})
-        </Badge>
+        <span className="font-mono text-[9px] font-bold px-1.5 py-0.5 rounded bg-high/15 text-high border border-high/30 uppercase">
+          Risk {score.toFixed(0)}
+        </span>
       );
     }
     return (
-      <Badge
-        variant="outline"
-        className="text-[10px] font-bold px-1.5 py-0 bg-emerald-500/20 text-emerald-400 border-emerald-500/40 uppercase"
-      >
-        Low ({score.toFixed(0)})
-      </Badge>
+      <span className="font-mono text-[9px] font-bold px-1.5 py-0.5 rounded bg-clean/15 text-clean border border-clean/30 uppercase">
+        Risk {score.toFixed(0)}
+      </span>
     );
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 max-w-7xl mx-auto pb-10">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border/40 pb-5">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
-            <FileCheck2 className="w-7 h-7 text-primary" />
-            Forensic Reports & Export
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Generate, preview, and download cryptographically-sealed forensic investigation reports.
-          </p>
-        </div>
-
-        {selectedEmail && (
-          <div className="shrink-0">
-            <ReportDownload
-              emailId={selectedEmail.id}
-              emailSubject={selectedEmail.subject}
-            />
+      <div className="panel p-5">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
+              <FileCheck2 className="size-5 text-primary" />
+              Forensic Reports & Dossier Export
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Generate, preview, and download cryptographically-sealed forensic investigation reports.
+            </p>
           </div>
-        )}
+
+          {selectedEmail && (
+            <div className="shrink-0">
+              <ReportDownload
+                emailId={selectedEmail.id}
+                emailSubject={selectedEmail.subject}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Main 2-Column Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Left Sidebar: Email Evidence Selector */}
-        <Card className="lg:col-span-4 flex flex-col bg-card/60 backdrop-blur-md border border-border/60 shadow-sm h-[calc(100vh-210px)] min-h-[580px]">
-          <CardHeader className="p-4 pb-3 border-b border-border/40 shrink-0 space-y-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Mail className="w-4 h-4 text-primary" />
-                Analyzed Evidence ({filteredEmails.length})
-              </CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => refetchEmails()}
-                className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-                title="Refresh email list"
+        <div className="panel lg:col-span-4 flex flex-col h-[calc(100vh-210px)] min-h-[580px] p-3 space-y-2.5">
+          <div className="flex items-center justify-between border-b border-border/50 pb-2">
+            <span className="label-mono font-semibold flex items-center gap-1.5">
+              <Mail className="size-3.5 text-primary" />
+              Evidence Ledger ({filteredEmails.length})
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => refetchEmails()}
+              className="size-6 p-0 text-muted-foreground hover:text-foreground"
+              title="Refresh email list"
+            >
+              <RefreshCw className={`size-3 ${isEmailsLoading ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2 size-3 text-muted-foreground" />
+            <Input
+              placeholder="Search sender, subject..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-7 pl-7 text-xs font-mono bg-background/50 border-border/60"
+            />
+          </div>
+
+          {/* Filter Pills */}
+          <div className="flex items-center gap-1 overflow-x-auto pb-0.5 scrollbar-none">
+            {(['all', 'critical', 'high', 'analyzed'] as const).map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setStatusFilter(filter)}
+                className={cn(
+                  'text-[10px] font-mono font-semibold px-2 py-0.5 rounded capitalize transition-colors whitespace-nowrap border',
+                  statusFilter === filter
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-surface text-muted-foreground border-border/50 hover:bg-muted'
+                )}
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${isEmailsLoading ? 'animate-spin' : ''}`} />
-              </Button>
-            </div>
-
-            {/* Search Bar */}
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                placeholder="Search sender, subject..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-8 pl-8 text-xs bg-background/50 border-border/60"
-              />
-            </div>
-
-            {/* Filter Pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-              {(['all', 'critical', 'high', 'analyzed'] as const).map((filter) => (
-                <button
-                  key={filter}
-                  onClick={() => setStatusFilter(filter)}
-                  className={`text-[11px] font-medium px-2.5 py-1 rounded-full border transition-colors capitalize whitespace-nowrap ${
-                    statusFilter === filter
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-background/40 text-muted-foreground border-border/50 hover:bg-muted'
-                  }`}
-                >
-                  {filter}
-                </button>
-              ))}
-            </div>
-          </CardHeader>
+                {filter}
+              </button>
+            ))}
+          </div>
 
           {/* Email List */}
-          <CardContent className="p-2 flex-1 overflow-y-auto space-y-1.5 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+          <div className="flex-1 overflow-y-auto space-y-1.5 pr-1">
             {isEmailsLoading && (
               <div className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
-                <Loader2 className="w-6 h-6 animate-spin text-primary mb-2" />
-                <span className="text-xs">Loading email records...</span>
+                <Loader2 className="size-5 animate-spin text-primary mb-2" />
+                <span className="label-mono text-[10px]">LOADING EVIDENCE ARTIFACTS...</span>
               </div>
             )}
 
             {!isEmailsLoading && isEmailsError && (
-              <div className="p-4 text-center text-xs text-amber-400">
+              <div className="p-4 text-center text-xs text-medium">
                 Failed to load email records.
               </div>
             )}
 
             {!isEmailsLoading && !isEmailsError && filteredEmails.length === 0 && (
               <div className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
-                <FileSearch className="w-8 h-8 opacity-50 mb-2" />
+                <FileSearch className="size-8 opacity-40 mb-2" />
                 <p className="text-xs font-medium text-foreground">No matching emails found</p>
                 <p className="text-[11px] text-muted-foreground mt-1">
                   Try adjusting your search query or filter.
@@ -240,22 +213,23 @@ export default function ReportsPage() {
                   <div
                     key={email.id}
                     onClick={() => handleSelectEmail(email.id)}
-                    className={`p-3 rounded-lg border transition-all cursor-pointer ${
+                    className={cn(
+                      'p-2.5 rounded border transition-all cursor-pointer text-xs space-y-1',
                       isSelected
-                        ? 'border-primary/80 bg-primary/10 shadow-sm ring-1 ring-primary/40'
-                        : 'border-border/40 bg-background/30 hover:bg-muted/40 hover:border-border/80'
-                    }`}
+                        ? 'border-primary/80 bg-primary/10 shadow-glow'
+                        : 'border-border/50 bg-surface/40 hover:bg-surface hover:border-border'
+                    )}
                   >
-                    <div className="flex items-start justify-between gap-2 mb-1">
-                      <p className="text-xs font-semibold text-foreground truncate max-w-[200px]">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-semibold text-foreground truncate max-w-[200px]">
                         {email.subject || 'No Subject'}
                       </p>
                       {renderRiskBadge(email.risk_score)}
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px] text-muted-foreground mt-1.5">
-                      <span className="truncate max-w-[150px]">{email.sender}</span>
-                      <span className="shrink-0 text-[10px]">
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono mt-1">
+                      <span className="truncate max-w-[140px]">{email.sender}</span>
+                      <span className="shrink-0">
                         {email.ingested_at
                           ? formatDistanceToNow(new Date(email.ingested_at), { addSuffix: true })
                           : 'recent'}
@@ -264,8 +238,8 @@ export default function ReportsPage() {
                   </div>
                 );
               })}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Right Area: Interactive Report Preview */}
         <div className="lg:col-span-8 h-[calc(100vh-210px)] min-h-[580px]">
@@ -278,4 +252,5 @@ export default function ReportsPage() {
     </div>
   );
 }
+
 

@@ -11,12 +11,21 @@ declare const config: {
             };
         };
         extend: {
+            fontFamily: {
+                sans: [string, string, string, string];
+                mono: [string, string, string, string];
+            };
             colors: {
                 border: string;
                 input: string;
                 ring: string;
                 background: string;
                 foreground: string;
+                surface: {
+                    DEFAULT: string;
+                    2: string;
+                };
+                grid: string;
                 primary: {
                     DEFAULT: string;
                     foreground: string;
@@ -45,12 +54,24 @@ declare const config: {
                     DEFAULT: string;
                     foreground: string;
                 };
+                critical: {
+                    DEFAULT: string;
+                    foreground: string;
+                };
+                high: string;
+                medium: string;
+                low: string;
+                clean: string;
                 severity: {
                     critical: string;
                     high: string;
                     medium: string;
                     low: string;
                 };
+            };
+            boxShadow: {
+                panel: string;
+                glow: string;
             };
             borderRadius: {
                 lg: string;

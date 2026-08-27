@@ -109,8 +109,8 @@ async def test_pipeline_phishing_triggers_alert():
 
     mock_nlp = NLPClassificationResult(
         label="Phishing",
-        confidence=0.98,
-        probabilities={"Phishing": 0.98, "Legitimate": 0.01, "Suspicious": 0.01},
+        confidence=98.0,
+        probabilities={"Phishing": 98.0, "Legitimate": 1.0, "Suspicious": 1.0},
         urgency_score=85.0,
         bec_indicators=[],
         impersonation_signals=["lookalike_domain"],
@@ -229,8 +229,8 @@ async def test_pipeline_legitimate_no_alert():
 
     mock_nlp = NLPClassificationResult(
         label="Legitimate",
-        confidence=0.99,
-        probabilities={"Legitimate": 0.99, "Phishing": 0.0, "Suspicious": 0.01},
+        confidence=99.0,
+        probabilities={"Legitimate": 99.0, "Phishing": 0.0, "Suspicious": 1.0},
         urgency_score=0.0,
         bec_indicators=[],
         impersonation_signals=[],
@@ -301,7 +301,7 @@ async def test_pipeline_alert_or_audit_failure_resilience():
         auth_confidence_score=0.0,
     )
     mock_geo = GeoIntelResult(originating_ip="1.2.3.4", geo_locations=[], domain_intel=None, infrastructure_flags=[], location_confidence="low", ip_reputation_score=50.0)
-    mock_nlp = NLPClassificationResult(label="Phishing", confidence=0.9, probabilities={}, urgency_score=50.0, bec_indicators=[], impersonation_signals=[], contributing_factors=[])
+    mock_nlp = NLPClassificationResult(label="Phishing", confidence=90.0, probabilities={"Phishing": 90.0}, urgency_score=50.0, bec_indicators=[], impersonation_signals=[], contributing_factors=[])
     mock_link = LinkAnalysisResult(urls_analyzed=0, url_results=[], overall_link_risk=0.0, phishing_urls_found=0, suspicious_urls_found=0)
     mock_att = AttachmentAnalysisReport(total_attachments=0, results=[], overall_attachment_risk=0.0)
 

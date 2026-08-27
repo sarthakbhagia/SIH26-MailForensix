@@ -1,67 +1,86 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
+import { cn } from '@/lib/utils';
+import { BarChart3 } from 'lucide-react';
 
-interface RiskFactor {
+export interface RiskFactor {
   name: string;
   score: number;
-  percentage: number;
-  color: string;
+  percentage?: number;
+  color?: string;
 }
 
-interface RiskBreakdownProps {
+export interface RiskBreakdownProps {
   overallScore: number;
   factors?: RiskFactor[];
+  breakdownMap?: Record<string, number | { raw_score?: number; weight?: number }>;
 }
 
-export function RiskBreakdown({ overallScore, factors }: RiskBreakdownProps) {
-  const defaultFactors: RiskFactor[] = [
-    { name: "NLP Threat Score", score: 72, percentage: 35, color: "#3b82f6" },
-    { name: "Auth Confidence", score: 85, percentage: 25, color: "#10b981" },
-    { name: "IP Reputation", score: 60, percentage: 20, color: "#f59e0b" },
-    { name: "Link Risk", score: 95, percentage: 10, color: "#8b5cf6" },
-    { name: "Attachment Risk", score: 30, percentage: 10, color: "#ec4899" },
-  ];
+export function RiskBreakdown({ overallScore, factors, breakdownMap }: RiskBreakdownProps) {
+  let renderedFactors: RiskFactor[] = [];
 
-  const renderedFactors = factors || defaultFactors;
+  if (breakdownMap && Object.keys(breakdownMap).length > 0) {
+    renderedFactors = Object.entries(breakdownMap).map(([key, val]) => {
+      const score = typeof val === 'number' ? val : val?.raw_score ?? 0;
+      const formattedName = key
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+      return {
+        name: formattedName,
+        score: Math.min(100, Math.max(0, Math.round(score))),
+      };
+    });
+  } else if (factors && factors.length > 0) {
+    renderedFactors = factors;
+  } else {
+    renderedFactors = [];
+  }
 
-  const getColor = (factor: RiskFactor) => {
-    if (factor.score >= 75) return "#ef4444";
-    if (factor.score >= 50) return "#f59e0b";
-    return "#22c55e";
+  const getScoreColor = (score: number) => {
+    if (score >= 75) return { text: 'text-critical', bar: 'bg-critical', stroke: 'var(--critical)' };
+    if (score >= 50) return { text: 'text-high', bar: 'bg-high', stroke: 'var(--high)' };
+    if (score >= 25) return { text: 'text-medium', bar: 'bg-medium', stroke: 'var(--medium)' };
+    return { text: 'text-clean', bar: 'bg-clean', stroke: 'var(--clean)' };
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          Overall Risk Score: {overallScore}/100{" "}
-          {overallScore >= 75 ? "🔴 HIGH" : overallScore >= 50 ? "🟡 MEDIUM" : "🟢 LOW"}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="h-64 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={renderedFactors}
-              margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
-            >
-              <XAxis dataKey="name" height={30} tick={{ fontSize: 12 }} />
-              <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
-              <Tooltip />
-              <Legend verticalAlign="bottom" height={36} />
-              {renderedFactors.map((factor, index) => (
-                <Bar
-                  key={index}
-                  dataKey="score"
-                  name={factor.name}
-                  fill={getColor(factor)}
-                  barSize={24}
-                />
-              ))}
-            </BarChart>
-          </ResponsiveContainer>
+    <div className="panel p-5 space-y-4">
+      <div className="flex items-center justify-between border-b border-border/50 pb-3">
+        <div className="flex items-center gap-2">
+          <BarChart3 className="size-4 text-primary" />
+          <h3 className="text-sm font-semibold tracking-tight text-foreground">Risk Vector Assessment</h3>
         </div>
-      </CardContent>
-    </Card>
+        <div className="flex items-center gap-2">
+          <span className="label-mono text-[10px]">COMPOSITE</span>
+          <span className="font-mono text-sm font-bold text-primary">{overallScore}/100</span>
+        </div>
+      </div>
+
+      <div className="space-y-3 pt-1">
+        {renderedFactors.length === 0 ? (
+          <div className="text-center py-4 text-xs font-mono text-muted-foreground">
+            No anomalous risk vector factors detected.
+          </div>
+        ) : (
+          renderedFactors.map((factor, idx) => {
+            const color = getScoreColor(factor.score);
+            return (
+              <div key={idx} className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <span className="text-foreground/90 font-medium">{factor.name}</span>
+                  <span className={cn('font-bold', color.text)}>{factor.score}%</span>
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-surface-2 overflow-hidden border border-border/40">
+                  <div
+                    className={cn('h-full rounded-full transition-all duration-700', color.bar)}
+                    style={{ width: `${factor.score}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
   );
 }
+
+export default RiskBreakdown;

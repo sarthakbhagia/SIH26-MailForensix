@@ -6,9 +6,9 @@ import AttributionGraph from '../components/graph/AttributionGraph';
 import GraphControls from '../components/graph/GraphControls';
 import NodeDetailPanel from '../components/graph/NodeDetailPanel';
 import CampaignCanvas from '../components/graph/CampaignCanvas';
-import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { GraphNode, GraphLink, GraphFilters, GraphNodeType } from '../types/graph';
+import { cn } from '../lib/utils';
 
 const defaultFilters: GraphFilters = {
   searchQuery: '',
@@ -142,106 +142,108 @@ export default function AttributionGraphPage() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-5.5rem)] space-y-3">
+    <div className="flex flex-col h-[calc(100vh-5.5rem)] space-y-3 max-w-7xl mx-auto pb-6">
       {/* Header & Stats Badges */}
-      <div className="flex flex-wrap items-center justify-between gap-4 shrink-0">
+      <div className="panel p-4 flex flex-wrap items-center justify-between gap-4 shrink-0">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <Share2 className="h-6 w-6 text-primary" />
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Share2 className="size-5 text-primary" />
             Threat Attribution Graph
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Cross-email correlation engine detecting shared infrastructure, relays, and campaign clusters
+            Cross-email correlation engine detecting shared infrastructure, relays, and campaign clusters.
           </p>
         </div>
 
         {/* View Toggle Tabs */}
-        <div className="flex items-center gap-2 bg-muted/60 p-1 rounded-lg border border-border">
+        <div className="flex items-center gap-1.5 bg-surface-2 p-1 rounded border border-border">
           <button
             onClick={() => setActiveTab('graph')}
-            className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all ${
-              activeTab === 'graph' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-            }`}
+            className={cn(
+              'px-3 py-1 rounded text-xs font-mono font-semibold flex items-center gap-1.5 transition-all',
+              activeTab === 'graph' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+            )}
           >
-            <Network className="h-3.5 w-3.5" />
-            Attribution Graph
+            <Network className="size-3.5" />
+            ATTRIBUTION GRAPH
           </button>
           <button
             onClick={() => setActiveTab('campaigns')}
-            className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all ${
-              activeTab === 'campaigns' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-            }`}
+            className={cn(
+              'px-3 py-1 rounded text-xs font-mono font-semibold flex items-center gap-1.5 transition-all',
+              activeTab === 'campaigns' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+            )}
           >
-            <Users className="h-3.5 w-3.5" />
-            Campaign Canvas ({campaigns.length})
+            <Users className="size-3.5" />
+            CAMPAIGN CLUSTERS ({campaigns.length})
           </button>
         </div>
       </div>
 
       {/* Stats Summary Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 shrink-0">
-        <Card className="p-2.5 flex items-center gap-3 border-border bg-card/60">
-          <div className="p-2 rounded-md bg-blue-500/10 text-blue-400">
-            <Network className="h-4 w-4" />
+        <div className="panel p-3 flex items-center gap-3">
+          <div className="p-2 rounded bg-primary/10 text-primary border border-primary/20">
+            <Network className="size-4" />
           </div>
           <div>
-            <span className="text-[10px] uppercase font-bold text-muted-foreground block">Entities</span>
-            <span className="text-base font-bold text-foreground">{stats.node_count}</span>
+            <span className="label-mono text-[9px] block">TOTAL ENTITIES</span>
+            <span className="text-base font-bold font-mono text-foreground">{stats.node_count}</span>
           </div>
-        </Card>
+        </div>
 
-        <Card className="p-2.5 flex items-center gap-3 border-border bg-card/60">
-          <div className="p-2 rounded-md bg-purple-500/10 text-purple-400">
-            <Share2 className="h-4 w-4" />
+        <div className="panel p-3 flex items-center gap-3">
+          <div className="p-2 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">
+            <Share2 className="size-4" />
           </div>
           <div>
-            <span className="text-[10px] uppercase font-bold text-muted-foreground block">Connections</span>
-            <span className="text-base font-bold text-foreground">{stats.edge_count}</span>
+            <span className="label-mono text-[9px] block">CORRELATION EDGES</span>
+            <span className="text-base font-bold font-mono text-foreground">{stats.edge_count}</span>
           </div>
-        </Card>
+        </div>
 
-        <Card className="p-2.5 flex items-center gap-3 border-border bg-card/60">
-          <div className="p-2 rounded-md bg-emerald-500/10 text-emerald-400">
-            <Layers className="h-4 w-4" />
+        <div className="panel p-3 flex items-center gap-3">
+          <div className="p-2 rounded bg-clean/10 text-clean border border-clean/20">
+            <Layers className="size-4" />
           </div>
           <div>
-            <span className="text-[10px] uppercase font-bold text-muted-foreground block">Analyzed Emails</span>
-            <span className="text-base font-bold text-foreground">{stats.email_count}</span>
+            <span className="label-mono text-[9px] block">ANALYZED EVIDENCE</span>
+            <span className="text-base font-bold font-mono text-foreground">{stats.email_count}</span>
           </div>
-        </Card>
+        </div>
 
-        <Card className="p-2.5 flex items-center gap-3 border-border bg-card/60">
-          <div className="p-2 rounded-md bg-pink-500/10 text-pink-400">
-            <Users className="h-4 w-4" />
+        <div className="panel p-3 flex items-center gap-3">
+          <div className="p-2 rounded bg-pink-500/10 text-pink-400 border border-pink-500/20">
+            <Users className="size-4" />
           </div>
           <div>
-            <span className="text-[10px] uppercase font-bold text-muted-foreground block">Campaigns</span>
-            <span className="text-base font-bold text-foreground">{stats.campaign_count}</span>
+            <span className="label-mono text-[9px] block">ATTRIBUTION CAMPAIGNS</span>
+            <span className="text-base font-bold font-mono text-foreground">{stats.campaign_count}</span>
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* Main Content Area */}
       {isLoading ? (
-        <div className="flex-1 flex flex-col items-center justify-center p-12 bg-card border border-border rounded-lg">
-          <RefreshCw className="h-8 w-8 text-primary animate-spin mb-3" />
-          <p className="text-sm font-medium text-foreground">Loading Attribution Graph...</p>
-          <p className="text-xs text-muted-foreground mt-1">Extracting forensic nodes and campaign relationships</p>
+        <div className="panel flex-1 flex flex-col items-center justify-center p-12 text-center">
+          <RefreshCw className="size-8 text-primary animate-spin mb-3" />
+          <p className="text-sm font-semibold text-foreground">Extracting Graph Topology...</p>
+          <p className="label-mono text-[10px] text-muted-foreground mt-1">Cross-referencing IOCs and relay nodes</p>
         </div>
       ) : isError ? (
-        <div className="flex-1 flex flex-col items-center justify-center p-12 bg-card border border-destructive/40 rounded-lg text-center">
-          <AlertCircle className="h-10 w-10 text-destructive mb-3" />
+        <div className="panel flex-1 flex flex-col items-center justify-center p-12 text-center border-critical/40">
+          <AlertCircle className="size-10 text-critical mb-3" />
           <h3 className="text-base font-semibold text-foreground">Failed to Load Graph</h3>
           <p className="text-xs text-muted-foreground max-w-sm mt-1 mb-4">
             {error instanceof Error ? error.message : 'An unexpected error occurred while communicating with the server.'}
           </p>
-          <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2 text-xs">
-            <RefreshCw className="h-3.5 w-3.5" />
+          <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2 text-xs font-mono border-border">
+            <RefreshCw className="size-3.5" />
             Retry
           </Button>
         </div>
       ) : activeTab === 'campaigns' ? (
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto pr-1">
           <CampaignCanvas campaigns={campaigns} onSelectCampaign={handleSelectCampaignFromCanvas} />
         </div>
       ) : (
@@ -273,3 +275,4 @@ export default function AttributionGraphPage() {
     </div>
   );
 }
+

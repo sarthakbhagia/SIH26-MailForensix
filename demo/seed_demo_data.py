@@ -29,6 +29,7 @@ from app.services.case_service import CaseService
 from app.services.audit_service import AuditService
 from app.core.reporting.report_generator import ReportGenerator
 from app.schemas.case import CaseCreate, CaseNoteCreate
+from app.core.utils.timezone import now_utc, format_ist
 
 SAMPLE_DIR = BASE_DIR / "sample_emails"
 REPORTS_DIR = BASE_DIR / "demo" / "reports"
@@ -124,7 +125,7 @@ async def seed_demo():
                 risk_score=78.0,
                 contributing_factors=["Tor Relay Hop 185.220.101.5", "Lookalike Domain paypa1-security-login.xyz", "SPF/DKIM Authentication Failures"],
                 acknowledged=False,
-                created_at=datetime.now(timezone.utc).replace(tzinfo=None),
+                created_at=now_utc().replace(tzinfo=None),
             )
             session.add(alert1)
         if phish2_uuid:
@@ -135,7 +136,7 @@ async def seed_demo():
                 risk_score=75.0,
                 contributing_factors=["Shared Campaign Infrastructure", "Lookalike Domain", "SPF Failures"],
                 acknowledged=False,
-                created_at=datetime.now(timezone.utc).replace(tzinfo=None),
+                created_at=now_utc().replace(tzinfo=None),
             )
             session.add(alert2)
         await session.commit()
@@ -145,7 +146,7 @@ async def seed_demo():
         print(f"  [ALERTS] Total Active Alerts Generated: {len(alerts)}")
         for a in alerts:
             sev_str = a.severity.value if hasattr(a.severity, "value") else str(a.severity)
-            print(f"    - [{sev_str.upper()}] {a.message} (Risk: {a.risk_score:.0f}, Email: {a.email_id})")
+            print(f"    - [{sev_str.upper()}] {a.message} (Risk: {a.risk_score:.0f}, Created: {format_ist(a.created_at)})")
 
     print("\n[STEP 3/6] Creating Structured Investigation Cases...")
     case1_id = None

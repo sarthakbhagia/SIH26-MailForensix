@@ -3,7 +3,6 @@ import { formatDistanceToNow } from 'date-fns';
 import { AlertCircle, Loader2, MessageSquare, Plus, Send, User } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useAddCaseNote, useCaseNotes } from '@/hooks/useCases';
 
@@ -42,20 +41,20 @@ export default function CaseNotes({ caseId }: CaseNotesProps) {
   return (
     <div className="space-y-4">
       {/* Add Note Form */}
-      <Card className="bg-card/70 border-border/60 shadow-sm overflow-hidden">
-        <form onSubmit={handleAddNote} className="p-4 space-y-3">
+      <div className="panel p-4 space-y-3">
+        <form onSubmit={handleAddNote} className="space-y-3">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-              <Plus className="w-3.5 h-3.5 text-primary" />
-              Add Investigation Note
+            <h4 className="label-mono font-bold flex items-center gap-1.5 text-foreground">
+              <Plus className="size-3.5 text-primary" />
+              ADD INVESTIGATION NOTE
             </h4>
             <div className="flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5 text-muted-foreground" />
+              <User className="size-3.5 text-muted-foreground" />
               <Input
                 value={author}
                 onChange={(e) => setAuthor(e.target.value)}
                 placeholder="Author name"
-                className="h-7 text-xs w-36 bg-background/60 border-border/60"
+                className="h-7 text-xs font-mono w-36 bg-background/60 border-border"
               />
             </div>
           </div>
@@ -65,12 +64,12 @@ export default function CaseNotes({ caseId }: CaseNotesProps) {
             onChange={(e) => setContent(e.target.value)}
             placeholder="Record technical findings, evidence correlations, adversary tactics, or remediation steps..."
             rows={3}
-            className="w-full text-xs rounded-md bg-background/60 border border-border/60 p-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-all resize-y"
+            className="w-full text-xs rounded bg-background/60 border border-border p-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-all resize-y font-mono"
           />
 
           {errorMsg && (
-            <div className="flex items-center gap-1.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-md p-2">
-              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+            <div className="flex items-center gap-1.5 text-xs text-critical bg-critical/10 border border-critical/20 rounded p-2 font-mono">
+              <AlertCircle className="size-3.5 shrink-0" />
               <span>{errorMsg}</span>
             </div>
           )}
@@ -80,30 +79,30 @@ export default function CaseNotes({ caseId }: CaseNotesProps) {
               type="submit"
               size="sm"
               disabled={!content.trim() || addNoteMutation.isPending}
-              className="h-8 text-xs px-3 gap-1.5 font-medium"
+              className="h-8 text-xs font-mono font-bold px-3 gap-1.5"
             >
               {addNoteMutation.isPending ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <Loader2 className="size-3.5 animate-spin" />
               ) : (
-                <Send className="w-3.5 h-3.5" />
+                <Send className="size-3.5" />
               )}
-              <span>Post Note</span>
+              <span>POST NOTE</span>
             </Button>
           </div>
         </form>
-      </Card>
+      </div>
 
       {/* Notes List */}
       <div className="space-y-2.5">
         {isLoading && (
-          <div className="flex flex-col items-center justify-center p-8 text-muted-foreground gap-2">
-            <Loader2 className="w-6 h-6 animate-spin text-primary" />
-            <span className="text-xs">Loading case notes...</span>
+          <div className="panel flex flex-col items-center justify-center p-8 text-muted-foreground gap-2">
+            <Loader2 className="size-6 animate-spin text-primary" />
+            <span className="label-mono text-[10px]">FETCHING CASE NOTES...</span>
           </div>
         )}
 
         {!isLoading && isError && (
-          <div className="p-4 text-center text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+          <div className="panel p-4 text-center text-xs text-medium border-medium/30">
             Failed to load notes.{' '}
             <button onClick={() => refetch()} className="underline font-semibold ml-1">
               Retry
@@ -112,48 +111,47 @@ export default function CaseNotes({ caseId }: CaseNotesProps) {
         )}
 
         {!isLoading && !isError && (!notes || notes.length === 0) && (
-          <Card className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground border-dashed bg-card/30">
-            <MessageSquare className="w-8 h-8 opacity-40 mb-2 text-muted-foreground" />
+          <div className="panel flex flex-col items-center justify-center p-8 text-center text-muted-foreground border-dashed">
+            <MessageSquare className="size-8 opacity-40 mb-2 text-muted-foreground" />
             <p className="text-xs font-medium text-foreground">No notes posted yet</p>
             <p className="text-[11px] text-muted-foreground mt-0.5 max-w-xs">
               Record analyst remarks, adversary insights, and containment steps above.
             </p>
-          </Card>
+          </div>
         )}
 
         {!isLoading &&
           !isError &&
           notes &&
           notes.map((note) => (
-            <Card
+            <div
               key={note.id}
-              className="bg-card/50 border-border/50 shadow-sm hover:border-border/80 transition-colors"
+              className="panel p-3.5 space-y-2"
             >
-              <CardContent className="p-3.5 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-primary" />
-                      {note.author}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded font-mono">
-                      Analyst
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground font-mono">
-                    {note.created_at
-                      ? formatDistanceToNow(new Date(note.created_at), { addSuffix: true })
-                      : 'recently'}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                    <span className="size-1.5 rounded-full bg-primary" />
+                    {note.author}
+                  </span>
+                  <span className="label-mono text-[9px] bg-surface px-1.5 py-0.5 rounded border border-border">
+                    Analyst
                   </span>
                 </div>
+                <span className="text-[10px] text-muted-foreground font-mono">
+                  {note.created_at
+                    ? formatDistanceToNow(new Date(note.created_at), { addSuffix: true })
+                    : 'recently'}
+                </span>
+              </div>
 
-                <p className="text-xs text-foreground/90 whitespace-pre-wrap leading-relaxed font-sans pl-3.5 border-l-2 border-primary/40">
-                  {note.content}
-                </p>
-              </CardContent>
-            </Card>
+              <p className="text-xs text-foreground/90 whitespace-pre-wrap leading-relaxed font-mono pl-3 border-l-2 border-primary/50">
+                {note.content}
+              </p>
+            </div>
           ))}
       </div>
     </div>
   );
 }
+

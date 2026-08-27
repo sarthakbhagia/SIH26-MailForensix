@@ -17,13 +17,11 @@ import {
   Clock,
   ExternalLink,
 } from 'lucide-react';
-
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
 import { EmailSummary } from '@/types/email';
+import { cn } from '@/lib/utils';
 
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
@@ -219,143 +217,137 @@ export function TraceMapPage({ analysis: propAnalysis, emailId: propEmailId }: T
   };
 
   const getMarkerColor = (type: string) => {
-    if (type === 'tor_exit_node' || type === 'known_vpn') return '#ef4444';
-    if (type === 'hosting' || type === 'aws_cloud' || type === 'cloud') return '#f59e0b';
+    if (type === 'tor_exit_node' || type === 'known_vpn') return '#ff3366';
+    if (type === 'hosting' || type === 'aws_cloud' || type === 'cloud') return '#ffb020';
     if (type === 'private') return '#64748b';
-    return '#3b82f6';
+    return '#00e5ff';
   };
 
   const renderRiskBadge = (score?: number) => {
     if (score === undefined || score === null) {
       return (
-        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+        <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-surface border border-border text-muted-foreground">
           Pending
-        </Badge>
-      );
-    }
-    if (score >= 90) {
-      return (
-        <Badge variant="destructive" className="text-[10px] font-bold px-1.5 py-0 bg-red-500/20 text-red-400 border-red-500/40">
-          Critical ({score.toFixed(0)})
-        </Badge>
+        </span>
       );
     }
     if (score >= 75) {
       return (
-        <Badge variant="secondary" className="text-[10px] font-bold px-1.5 py-0 bg-amber-500/20 text-amber-400 border-amber-500/40">
-          High ({score.toFixed(0)})
-        </Badge>
+        <span className="font-mono text-[9px] font-bold px-1.5 py-0.5 rounded bg-critical/15 text-critical border border-critical/30 uppercase">
+          Risk {score.toFixed(0)}
+        </span>
       );
     }
     if (score >= 50) {
       return (
-        <Badge variant="outline" className="text-[10px] font-bold px-1.5 py-0 bg-yellow-500/20 text-yellow-400 border-yellow-500/40">
-          Medium ({score.toFixed(0)})
-        </Badge>
+        <span className="font-mono text-[9px] font-bold px-1.5 py-0.5 rounded bg-high/15 text-high border border-high/30 uppercase">
+          Risk {score.toFixed(0)}
+        </span>
       );
     }
     return (
-      <Badge variant="outline" className="text-[10px] font-bold px-1.5 py-0 bg-emerald-500/20 text-emerald-400 border-emerald-500/40">
-        Low ({score.toFixed(0)})
-      </Badge>
+      <span className="font-mono text-[9px] font-bold px-1.5 py-0.5 rounded bg-clean/15 text-clean border border-clean/30 uppercase">
+        Risk {score.toFixed(0)}
+      </span>
     );
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-7xl mx-auto pb-10">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border/40 pb-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
-            <MapIcon className="w-7 h-7 text-primary" />
-            Relay Trace Map
-          </h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Geographic transmission routing, MTA server hop triangulation, and infrastructure inspection
-          </p>
-        </div>
-
-        {currentEmail && (
-          <div className="flex items-center gap-2.5">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate(`/emails/${currentEmail.id}`)}
-              className="text-xs gap-1.5 font-medium border-border/60"
-            >
-              <span>Email Forensics</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </Button>
+      <div className="panel p-5">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
+              <MapIcon className="size-5 text-primary" />
+              MTA Relay Trace Map
+            </h1>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Geographic transmission routing, MTA server hop triangulation, and infrastructure inspection.
+            </p>
           </div>
-        )}
+
+          {currentEmail && (
+            <div className="flex items-center gap-2.5">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(`/emails/${currentEmail.id}`)}
+                className="h-8 text-xs font-mono gap-1.5 border-border bg-surface hover:bg-muted"
+              >
+                <span>Email Workstation</span>
+                <ExternalLink className="size-3.5" />
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Main 3-Column Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
         {/* Left Column: Email Selector */}
-        <Card className="lg:col-span-3 flex flex-col bg-card/60 backdrop-blur-md border border-border/60 shadow-sm h-[calc(100vh-210px)] min-h-[600px]">
-          <CardHeader className="p-3.5 pb-2.5 border-b border-border/40 shrink-0 space-y-2.5">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-semibold flex items-center gap-1.5 uppercase tracking-wider text-muted-foreground">
-                <Mail className="w-3.5 h-3.5 text-primary" />
-                Analyzed Emails ({filteredEmails.length})
-              </CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => refetchEmails()}
-                className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
-                title="Refresh email list"
+        <div className="panel lg:col-span-3 flex flex-col h-[calc(100vh-210px)] min-h-[580px] p-3 space-y-2.5">
+          <div className="flex items-center justify-between border-b border-border/50 pb-2">
+            <span className="label-mono font-semibold flex items-center gap-1.5">
+              <Mail className="size-3.5 text-primary" />
+              Emails ({filteredEmails.length})
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => refetchEmails()}
+              className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+              title="Refresh email list"
+            >
+              <RefreshCw className={`size-3 ${isEmailsLoading ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
+
+          {/* Search Input */}
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2 size-3 text-muted-foreground" />
+            <Input
+              placeholder="Search subject, sender..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-7 pl-7 text-xs font-mono bg-background/50 border-border/60"
+            />
+          </div>
+
+          {/* Filter Pills */}
+          <div className="flex items-center gap-1 overflow-x-auto pb-0.5 scrollbar-none">
+            {(['all', 'critical', 'high', 'analyzed'] as const).map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setStatusFilter(filter)}
+                className={cn(
+                  'font-mono text-[9px] uppercase px-2 py-0.5 rounded transition-colors whitespace-nowrap border',
+                  statusFilter === filter
+                    ? 'bg-primary text-primary-foreground border-primary font-semibold'
+                    : 'bg-surface text-muted-foreground border-border/50 hover:bg-muted'
+                )}
               >
-                <RefreshCw className={`w-3 h-3 ${isEmailsLoading ? 'animate-spin' : ''}`} />
-              </Button>
-            </div>
-
-            {/* Search Input */}
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                placeholder="Search subject, sender..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-7 pl-8 text-xs bg-background/50 border-border/60"
-              />
-            </div>
-
-            {/* Filter Pills */}
-            <div className="flex items-center gap-1 overflow-x-auto pb-0.5 scrollbar-none">
-              {(['all', 'critical', 'high', 'analyzed'] as const).map((filter) => (
-                <button
-                  key={filter}
-                  onClick={() => setStatusFilter(filter)}
-                  className={`text-[10px] font-medium px-2 py-0.5 rounded-full border transition-colors capitalize whitespace-nowrap ${
-                    statusFilter === filter
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-background/40 text-muted-foreground border-border/50 hover:bg-muted'
-                  }`}
-                >
-                  {filter}
-                </button>
-              ))}
-            </div>
-          </CardHeader>
+                {filter}
+              </button>
+            ))}
+          </div>
 
           {/* Email List Items */}
-          <CardContent className="p-2 flex-1 overflow-y-auto space-y-1.5 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+          <div className="flex-1 overflow-y-auto space-y-1.5 pr-1">
             {isEmailsLoading && (
               <div className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
-                <Loader2 className="w-5 h-5 animate-spin text-primary mb-2" />
-                <span className="text-xs">Loading emails...</span>
+                <Loader2 className="size-5 animate-spin text-primary mb-2" />
+                <span className="label-mono text-[10px]">LOADING EVIDENCE...</span>
               </div>
             )}
 
             {!isEmailsLoading && isEmailsError && (
-              <div className="p-3 text-center text-xs text-amber-400">Failed to load email records.</div>
+              <div className="p-3 text-center text-xs text-medium">Failed to load email records.</div>
             )}
 
             {!isEmailsLoading && !isEmailsError && filteredEmails.length === 0 && (
               <div className="flex flex-col items-center justify-center p-6 text-center text-muted-foreground">
-                <FileSearch className="w-7 h-7 opacity-50 mb-1.5" />
+                <FileSearch className="size-6 opacity-40 mb-1.5" />
                 <p className="text-xs font-medium text-foreground">No emails found</p>
               </div>
             )}
@@ -368,19 +360,20 @@ export function TraceMapPage({ analysis: propAnalysis, emailId: propEmailId }: T
                   <div
                     key={email.id}
                     onClick={() => handleSelectEmail(email.id)}
-                    className={`p-2.5 rounded-lg border transition-all cursor-pointer ${
+                    className={cn(
+                      'p-2.5 rounded border transition-all cursor-pointer text-xs',
                       isSelected
-                        ? 'border-primary/80 bg-primary/10 shadow-sm ring-1 ring-primary/40'
-                        : 'border-border/40 bg-background/30 hover:bg-muted/40 hover:border-border/80'
-                    }`}
+                        ? 'border-primary/80 bg-primary/10 shadow-glow'
+                        : 'border-border/50 bg-surface/40 hover:bg-surface hover:border-border'
+                    )}
                   >
                     <div className="flex items-start justify-between gap-1 mb-1">
-                      <p className="text-xs font-semibold text-foreground truncate max-w-[170px]">
+                      <p className="font-semibold text-foreground truncate max-w-[170px]">
                         {email.subject || 'No Subject'}
                       </p>
                       {renderRiskBadge(email.risk_score)}
                     </div>
-                    <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1">
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono mt-1">
                       <span className="truncate max-w-[120px]">{email.sender}</span>
                       <span>
                         {email.ingested_at
@@ -391,21 +384,21 @@ export function TraceMapPage({ analysis: propAnalysis, emailId: propEmailId }: T
                   </div>
                 );
               })}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Center Column: Interactive Map */}
-        <Card className="lg:col-span-6 flex flex-col bg-card/60 backdrop-blur-md border border-border/60 shadow-sm h-[calc(100vh-210px)] min-h-[600px] overflow-hidden relative">
+        <div className="panel lg:col-span-6 flex flex-col h-[calc(100vh-210px)] min-h-[580px] overflow-hidden relative p-0">
           {/* Active Email Banner */}
           {currentEmail && (
-            <div className="p-3 border-b border-border/40 bg-muted/30 flex items-center justify-between gap-2 shrink-0 z-10">
+            <div className="p-2.5 border-b border-border/50 bg-surface/60 flex items-center justify-between gap-2 shrink-0 z-10">
               <div className="flex items-center gap-2 truncate">
-                <Radio className="w-3.5 h-3.5 text-blue-400 animate-pulse shrink-0" />
+                <Radio className="size-3 text-primary animate-pulse shrink-0" />
                 <span className="text-xs font-semibold truncate text-foreground">{currentEmail.subject}</span>
               </div>
-              <Badge variant="outline" className="text-[10px] font-mono shrink-0">
-                {hops.length} Geo Hops
-              </Badge>
+              <span className="label-mono text-[9px] bg-surface px-2 py-0.5 rounded border border-border shrink-0">
+                {hops.length} GEO HOPS
+              </span>
             </div>
           )}
 
@@ -413,15 +406,15 @@ export function TraceMapPage({ analysis: propAnalysis, emailId: propEmailId }: T
           <div className="flex-1 w-full h-full relative">
             {isAnalysisLoading ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 z-20">
-                <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
-                <span className="text-xs font-medium">Resolving Relay Coordinates...</span>
+                <Loader2 className="size-8 animate-spin text-primary mb-2" />
+                <span className="label-mono text-[10px]">RESOLVING RELAY COORDINATES...</span>
               </div>
             ) : hops.length === 0 ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
-                <Globe className="w-12 h-12 opacity-30 mb-3 text-primary" />
+                <Globe className="size-10 opacity-30 mb-3 text-primary" />
                 <h3 className="text-sm font-semibold text-foreground">No Geo Hops Detected</h3>
                 <p className="text-xs text-muted-foreground max-w-xs mt-1">
-                  Select an email on the left or upload an .eml file with public received headers to plot its geographic path.
+                  Select an email on the left or upload an email file with public received headers to plot its geographic path.
                 </p>
               </div>
             ) : (
@@ -442,7 +435,7 @@ export function TraceMapPage({ analysis: propAnalysis, emailId: propEmailId }: T
                     type="line"
                     id="trace-path-layer"
                     paint={{
-                      'line-color': '#3b82f6',
+                      'line-color': '#00e5ff',
                       'line-width': 2.5,
                       'line-opacity': 0.8,
                       'line-dasharray': [2, 1],
@@ -475,12 +468,12 @@ export function TraceMapPage({ analysis: propAnalysis, emailId: propEmailId }: T
                         style={{ width: '28px', height: '28px' }}
                       >
                         <div
-                          className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-lg border-2 ${
+                          className={cn(
+                            'size-6 rounded-full flex items-center justify-center font-mono text-[10px] font-bold text-black shadow-lg border-2 border-background',
                             isSelected ? 'ring-4 ring-primary/60 scale-110' : ''
-                          }`}
+                          )}
                           style={{
                             backgroundColor: color,
-                            borderColor: '#ffffff',
                           }}
                         >
                           #{idx + 1}
@@ -500,20 +493,19 @@ export function TraceMapPage({ analysis: propAnalysis, emailId: propEmailId }: T
                     closeButton={true}
                     className="z-50"
                   >
-                    <div className="min-w-[200px] p-2 text-foreground space-y-1.5">
+                    <div className="min-w-[200px] p-2.5 text-foreground space-y-1.5 panel shadow-2xl">
                       <div className="flex items-center justify-between border-b border-border/60 pb-1">
-                        <span className="font-bold text-xs">Hop #{selectedHop.index + 1}</span>
-                        <Badge
-                          variant="outline"
-                          className="text-[9px] px-1 py-0 uppercase"
-                          style={{ borderColor: getMarkerColor(selectedHop.infrastructureType) }}
+                        <span className="label-mono font-bold">Hop #{selectedHop.index + 1}</span>
+                        <span
+                          className="font-mono text-[9px] px-1 py-0.5 rounded border uppercase"
+                          style={{ borderColor: getMarkerColor(selectedHop.infrastructureType), color: getMarkerColor(selectedHop.infrastructureType) }}
                         >
                           {selectedHop.infrastructureType}
-                        </Badge>
+                        </span>
                       </div>
-                      <div className="text-[11px]">
+                      <div className="font-mono text-xs">
                         <span className="text-muted-foreground">IP: </span>
-                        <span className="font-mono font-semibold">{selectedHop.ip}</span>
+                        <span className="font-semibold text-primary">{selectedHop.ip}</span>
                       </div>
                       <div className="text-[11px]">
                         <span className="text-muted-foreground">Location: </span>
@@ -521,14 +513,14 @@ export function TraceMapPage({ analysis: propAnalysis, emailId: propEmailId }: T
                           {selectedHop.city}, {selectedHop.country} ({selectedHop.country_code})
                         </span>
                       </div>
-                      <div className="text-[11px]">
-                        <span className="text-muted-foreground">Organization: </span>
+                      <div className="text-[11px] truncate">
+                        <span className="text-muted-foreground">Org: </span>
                         <span>{selectedHop.org || selectedHop.isp}</span>
                       </div>
                       {selectedHop.delay !== undefined && (
-                        <div className="text-[11px]">
-                          <span className="text-muted-foreground">Hop Delay: </span>
-                          <span className="font-mono">{selectedHop.delay.toFixed(1)}s</span>
+                        <div className="text-[11px] font-mono">
+                          <span className="text-muted-foreground">Delay: </span>
+                          <span>{selectedHop.delay.toFixed(1)}s</span>
                         </div>
                       )}
                     </div>
@@ -537,18 +529,18 @@ export function TraceMapPage({ analysis: propAnalysis, emailId: propEmailId }: T
               </Map>
             )}
           </div>
-        </Card>
+        </div>
 
         {/* Right Column: Hop Path Breakdown */}
-        <Card className="lg:col-span-3 flex flex-col bg-card/60 backdrop-blur-md border border-border/60 shadow-sm h-[calc(100vh-210px)] min-h-[600px]">
-          <CardHeader className="p-3.5 pb-2.5 border-b border-border/40 shrink-0">
-            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-              <Server className="w-3.5 h-3.5 text-primary" />
-              Transmission Route ({hops.length})
-            </CardTitle>
-          </CardHeader>
+        <div className="panel lg:col-span-3 flex flex-col h-[calc(100vh-210px)] min-h-[580px] p-3 space-y-2.5">
+          <div className="flex items-center justify-between border-b border-border/50 pb-2">
+            <span className="label-mono font-semibold flex items-center gap-1.5">
+              <Server className="size-3.5 text-primary" />
+              Routing Chain ({hops.length})
+            </span>
+          </div>
 
-          <CardContent className="p-2.5 flex-1 overflow-y-auto space-y-2 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+          <div className="flex-1 overflow-y-auto space-y-2 pr-1">
             {hops.length === 0 ? (
               <p className="text-xs text-muted-foreground text-center py-8">No relay route hops available.</p>
             ) : (
@@ -561,40 +553,41 @@ export function TraceMapPage({ analysis: propAnalysis, emailId: propEmailId }: T
                   <div
                     key={idx}
                     onClick={() => setSelectedHop(hop)}
-                    className={`p-2.5 rounded-lg border transition-all cursor-pointer ${
+                    className={cn(
+                      'p-2.5 rounded border transition-all cursor-pointer text-xs space-y-1',
                       isSelected
-                        ? 'border-primary/80 bg-primary/10 shadow-sm ring-1 ring-primary/40'
-                        : 'border-border/40 bg-background/40 hover:bg-muted/40'
-                    }`}
+                        ? 'border-primary/80 bg-primary/10 shadow-glow'
+                        : 'border-border/50 bg-surface/40 hover:bg-surface hover:border-border'
+                    )}
                   >
-                    <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
                         <span
-                          className="w-2 h-2 rounded-full shrink-0"
+                          className="size-2 rounded-full shrink-0"
                           style={{ backgroundColor: getMarkerColor(hop.infrastructureType) }}
                         />
-                        <span className="text-xs font-bold font-mono">Hop #{idx + 1}</span>
+                        <span className="font-bold font-mono text-[11px]">Hop #{idx + 1}</span>
                       </div>
-                      <Badge variant="outline" className="text-[9px] px-1 py-0 uppercase">
+                      <span className="label-mono text-[9px] uppercase px-1.5 py-0.5 rounded bg-surface border border-border">
                         {isOrigin ? 'Origin' : isDestination ? 'Destination' : 'Relay'}
-                      </Badge>
+                      </span>
                     </div>
 
-                    <div className="font-mono text-xs text-foreground font-semibold truncate">{hop.ip}</div>
+                    <div className="font-mono text-xs text-primary font-semibold truncate">{hop.ip}</div>
 
-                    <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
-                      <Globe className="w-3 h-3 shrink-0" />
+                    <div className="text-[11px] text-muted-foreground flex items-center gap-1 truncate">
+                      <Globe className="size-3 shrink-0" />
                       <span className="truncate">
                         {hop.city !== 'Unknown' ? `${hop.city}, ` : ''}
                         {hop.country}
                       </span>
                     </div>
 
-                    <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center justify-between">
-                      <span className="truncate max-w-[140px]">{hop.isp || hop.org}</span>
+                    <div className="text-[10px] text-muted-foreground flex items-center justify-between font-mono pt-0.5">
+                      <span className="truncate max-w-[130px]">{hop.isp || hop.org}</span>
                       {hop.delay !== undefined && (
-                        <span className="flex items-center gap-0.5 font-mono">
-                          <Clock className="w-2.5 h-2.5" />
+                        <span className="flex items-center gap-0.5">
+                          <Clock className="size-2.5" />
                           {hop.delay.toFixed(1)}s
                         </span>
                       )}
@@ -603,11 +596,11 @@ export function TraceMapPage({ analysis: propAnalysis, emailId: propEmailId }: T
                 );
               })
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-export default TraceMapPage;
+export default TraceMapPage;

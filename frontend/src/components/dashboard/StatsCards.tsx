@@ -1,8 +1,7 @@
 import { Mail, ShieldAlert, FolderKanban, Activity } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
-interface StatsCardsProps {
+export interface StatsCardsProps {
   data?: {
     total_emails?: number;
     threats_detected?: number;
@@ -12,19 +11,19 @@ interface StatsCardsProps {
   isLoading?: boolean;
 }
 
-export default function StatsCards({ data, isLoading = false }: StatsCardsProps) {
+export function StatsCards({ data, isLoading = false }: StatsCardsProps) {
   if (isLoading) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
-          <Card key={i} className="bg-card/50 backdrop-blur-sm border border-border/50 animate-pulse p-4">
-            <div className="flex justify-between items-center mb-3">
-              <div className="h-3.5 w-24 bg-muted/60 rounded" />
-              <div className="w-8 h-8 rounded-full bg-muted/50" />
+          <div key={i} className="panel p-4.5 animate-pulse space-y-3">
+            <div className="flex justify-between items-center">
+              <div className="h-3 w-20 bg-muted/60 rounded" />
+              <div className="size-7 rounded bg-muted/50" />
             </div>
-            <div className="h-8 w-16 bg-muted/60 rounded mb-2" />
-            <div className="h-3 w-32 bg-muted/40 rounded" />
-          </Card>
+            <div className="h-7 w-16 bg-muted/60 rounded" />
+            <div className="h-2.5 w-28 bg-muted/40 rounded" />
+          </div>
         ))}
       </div>
     );
@@ -37,96 +36,104 @@ export default function StatsCards({ data, isLoading = false }: StatsCardsProps)
 
   const stats = [
     {
-      title: 'Total Emails',
+      title: 'TOTAL INGESTION',
       value: totalEmails.toLocaleString(),
       icon: Mail,
-      subtext: totalEmails === 1 ? '1 Ingested Record' : `${totalEmails.toLocaleString()} Ingested Records`,
-      color: 'text-sky-400',
-      borderGlow: 'hover:border-sky-500/30',
-      bg: 'bg-sky-500/10',
+      subtext: totalEmails === 1 ? '1 Processed Envelope' : `${totalEmails.toLocaleString()} Processed Envelopes`,
+      color: 'text-primary',
+      borderAccent: 'hover:border-primary/50',
+      badgeBg: 'bg-primary/10 text-primary border-primary/20',
     },
     {
-      title: 'Threats Detected',
+      title: 'THREATS FLAGGED',
       value: threatsDetected.toLocaleString(),
       icon: ShieldAlert,
-      subtext: 'Composite Risk > 50.0',
-      color: 'text-red-400',
-      borderGlow: 'hover:border-red-500/30',
-      bg: 'bg-red-500/10',
+      subtext: 'Composite Risk ≥ 50.0',
+      color: 'text-critical',
+      borderAccent: 'hover:border-critical/50',
+      badgeBg: 'bg-critical/10 text-critical border-critical/25',
     },
     {
-      title: 'Active Cases',
+      title: 'ACTIVE CASES',
       value: activeCases.toLocaleString(),
       icon: FolderKanban,
-      subtext: 'Open & Investigating',
-      color: 'text-amber-400',
-      borderGlow: 'hover:border-amber-500/30',
-      bg: 'bg-amber-500/10',
+      subtext: 'Open SOC Investigations',
+      color: 'text-accent',
+      borderAccent: 'hover:border-accent/50',
+      badgeBg: 'bg-accent/10 text-accent border-accent/25',
     },
     {
-      title: 'Average Risk Score',
+      title: 'AVERAGE RISK SCORE',
       value: avgRiskScore.toFixed(1),
       icon: Activity,
       subtext:
         avgRiskScore >= 75
-          ? 'Critical Threat Tier'
+          ? 'CRITICAL SEVERITY TIER'
           : avgRiskScore >= 50
-          ? 'Elevated Risk Tier'
-          : 'Low / Nominal Risk',
+          ? 'HIGH / ELEVATED TIER'
+          : avgRiskScore >= 25
+          ? 'MEDIUM / MODERATE TIER'
+          : 'NOMINAL / CLEAN TIER',
       color:
         avgRiskScore >= 75
-          ? 'text-red-400'
+          ? 'text-critical'
           : avgRiskScore >= 50
-          ? 'text-amber-400'
-          : 'text-emerald-400',
-      borderGlow:
+          ? 'text-high'
+          : avgRiskScore >= 25
+          ? 'text-medium'
+          : 'text-clean',
+      borderAccent:
         avgRiskScore >= 75
-          ? 'hover:border-red-500/30'
+          ? 'hover:border-critical/50'
           : avgRiskScore >= 50
-          ? 'hover:border-amber-500/30'
-          : 'hover:border-emerald-500/30',
-      bg:
+          ? 'hover:border-high/50'
+          : 'hover:border-clean/50',
+      badgeBg:
         avgRiskScore >= 75
-          ? 'bg-red-500/10'
+          ? 'bg-critical/10 text-critical border-critical/25'
           : avgRiskScore >= 50
-          ? 'bg-amber-500/10'
-          : 'bg-emerald-500/10',
+          ? 'bg-high/10 text-high border-high/25'
+          : 'bg-clean/10 text-clean border-clean/25',
     },
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat, index) => {
         const Icon = stat.icon;
         return (
-          <Card
+          <div
             key={index}
             className={cn(
-              'overflow-hidden bg-card/60 backdrop-blur-md border border-border/50 shadow-sm transition-all duration-200 hover:shadow-md',
-              stat.borderGlow
+              'panel p-4.5 transition-all duration-200 group flex flex-col justify-between',
+              stat.borderAccent
             )}
           >
-            <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4">
-              <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            <div className="flex items-center justify-between gap-2 pb-2">
+              <span className="label-mono font-semibold tracking-wider text-[10px]">
                 {stat.title}
-              </CardTitle>
-              <div className={cn('p-2 rounded-lg border border-border/40', stat.bg)}>
-                <Icon className={cn('h-4 w-4', stat.color)} />
+              </span>
+              <div className={cn('p-1.5 rounded border', stat.badgeBg)}>
+                <Icon className="size-3.5" />
               </div>
-            </CardHeader>
-            <CardContent className="px-4 pb-4 pt-0">
-              <div className="text-2xl font-bold tracking-tight text-foreground font-mono">
+            </div>
+
+            <div className="space-y-1">
+              <div className="text-2xl lg:text-3xl font-bold font-mono tracking-tight text-foreground">
                 {stat.value}
               </div>
-              <p className="text-[11px] text-muted-foreground mt-1 font-medium">
-                <span className={cn(stat.color, 'font-semibold')}>{stat.subtext}</span>
+              <p className="label-mono text-[10px] text-muted-foreground truncate">
+                <span className={cn('font-semibold', stat.color)}>{stat.subtext}</span>
               </p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         );
       })}
     </div>
   );
 }
+
+export default StatsCards;
+
 
 

@@ -1,35 +1,35 @@
 import { useState, useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { AlertCircle, PieChart as PieIcon, BarChart3 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AlertCircle, PieChart as PieIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const NLP_COLOR_MAP: Record<string, string> = {
-  Legitimate: '#22c55e',
-  legitimate: '#22c55e',
-  Suspicious: '#eab308',
-  suspicious: '#eab308',
-  Phishing: '#ef4444',
-  phishing: '#ef4444',
-  BEC: '#a855f7',
-  bec: '#a855f7',
-  'BEC/Fraud': '#a855f7',
-  Impersonation: '#f97316',
-  impersonation: '#f97316',
-  Malware: '#dc2626',
-  malware: '#dc2626',
-  Unclassified: '#64748b',
+  Legitimate: 'var(--clean)',
+  legitimate: 'var(--clean)',
+  Suspicious: 'var(--medium)',
+  suspicious: 'var(--medium)',
+  Phishing: 'var(--high)',
+  phishing: 'var(--high)',
+  BEC: 'var(--critical)',
+  bec: 'var(--critical)',
+  'BEC/Fraud': 'var(--critical)',
+  Impersonation: 'var(--accent)',
+  impersonation: 'var(--accent)',
+  Malware: 'var(--critical)',
+  malware: 'var(--critical)',
+  Unclassified: 'var(--muted-foreground)',
 };
 
 const RISK_TIER_COLORS: Record<string, string> = {
-  low: '#22c55e',
-  medium: '#eab308',
-  high: '#f97316',
-  critical: '#ef4444',
+  low: 'var(--clean)',
+  medium: 'var(--medium)',
+  high: 'var(--high)',
+  critical: 'var(--critical)',
 };
 
-const DEFAULT_PALETTE = ['#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f59e0b', '#06b6d4'];
+const DEFAULT_PALETTE = ['#00e5ff', '#ffb020', '#ff3366', '#00e676', '#a855f7', '#38bdf8'];
 
-interface ThreatChartProps {
+export interface ThreatChartProps {
   threatDistribution?: Record<string, number>;
   riskDistribution?: {
     low?: number;
@@ -40,7 +40,7 @@ interface ThreatChartProps {
   isLoading?: boolean;
 }
 
-export default function ThreatChart({
+export function ThreatChart({
   threatDistribution,
   riskDistribution,
   isLoading = false,
@@ -61,10 +61,10 @@ export default function ThreatChart({
   const riskChartData = useMemo(() => {
     if (!riskDistribution) return [];
     const items = [
-      { name: 'Low (<=25)', key: 'low', value: riskDistribution.low || 0, color: RISK_TIER_COLORS.low },
-      { name: 'Medium (<=50)', key: 'medium', value: riskDistribution.medium || 0, color: RISK_TIER_COLORS.medium },
-      { name: 'High (<=75)', key: 'high', value: riskDistribution.high || 0, color: RISK_TIER_COLORS.high },
-      { name: 'Critical (>75)', key: 'critical', value: riskDistribution.critical || 0, color: RISK_TIER_COLORS.critical },
+      { name: 'Low (0–25)', key: 'low', value: riskDistribution.low || 0, color: RISK_TIER_COLORS.low },
+      { name: 'Medium (26–50)', key: 'medium', value: riskDistribution.medium || 0, color: RISK_TIER_COLORS.medium },
+      { name: 'High (51–75)', key: 'high', value: riskDistribution.high || 0, color: RISK_TIER_COLORS.high },
+      { name: 'Critical (76–100)', key: 'critical', value: riskDistribution.critical || 0, color: RISK_TIER_COLORS.critical },
     ];
     return items.filter((item) => item.value > 0);
   }, [riskDistribution]);
@@ -73,72 +73,74 @@ export default function ThreatChart({
   const totalCount = activeData.reduce((acc, curr) => acc + curr.value, 0);
 
   return (
-    <Card className="h-full flex flex-col bg-card/60 backdrop-blur-md border border-border/50 shadow-sm">
-      <CardHeader className="pb-3 pt-4 px-5 shrink-0 border-b border-border/40 flex flex-row items-center justify-between space-y-0">
+    <div className="panel h-full flex flex-col p-4 sm:p-5">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-border/50 pb-3">
         <div className="flex items-center gap-2">
-          <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-            <PieIcon className="w-4 h-4 text-primary" />
-            Threat Distribution
-          </CardTitle>
+          <PieIcon className="size-4 text-primary" />
+          <h3 className="text-sm font-semibold tracking-tight text-foreground">Threat Distribution</h3>
         </div>
 
-        {/* Mode Selector Toggle */}
-        <div className="flex items-center bg-background/50 border border-border/60 rounded-lg p-0.5">
+        {/* View Mode Switcher */}
+        <div className="flex items-center rounded-md border border-border bg-surface p-0.5">
           <button
             onClick={() => setViewMode('nlp')}
-            className={`flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md transition-all ${
+            className={cn(
+              'px-2 py-0.5 text-[10px] font-mono uppercase rounded transition-colors',
               viewMode === 'nlp'
-                ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
+                ? 'bg-primary text-primary-foreground font-semibold'
                 : 'text-muted-foreground hover:text-foreground'
-            }`}
+            )}
           >
             NLP Labels
           </button>
           <button
             onClick={() => setViewMode('risk')}
-            className={`flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md transition-all ${
+            className={cn(
+              'px-2 py-0.5 text-[10px] font-mono uppercase rounded transition-colors',
               viewMode === 'risk'
-                ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
+                ? 'bg-primary text-primary-foreground font-semibold'
                 : 'text-muted-foreground hover:text-foreground'
-            }`}
+            )}
           >
-            <BarChart3 className="w-3 h-3" />
             Risk Tiers
           </button>
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="flex-1 flex flex-col items-center justify-center p-4 min-h-[320px]">
+      {/* Content Body */}
+      <div className="flex-1 flex flex-col items-center justify-center min-h-[290px] pt-2">
         {isLoading && (
           <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-muted-foreground">
-            <div className="w-32 h-32 rounded-full border-4 border-muted border-t-primary animate-spin" />
-            <span className="text-xs font-medium mt-2">Loading threat classifications...</span>
+            <div className="size-10 rounded-full border-2 border-muted border-t-primary animate-spin" />
+            <span className="label-mono text-[10px] mt-2">PARSING THREAT VECTORS...</span>
           </div>
         )}
 
         {!isLoading && totalCount === 0 && (
           <div className="flex flex-col items-center justify-center p-6 text-center text-muted-foreground">
-            <AlertCircle className="w-8 h-8 opacity-40 mb-2" />
+            <AlertCircle className="size-7 opacity-40 mb-2" />
             <p className="text-xs font-semibold text-foreground">No threats classified yet</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5 max-w-[220px]">
-              Ingest and analyze emails to populate real-time threat categorization.
+            <p className="text-[11px] text-muted-foreground mt-0.5 max-w-[200px]">
+              Ingest emails to populate real-time threat distribution telemetry.
             </p>
           </div>
         )}
 
         {!isLoading && totalCount > 0 && (
-          <div className="w-full h-full min-h-[300px] flex flex-col items-center justify-center">
-            <ResponsiveContainer width="100%" height={300}>
+          <div className="w-full h-full min-h-[270px] flex flex-col items-center justify-center">
+            <ResponsiveContainer width="100%" height={270}>
               <PieChart>
                 <Pie
                   data={activeData}
                   cx="50%"
                   cy="45%"
-                  innerRadius={60}
-                  outerRadius={92}
+                  innerRadius={56}
+                  outerRadius={86}
                   paddingAngle={3}
                   dataKey="value"
-                  stroke="none"
+                  stroke="rgba(0,0,0,0.3)"
+                  strokeWidth={1}
                 >
                   {activeData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -150,14 +152,14 @@ export default function ThreatChart({
                       const data = payload[0].payload;
                       const percentage = totalCount > 0 ? ((data.value / totalCount) * 100).toFixed(1) : '0';
                       return (
-                        <div className="bg-popover/95 backdrop-blur-md border border-border/80 shadow-lg rounded-lg p-2.5 text-xs">
-                          <p className="font-semibold text-foreground flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: data.color }} />
+                        <div className="panel p-2.5 text-xs shadow-xl min-w-[130px]">
+                          <p className="font-semibold text-foreground flex items-center gap-1.5 font-mono text-[11px]">
+                            <span className="size-2 rounded-full" style={{ backgroundColor: data.color }} />
                             {data.name}
                           </p>
-                          <div className="flex items-center justify-between gap-4 text-muted-foreground mt-1 font-mono">
+                          <div className="flex items-center justify-between gap-3 text-muted-foreground mt-1 font-mono text-[10px]">
                             <span>Count: {data.value}</span>
-                            <span className="text-foreground font-bold">{percentage}%</span>
+                            <span className="text-primary font-bold">{percentage}%</span>
                           </div>
                         </div>
                       );
@@ -167,20 +169,24 @@ export default function ThreatChart({
                 />
                 <Legend
                   verticalAlign="bottom"
-                  height={40}
+                  height={36}
                   wrapperStyle={{
-                    color: 'hsl(var(--foreground))',
-                    fontSize: '11px',
-                    paddingTop: '8px',
+                    color: 'var(--foreground)',
+                    fontFamily: 'var(--font-mono, monospace)',
+                    fontSize: '10px',
+                    paddingTop: '6px',
                   }}
                 />
               </PieChart>
             </ResponsiveContainer>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
+
+export default ThreatChart;
+
 
 

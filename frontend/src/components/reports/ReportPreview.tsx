@@ -1,7 +1,6 @@
 import { useState, useRef } from 'react';
 import { ExternalLink, FileText, Loader2, RefreshCw, ZoomIn, ZoomOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 
 interface ReportPreviewProps {
   emailId: string | null;
@@ -37,55 +36,55 @@ export default function ReportPreview({ emailId, emailSubject }: ReportPreviewPr
 
   if (!emailId) {
     return (
-      <Card className="h-full flex flex-col items-center justify-center p-10 bg-card/40 backdrop-blur-sm border-dashed border-border/60 text-center min-h-[500px]">
-        <div className="w-16 h-16 rounded-2xl bg-muted/60 flex items-center justify-center mb-4 text-muted-foreground">
-          <FileText className="w-8 h-8 opacity-70" />
+      <div className="panel h-full flex flex-col items-center justify-center p-10 text-center min-h-[500px] border-dashed">
+        <div className="size-16 rounded-2xl bg-surface-2 flex items-center justify-center mb-4 text-muted-foreground border border-border">
+          <FileText className="size-8 opacity-60 text-primary" />
         </div>
-        <h3 className="text-lg font-semibold text-foreground mb-1">No Email Selected</h3>
-        <p className="text-sm text-muted-foreground max-w-sm">
-          Select an analyzed email evidence file to generate and review its forensic investigation report preview.
+        <h3 className="text-base font-bold text-foreground mb-1">No Email Artifact Selected</h3>
+        <p className="text-xs text-muted-foreground max-w-sm">
+          Select an analyzed email evidence file from the ledger to generate and inspect its cryptographic forensic report preview.
         </p>
-      </Card>
+      </div>
     );
   }
 
   return (
-    <Card className="h-full flex flex-col bg-card/60 backdrop-blur-md border border-border/60 overflow-hidden shadow-sm">
+    <div className="panel h-full flex flex-col overflow-hidden p-0 shadow-lg">
       {/* Preview Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-muted/30 border-b border-border/40 shrink-0">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-surface-2/70 border-b border-border/60 shrink-0">
         <div className="flex items-center gap-2 overflow-hidden mr-2">
-          <FileText className="w-4 h-4 text-primary shrink-0" />
+          <FileText className="size-4 text-primary shrink-0" />
           <span className="text-xs font-semibold text-foreground truncate max-w-[280px]">
             {emailSubject || 'Forensic Investigation Report'}
           </span>
-          <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded uppercase font-bold tracking-wider">
-            A4 Preview
+          <span className="label-mono text-[9px] bg-surface px-1.5 py-0.5 rounded border border-border">
+            A4 PREVIEW
           </span>
         </div>
 
         <div className="flex items-center gap-1.5">
           {/* Zoom controls */}
-          <div className="flex items-center bg-background/60 border border-border/60 rounded-md p-0.5">
+          <div className="flex items-center bg-surface border border-border rounded p-0.5 font-mono text-[10px]">
             <Button
               variant="ghost"
               size="sm"
               onClick={handleZoomOut}
               disabled={zoom <= 70}
-              className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+              className="size-6 p-0 text-muted-foreground hover:text-foreground"
               title="Zoom out"
             >
-              <ZoomOut className="w-3.5 h-3.5" />
+              <ZoomOut className="size-3.5" />
             </Button>
-            <span className="text-[11px] font-mono px-1.5 text-muted-foreground">{zoom}%</span>
+            <span className="px-1.5 text-muted-foreground">{zoom}%</span>
             <Button
               variant="ghost"
               size="sm"
               onClick={handleZoomIn}
               disabled={zoom >= 150}
-              className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+              className="size-6 p-0 text-muted-foreground hover:text-foreground"
               title="Zoom in"
             >
-              <ZoomIn className="w-3.5 h-3.5" />
+              <ZoomIn className="size-3.5" />
             </Button>
           </div>
 
@@ -93,32 +92,32 @@ export default function ReportPreview({ emailId, emailSubject }: ReportPreviewPr
             variant="outline"
             size="sm"
             onClick={handleRefresh}
-            className="h-7 text-xs px-2 gap-1"
+            className="h-7 text-xs font-mono px-2 gap-1 border-border bg-surface hover:bg-muted"
             title="Reload preview"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
+            <RefreshCw className={`size-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            RELOAD
           </Button>
 
           <Button
             variant="outline"
             size="sm"
             onClick={handleOpenNewTab}
-            className="h-7 text-xs px-2 gap-1"
+            className="h-7 text-xs font-mono px-2 gap-1 border-border bg-surface hover:bg-muted"
             title="Open in new window"
           >
-            <ExternalLink className="w-3.5 h-3.5" />
-            Open
+            <ExternalLink className="size-3.5" />
+            OPEN
           </Button>
         </div>
       </div>
 
       {/* Preview Container */}
-      <div className="relative flex-1 bg-muted/20 overflow-auto p-4 flex justify-center min-h-[550px]">
+      <div className="relative flex-1 bg-background/50 overflow-auto p-4 flex justify-center min-h-[550px]">
         {isLoading && (
-          <div className="absolute inset-0 bg-background/70 backdrop-blur-sm z-10 flex flex-col items-center justify-center gap-2">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            <p className="text-xs font-medium text-muted-foreground">Rendering forensic preview...</p>
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center gap-2">
+            <Loader2 className="size-8 animate-spin text-primary" />
+            <p className="label-mono text-[10px]">RENDERING FORENSIC PREVIEW...</p>
           </div>
         )}
 
@@ -130,7 +129,7 @@ export default function ReportPreview({ emailId, emailSubject }: ReportPreviewPr
             width: '100%',
             maxWidth: '820px',
           }}
-          className="shadow-xl rounded-md bg-white border border-border/80 h-full min-h-[750px] overflow-hidden"
+          className="shadow-2xl rounded bg-white border border-border h-full min-h-[750px] overflow-hidden"
         >
           {previewUrl && (
             <iframe
@@ -145,6 +144,7 @@ export default function ReportPreview({ emailId, emailSubject }: ReportPreviewPr
           )}
         </div>
       </div>
-    </Card>
+    </div>
   );
 }
+

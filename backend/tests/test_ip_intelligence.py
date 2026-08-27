@@ -104,6 +104,20 @@ async def test_ipinfo_api_failure_fallback_to_maxmind():
     mock_resp = MagicMock()
     mock_resp.status_code = 429
 
+    mock_city_resp = MagicMock()
+    mock_city_resp.country.name = 'United States'
+    mock_city_resp.country.iso_code = 'US'
+    mock_city_resp.city.name = 'Mountain View'
+    mock_city_resp.subdivisions.most_specific.name = 'California'
+    mock_city_resp.location.latitude = 37.4
+    mock_city_resp.location.longitude = -122.0
+    mock_city_resp.traits.autonomous_system_number = 15169
+    mock_city_resp.traits.autonomous_system_organization = 'Google LLC'
+    mock_city_resp.traits.isp = 'Google LLC'
+
+    geo.reader = MagicMock()
+    geo.reader.city.return_value = mock_city_resp
+
     with patch('httpx.AsyncClient.get', new_callable=AsyncMock) as mock_get:
         mock_get.return_value = mock_resp
         res = await geo._geolocate_ip('8.8.8.8')

@@ -6,10 +6,12 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.database import get_db
 from app.models.alert import Alert
 from app.models.analysis_result import AnalysisResult
 from app.models.email_case import Case, CaseStatus, Email
+from app.core.utils.timezone import now_ist, to_ist, to_utc
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +20,7 @@ router = APIRouter()
 
 @router.get("/stats")
 async def get_dashboard_stats(db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
-    """Return aggregated SOC dashboard metrics, threat distributions, risk breakdowns, and 7-day ingestion timeline."""
+    """Return aggregated SOC dashboard metrics, threat distributions, risk breakdowns, and 7-day ingestion timeline in IST."""
     try:
         # 1. Total emails count
         total_emails_res = await db.execute(select(func.count(Email.id)))
@@ -97,26 +99,27 @@ async def get_dashboard_stats(db: AsyncSession = Depends(get_db)) -> Dict[str, A
             "critical": int(risk_row[3] if risk_row else 0),
         }
 
-        # 8. Ingestion timeline (last 7 days, daily buckets)
-        now_dt = datetime.now(timezone.utc).replace(tzinfo=None)
-        start_date = (now_dt - timedelta(days=6)).replace(hour=0, minute=0, second=0, microsecond=0)
+        # 8. Ingestion timeline (last 7 days in IST, daily buckets)
+        now_ist_dt = now_ist()
+        start_ist_date = (now_ist_dt - timedelta(days=6)).replace(hour=0, minute=0, second=0, microsecond=0)
+        start_utc_dt = to_utc(start_ist_date).replace(tzinfo=None)
 
-        # Initialize contiguous 7-day timeline map
+        # Initialize contiguous 7-day timeline map with IST dates
         timeline_map: Dict[str, Dict[str, Any]] = {}
         for i in range(7):
-            d = (start_date + timedelta(days=i)).strftime("%Y-%m-%d")
+            d = (start_ist_date + timedelta(days=i)).strftime("%Y-%m-%d")
             timeline_map[d] = {"date": d, "ingested": 0, "threats": 0}
 
-        # Fetch emails from the last 7 days with composite risk score
+        # Fetch emails from start date with composite risk score
         timeline_stmt = (
             select(Email.ingested_at, AnalysisResult.composite_risk_score)
             .outerjoin(AnalysisResult, AnalysisResult.email_id == Email.id)
-            .where(Email.ingested_at >= start_date)
+            .where(Email.ingested_at >= start_utc_dt)
         )
         timeline_res = await db.execute(timeline_stmt)
         for ingested_at, score in timeline_res.all():
             if ingested_at:
-                d_str = ingested_at.strftime("%Y-%m-%d")
+                d_str = to_ist(ingested_at).strftime("%Y-%m-%d")
                 if d_str in timeline_map:
                     timeline_map[d_str]["ingested"] += 1
                     if score is not None and score > 50.0:

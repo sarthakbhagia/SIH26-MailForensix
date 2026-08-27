@@ -9,10 +9,11 @@ from uuid import UUID, uuid4
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from app.config import settings
 from app.models.analysis_result import AnalysisResult
 from app.models.email_case import Email
 from app.services.audit_service import AuditService
+from app.core.utils.timezone import now_utc, format_ist, to_iso_utc, to_ist
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,21 @@ def _normalize_uuid(val: Optional[Union[str, UUID]]) -> Optional[UUID]:
         return None
 
 
+def _normalize_percentage(val: Optional[Union[float, int, str]]) -> float:
+    """Normalize percentage/confidence value to canonical 0-100 float scale."""
+    if val is None:
+        return 0.0
+    try:
+        f_val = float(val)
+    except (ValueError, TypeError):
+        return 0.0
+    # If provided as a fraction in (0.0, 1.0], scale to 0-100 (e.g. 0.45 -> 45.0, 0.98 -> 98.0)
+    # 0.0 stays 0.0, and values > 1.0 stay on 0-100 scale (e.g. 45.0 stays 45.0).
+    if 0.0 < f_val <= 1.0:
+        return round(f_val * 100.0, 2)
+    return round(f_val, 2)
+
+
 class ReportGenerator:
     """Forensic report generator producing structured JSON and publication-ready PDF reports."""
 
@@ -43,7 +59,7 @@ class ReportGenerator:
     def _assemble_report_data(self, email: Email, analysis: AnalysisResult) -> Dict[str, Any]:
         """Assemble comprehensive forensic telemetry into a unified dictionary."""
         report_id = str(uuid4())
-        now_utc = datetime.now(timezone.utc).isoformat()
+        current_time = now_utc()
 
         # Email Headers & Metadata
         headers = email.headers or {}
@@ -110,20 +126,26 @@ class ReportGenerator:
             or graph_data.get("cluster_id")
             or "N/A"
         )
-        # Chain of custody timestamps
-        ingested_str = email.ingested_at.isoformat() if getattr(email, "ingested_at", None) else now_utc
+        # Timestamps in IST for user-facing forensic report
+        generated_at_ist = format_ist(now_utc(), "%Y-%m-%d %H:%M:%S IST")
+        ingested_at_ist = format_ist(email.ingested_at, "%Y-%m-%d %H:%M:%S IST") if getattr(email, "ingested_at", None) else generated_at_ist
+        analyzed_at_ist = format_ist(getattr(analysis, "analyzed_at", None), "%Y-%m-%d %H:%M:%S IST") if getattr(analysis, "analyzed_at", None) else ingested_at_ist
+
+        raw_header_date = (email.headers.get("Date") or email.headers.get("date")) if isinstance(email.headers, dict) else None
+        email_date_display = format_ist(raw_header_date, "%Y-%m-%d %H:%M:%S IST") if raw_header_date else ingested_at_ist
 
         return {
             "report_id": report_id,
             "version": "1.0",
             "platform": "PhishGuard Forensic Threat Intelligence Platform",
-            "generated_at": now_utc,
+            "generated_at": generated_at_ist,
+            "generated_at_iso": to_iso_utc(now_utc()),
             "email_metadata": {
                 "id": str(email.id),
                 "sender": email.sender or "Unknown",
                 "recipients": recipients,
                 "subject": email.subject or "No Subject",
-                "date": ingested_str,
+                "date": email_date_display,
                 "message_id": msg_id,
                 "hashes": {
                     "sha256": email.raw_hash_sha256 or "N/A",
@@ -139,7 +161,7 @@ class ReportGenerator:
             },
             "nlp_classification": {
                 "label": analysis.nlp_label or "Unknown",
-                "confidence": float(analysis.nlp_confidence or 0.0),
+                "confidence": _normalize_percentage(analysis.nlp_confidence),
                 "details": analysis.nlp_details or {},
             },
             "authentication": auth_summary,
@@ -151,14 +173,14 @@ class ReportGenerator:
             "indicators_of_compromise": iocs,
             "attribution": {
                 "category": getattr(analysis, "attribution_category", None) or "Opportunistic Cybercrime",
-                "confidence": float(getattr(analysis, "attribution_confidence", None) or 0.0),
+                "confidence": _normalize_percentage(getattr(analysis, "attribution_confidence", None)),
                 "campaign_id": campaign_id,
                 "cluster_id": cluster_id,
                 "details": getattr(analysis, "attribution", {}) or graph_data,
             },
             "chain_of_custody": {
-                "ingested_at": ingested_str,
-                "analyzed_at": ingested_str,
+                "ingested_at": ingested_at_ist,
+                "analyzed_at": analyzed_at_ist,
                 "hash_verification": "MATCH - Cryptographically Verified",
                 "integrity": "VALID",
             },
@@ -236,7 +258,7 @@ class ReportGenerator:
         
         banner_data = [
             [
-                Paragraph(f"<b>Classification:</b> {nlp['label']} ({nlp['confidence']*100:.1f}% Confidence)<br/><b>Action:</b> {t['recommended_action']}", body_style),
+                Paragraph(f"<b>Classification:</b> {nlp['label']} ({nlp['confidence']:.1f}% Confidence)<br/><b>Action:</b> {t['recommended_action']}", body_style),
                 Paragraph(f"<b>RISK SCORE: {t['overall_risk_score']:.1f} / 100</b><br/>Severity: {t['severity'].upper()}", ParagraphStyle("Score", parent=body_style, textColor=sev_color, fontName="Helvetica-Bold")),
             ]
         ]
@@ -277,7 +299,7 @@ class ReportGenerator:
         story.append(Paragraph("2. Threat Classification & NLP Analysis", section_style))
         nlp_table_data = [
             [Paragraph("<b>Predicted Threat Label:</b>", body_style), Paragraph(str(nlp["label"]), body_style)],
-            [Paragraph("<b>Model Confidence:</b>", body_style), Paragraph(f"{nlp['confidence']*100:.2f}%", body_style)],
+            [Paragraph("<b>Model Confidence:</b>", body_style), Paragraph(f"{nlp['confidence']:.1f}%", body_style)],
             [Paragraph("<b>Classification Details:</b>", body_style), Paragraph(str(nlp.get("details", {})), mono_style)],
         ]
         nlp_table = Table(nlp_table_data, colWidths=[140, 400])

@@ -196,6 +196,9 @@ class RiskScorer:
             confidence = float(nlp_result.get("confidence", 0.0))
             urgency = float(nlp_result.get("urgency_score", 0.0))
 
+        if 0.0 < confidence <= 1.0:
+            confidence = confidence * 100.0
+
         if label == "Legitimate":
             risk = max(0.0, (100.0 - confidence) * 0.15)
         elif label in ("Phishing", "BEC/Fraud"):

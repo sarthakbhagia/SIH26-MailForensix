@@ -10,12 +10,10 @@ import {
   RefreshCw,
   ShieldAlert,
 } from 'lucide-react';
-
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAlerts } from '@/hooks/useAlerts';
 import { Alert } from '@/types/alert';
+import { cn } from '@/lib/utils';
 
 export default function RecentAlerts() {
   const navigate = useNavigate();
@@ -72,33 +70,31 @@ export default function RecentAlerts() {
     const s = severity?.toLowerCase();
     if (s === 'critical') {
       return (
-        <Badge
-          variant="destructive"
-          className="bg-red-500/20 text-red-400 border border-red-500/40 text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 flex items-center gap-1"
-        >
-          <ShieldAlert className="w-3 h-3 text-red-400" />
+        <span className="px-2 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider bg-critical/15 text-critical border border-critical/40 flex items-center gap-1">
+          <ShieldAlert className="size-3" />
           Critical
-        </Badge>
+        </span>
       );
     }
     if (s === 'high') {
       return (
-        <Badge
-          variant="secondary"
-          className="bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 flex items-center gap-1"
-        >
-          <AlertTriangle className="w-3 h-3 text-amber-400" />
+        <span className="px-2 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider bg-high/15 text-high border border-high/40 flex items-center gap-1">
+          <AlertTriangle className="size-3" />
           High
-        </Badge>
+        </span>
+      );
+    }
+    if (s === 'medium') {
+      return (
+        <span className="px-2 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider bg-medium/15 text-medium border border-medium/40">
+          Medium
+        </span>
       );
     }
     return (
-      <Badge
-        variant="outline"
-        className="bg-muted text-muted-foreground text-[10px] font-bold tracking-wider uppercase px-2 py-0.5"
-      >
+      <span className="px-2 py-0.5 rounded font-mono text-[9px] font-bold uppercase tracking-wider bg-muted text-muted-foreground border border-border">
         {severity}
-      </Badge>
+      </span>
     );
   };
 
@@ -111,64 +107,61 @@ export default function RecentAlerts() {
   };
 
   return (
-    <Card className="h-full flex flex-col bg-card/60 backdrop-blur-md border border-border/50 shadow-sm">
-      <CardHeader className="pb-3.5 pt-4 px-5 shrink-0 border-b border-border/40 flex flex-row items-center justify-between space-y-0">
+    <div className="panel h-full flex flex-col p-4 sm:p-5">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/50 pb-3">
         <div className="flex items-center gap-2.5">
-          <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4 text-primary" />
-            Recent Alerts
-          </CardTitle>
+          <ShieldAlert className="size-4 text-primary" />
+          <h3 className="text-sm font-semibold tracking-tight text-foreground">Recent Threat Alerts</h3>
 
           {/* Connection status indicator */}
           <div
-            className="flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border bg-background/50 text-muted-foreground"
-            title={`WebSocket: ${connectionStatus}`}
+            className="flex items-center gap-1.5 text-[10px] font-mono px-2 py-0.5 rounded border border-border bg-surface text-muted-foreground"
+            title={`WebSocket status: ${connectionStatus}`}
           >
             <span
-              className={`w-1.5 h-1.5 rounded-full ${
+              className={cn(
+                'size-1.5 rounded-full',
                 connectionStatus === 'connected'
-                  ? 'bg-emerald-500 animate-pulse'
+                  ? 'bg-clean animate-pulse'
                   : connectionStatus === 'connecting' || connectionStatus === 'reconnecting'
-                  ? 'bg-amber-500 animate-pulse'
+                  ? 'bg-medium animate-pulse'
                   : 'bg-muted-foreground'
-              }`}
+              )}
             />
-            <span className="capitalize text-[10px]">{connectionStatus === 'connected' ? 'Live' : connectionStatus}</span>
+            <span className="uppercase">{connectionStatus === 'connected' ? 'LIVE FEED' : connectionStatus}</span>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           {stats && (
-            <Badge
-              variant={stats.unacknowledged > 0 ? 'destructive' : 'outline'}
-              className={`text-[11px] font-semibold px-2 py-0.5 ${
+            <span
+              className={cn(
+                'font-mono text-[10px] font-bold uppercase px-2 py-0.5 rounded border',
                 stats.unacknowledged > 0
-                  ? 'bg-red-500/15 text-red-400 border-red-500/30'
-                  : 'bg-muted/50 text-muted-foreground border-border/50'
-              }`}
+                  ? 'bg-critical/15 text-critical border-critical/30'
+                  : 'bg-surface text-muted-foreground border-border'
+              )}
             >
-              {stats.unacknowledged} unacknowledged
-            </Badge>
+              {stats.unacknowledged} UNACKNOWLEDGED
+            </span>
           )}
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="flex-1 overflow-hidden p-0 flex flex-col justify-between">
-        <div className="space-y-2.5 h-[340px] overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+      {/* Content Area */}
+      <div className="flex-1 overflow-hidden pt-3 flex flex-col justify-between">
+        <div className="space-y-2.5 max-h-[350px] overflow-y-auto pr-1">
           {/* Loading State */}
           {isLoading && (
             <div className="space-y-2.5">
               {[1, 2, 3].map((n) => (
-                <div
-                  key={n}
-                  className="p-3.5 rounded-xl border border-border/40 bg-muted/20 animate-pulse space-y-2"
-                >
+                <div key={n} className="p-3.5 rounded bg-surface/50 border border-border/40 animate-pulse space-y-2">
                   <div className="flex justify-between items-center">
-                    <div className="h-4 w-16 bg-muted rounded" />
+                    <div className="h-3.5 w-16 bg-muted rounded" />
                     <div className="h-3 w-12 bg-muted rounded" />
                   </div>
-                  <div className="h-4 w-3/4 bg-muted rounded" />
-                  <div className="h-3 w-1/2 bg-muted rounded" />
+                  <div className="h-3.5 w-3/4 bg-muted rounded" />
                 </div>
               ))}
             </div>
@@ -177,18 +170,18 @@ export default function RecentAlerts() {
           {/* Error State */}
           {!isLoading && isError && (
             <div className="h-full flex flex-col items-center justify-center p-6 text-center">
-              <AlertTriangle className="w-8 h-8 text-amber-400 mb-2" />
-              <p className="text-sm font-medium text-foreground">Failed to load alerts</p>
-              <p className="text-xs text-muted-foreground mt-1 mb-3">
+              <AlertTriangle className="size-7 text-medium mb-2" />
+              <p className="text-xs font-semibold text-foreground">Failed to synchronize alerts</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5 mb-3">
                 Could not retrieve latest threat alerts.
               </p>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => refetch()}
-                className="h-8 text-xs gap-1.5"
+                className="h-7 text-xs font-mono gap-1.5"
               >
-                <RefreshCw className="w-3.5 h-3.5" />
+                <RefreshCw className="size-3" />
                 Retry
               </Button>
             </div>
@@ -197,10 +190,10 @@ export default function RecentAlerts() {
           {/* Empty State */}
           {!isLoading && !isError && displayAlerts.length === 0 && (
             <div className="h-full flex flex-col items-center justify-center p-6 text-center">
-              <CheckCircle2 className="w-9 h-9 text-emerald-400 mb-2 opacity-80" />
-              <p className="text-sm font-medium text-foreground">No active threat alerts</p>
-              <p className="text-xs text-muted-foreground mt-1 max-w-[240px]">
-                No critical or high-risk incidents detected in the current stream.
+              <CheckCircle2 className="size-8 text-clean mb-2 opacity-80" />
+              <p className="text-xs font-semibold text-foreground">No active threat alerts</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5 max-w-[220px]">
+                No critical or high-risk incidents detected in the current telemetry stream.
               </p>
             </div>
           )}
@@ -220,50 +213,49 @@ export default function RecentAlerts() {
               return (
                 <div
                   key={alert.id}
-                  className={`relative flex flex-col gap-2 p-3.5 rounded-xl border transition-all duration-300 ${
+                  className={cn(
+                    'relative flex flex-col gap-2 p-3 rounded border transition-all duration-300',
                     isHighlighted
-                      ? 'border-amber-500/70 bg-amber-500/10 shadow-md shadow-amber-500/10 ring-1 ring-amber-500/50'
+                      ? 'border-accent/80 bg-accent/10 shadow-glow'
                       : alert.acknowledged
-                      ? 'border-border/30 bg-background/20 opacity-75 hover:opacity-100 hover:bg-muted/30'
-                      : 'border-border/60 bg-background/40 hover:bg-muted/40 shadow-sm'
-                  }`}
+                      ? 'border-border/30 bg-surface/30 opacity-70 hover:opacity-100 hover:bg-surface'
+                      : 'border-border/60 bg-surface/60 hover:bg-surface hover:border-border'
+                  )}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       {renderSeverityBadge(alert.severity)}
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded bg-muted/60 text-foreground/80 border border-border/40">
-                        Risk: {alert.risk_score ? alert.risk_score.toFixed(0) : '0'}
+                      <span className="font-mono text-[10px] font-bold text-foreground px-2 py-0.5 rounded bg-surface-2 border border-border">
+                        RISK {alert.risk_score ? alert.risk_score.toFixed(0) : '0'}
                       </span>
                     </div>
-                    <span className="text-[11px] text-muted-foreground font-medium whitespace-nowrap">
+                    <span className="label-mono text-[10px]">
                       {formatTimestamp(alert.created_at)}
                     </span>
                   </div>
 
-                  <p className="text-xs font-medium text-foreground/90 leading-snug line-clamp-2">
+                  <p className="text-xs text-foreground/90 font-medium leading-snug line-clamp-2">
                     {title}
                   </p>
 
-                  <div className="flex items-center justify-between pt-1 mt-0.5 border-t border-border/20">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between pt-1.5 mt-0.5 border-t border-border/30">
+                    <div>
                       {alert.email_id && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
+                        <button
                           onClick={() => navigate(`/emails/${alert.email_id}`)}
-                          className="h-6 px-2 text-[11px] text-primary hover:text-primary/80 hover:bg-primary/10 gap-1 font-medium -ml-1"
+                          className="inline-flex items-center gap-1 font-mono text-[11px] text-primary hover:text-primary/80 transition-colors"
                         >
-                          View Analysis
-                          <ExternalLink className="w-3 h-3" />
-                        </Button>
+                          <span>Analyze Evidence</span>
+                          <ExternalLink className="size-3" />
+                        </button>
                       )}
                     </div>
 
                     <div>
                       {alert.acknowledged ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-medium px-2 py-0.5">
-                          <Check className="w-3 h-3" />
-                          Acknowledged
+                        <span className="inline-flex items-center gap-1 font-mono text-[10px] text-clean font-semibold uppercase">
+                          <Check className="size-3" />
+                          Acked
                         </span>
                       ) : (
                         <Button
@@ -271,12 +263,12 @@ export default function RecentAlerts() {
                           size="sm"
                           disabled={isPendingAck}
                           onClick={() => handleAcknowledge(alert.id)}
-                          className="h-6 px-2 text-[11px] border-border/60 hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-500/30 gap-1 font-medium transition-colors"
+                          className="h-6 px-2 text-[10px] font-mono border-border/70 hover:bg-clean/15 hover:text-clean hover:border-clean/40 gap-1 transition-colors"
                         >
                           {isPendingAck ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
+                            <Loader2 className="size-2.5 animate-spin" />
                           ) : (
-                            <Check className="w-3 h-3" />
+                            <Check className="size-2.5" />
                           )}
                           Acknowledge
                         </Button>
@@ -287,8 +279,9 @@ export default function RecentAlerts() {
               );
             })}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
+
 

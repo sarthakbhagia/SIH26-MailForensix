@@ -16,12 +16,12 @@ interface AttributionGraphProps {
 }
 
 const TYPE_COLORS: Record<GraphNodeType, string> = {
-  email: '#3B82F6',     // Blue
-  domain: '#8B5CF6',    // Purple
-  ip: '#EF4444',        // Red
-  registrar: '#F59E0B', // Amber
-  asn: '#10B981',       // Emerald
-  campaign: '#EC4899',  // Pink
+  email: '#00e5ff',     // Cyan
+  domain: '#b388ff',    // Purple
+  ip: '#ff3366',        // Critical Red
+  registrar: '#ffb020', // Amber
+  asn: '#00e699',       // Clean Green
+  campaign: '#ff4081',  // Pink
 };
 
 export default function AttributionGraph({
@@ -238,11 +238,11 @@ export default function AttributionGraph({
   );
 
   return (
-    <div className="relative w-full h-full bg-slate-950 rounded-lg overflow-hidden border border-border shadow-inner">
+    <div className="relative w-full h-full panel bg-slate-950 overflow-hidden shadow-inner p-0">
       {graphData.nodes.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-8">
-          <p className="text-lg font-medium">No Graph Data Available</p>
-          <p className="text-sm mt-1">Upload and analyze emails to populate the threat attribution graph.</p>
+          <p className="text-sm font-semibold text-foreground">No Graph Data Available</p>
+          <p className="label-mono text-[10px] mt-1">Upload and analyze emails to populate the threat attribution graph.</p>
         </div>
       ) : (
         <>
@@ -269,30 +269,30 @@ export default function AttributionGraph({
           />
 
           {/* Color-Coded Legend Overlay */}
-          <div className="absolute bottom-3 left-3 bg-slate-900/90 backdrop-blur-sm border border-slate-800 rounded-md p-2.5 text-xs text-slate-300 shadow-lg space-y-1.5 pointer-events-none">
-            <div className="font-semibold text-slate-200 mb-1">Entity Legend</div>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#3B82F6]" />
-              <span>Email Node</span>
+          <div className="absolute bottom-3 left-3 panel bg-background/90 backdrop-blur-md p-2.5 text-xs text-foreground shadow-2xl space-y-1.5 pointer-events-none border border-border">
+            <div className="label-mono font-bold text-foreground mb-1">ENTITY TOPOLOGY</div>
+            <div className="flex items-center gap-2 font-mono text-[10px]">
+              <span className="size-2 rounded-full bg-[#00e5ff]" />
+              <span>Email Artifact</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rotate-45 bg-[#8B5CF6]" />
+            <div className="flex items-center gap-2 font-mono text-[10px]">
+              <span className="size-2 rotate-45 bg-[#b388ff]" />
               <span>Sender Domain</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rotate-45 bg-[#EF4444]" />
+            <div className="flex items-center gap-2 font-mono text-[10px]">
+              <span className="size-2 rotate-45 bg-[#ff3366]" />
               <span>Relay IP Address</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 bg-[#10B981]" />
+            <div className="flex items-center gap-2 font-mono text-[10px]">
+              <span className="size-2 bg-[#00e699]" />
               <span>Autonomous System (ASN)</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 border-b-4 border-l-2 border-r-2 border-transparent border-b-[#F59E0B]" />
+            <div className="flex items-center gap-2 font-mono text-[10px]">
+              <span className="size-2 border-b-4 border-l-2 border-r-2 border-transparent border-b-[#ffb020]" />
               <span>Registrar</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full ring-2 ring-[#EC4899] bg-transparent" />
+            <div className="flex items-center gap-2 font-mono text-[10px]">
+              <span className="size-2 rounded-full ring-2 ring-[#ff4081] bg-transparent" />
               <span>Campaign Cluster</span>
             </div>
           </div>
@@ -301,3 +301,4 @@ export default function AttributionGraph({
     </div>
   );
 }
+
