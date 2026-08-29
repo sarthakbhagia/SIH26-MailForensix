@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     NLP_MODEL_PATH: str = "ml/models/nlp_classifier"
     ENSEMBLE_MODEL_PATH: str = "ml/models/ensemble_meta.joblib"
     
+    # JWT Authentication
+    JWT_SECRET_KEY: str = "kcQITBywHmUx8DWP9ZXMpjgbwl6M67abpSwWLAmCUwJ"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRE_MINUTES: int = 60
+    
     CORS_ORIGINS: List[str] = ["http://localhost:5173"]
     
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")

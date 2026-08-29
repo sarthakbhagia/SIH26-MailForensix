@@ -1,18 +1,42 @@
-import { X, ExternalLink, ShieldAlert, Globe, Server, Mail, Building, Users } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { Button } from '../ui/button';
-import { GraphNode } from '../../types/graph';
-import { cn } from '../../lib/utils';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  X,
+  ExternalLink,
+  ShieldAlert,
+  Globe,
+  Server,
+  Mail,
+  Building,
+  Users,
+  FolderPlus,
+  Copy,
+  Check,
+  ArrowRight,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { GraphNode, GraphLink } from '@/types/graph';
+import { cn, safeFormatDate } from '@/lib/utils';
+import { getSeverityTokens } from '@/lib/severity';
 
-interface NodeDetailPanelProps {
+export interface NodeDetailPanelProps {
   node: GraphNode;
   onClose: () => void;
+  allLinks?: GraphLink[];
+  allNodes?: GraphNode[];
+  onSelectNode?: (node: GraphNode) => void;
 }
 
-export default function NodeDetailPanel({
+export function NodeDetailPanel({
   node,
   onClose,
+  allLinks = [],
+  allNodes = [],
+  onSelectNode,
 }: NodeDetailPanelProps) {
+  const navigate = useNavigate();
+  const [copiedText, setCopiedText] = useState(false);
+
   const getIcon = () => {
     switch (node.type) {
       case 'email':
@@ -36,8 +60,40 @@ export default function NodeDetailPanel({
     return idStr.replace('email:', '');
   };
 
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedText(true);
+    setTimeout(() => setCopiedText(false), 1800);
+  };
+
+  // Connected 1-hop neighbor nodes
+  const connectedNeighbors = allLinks
+    .filter((l) => {
+      const srcId = typeof l.source === 'object' ? (l.source as any).id : l.source;
+      const tgtId = typeof l.target === 'object' ? (l.target as any).id : l.target;
+      return srcId === node.id || tgtId === node.id;
+    })
+    .map((l) => {
+      const srcId = typeof l.source === 'object' ? (l.source as any).id : l.source;
+      const tgtId = typeof l.target === 'object' ? (l.target as any).id : l.target;
+      const otherId = srcId === node.id ? tgtId : srcId;
+      const targetNode = allNodes.find((n) => n.id === otherId);
+      return {
+        relationship: l.relationship,
+        targetNode: targetNode || { id: otherId, label: otherId, type: 'domain' as const, color: '#a78bfa', val: 5 },
+      };
+    });
+
+  const getExternalLookupUrl = (rawVal: string, type: string) => {
+    const encoded = encodeURIComponent(rawVal.trim());
+    if (type === 'ip') return `https://www.virustotal.com/gui/ip-address/${encoded}`;
+    if (type === 'domain') return `https://www.virustotal.com/gui/domain/${encoded}`;
+    if (type === 'hash') return `https://www.virustotal.com/gui/file/${encoded}`;
+    return `https://www.virustotal.com/gui/search/${encoded}`;
+  };
+
   return (
-    <div className="w-80 md:w-96 panel h-full flex flex-col shadow-2xl z-10 animate-in slide-in-from-right duration-200 border-l border-border p-0">
+    <div className="w-80 md:w-96 panel h-full flex flex-col shadow-2xl z-20 animate-in slide-in-from-right duration-200 border-l border-border p-0 bg-surface">
       {/* Panel Header */}
       <div className="p-3.5 border-b border-border/50 flex items-center justify-between bg-surface-2/60">
         <div className="flex items-center gap-2.5 min-w-0">
@@ -45,40 +101,46 @@ export default function NodeDetailPanel({
             {getIcon()}
           </div>
           <div className="min-w-0">
-            <span className="label-mono text-[9px] block">
-              {node.type} NODE
+            <span className="label-mono text-[9px] block uppercase">
+              {node.type} ENTITY
             </span>
             <h3 className="text-xs font-bold truncate text-foreground font-mono" title={node.label}>
               {node.label}
             </h3>
           </div>
         </div>
-        <Button variant="ghost" size="icon" onClick={onClose} className="h-7 w-7 text-muted-foreground hover:text-foreground">
-          <X className="size-4" />
-        </Button>
+
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => handleCopy(node.label || node.id)}
+            className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-surface-2 transition-colors"
+            title="Copy value"
+          >
+            {copiedText ? <Check className="size-3.5 text-clean" /> : <Copy className="size-3.5" />}
+          </button>
+          <Button variant="ghost" size="icon" onClick={onClose} className="h-7 w-7 text-muted-foreground hover:text-foreground">
+            <X className="size-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Panel Body */}
-      <div className="flex-1 overflow-y-auto p-3.5 space-y-3.5 text-xs">
+      <div className="flex-1 overflow-y-auto p-3.5 space-y-3.5 text-xs font-mono">
         {/* Risk Score Banner */}
         {node.risk_score !== undefined && node.risk_score !== null && (
-          <div className="flex items-center justify-between p-2.5 rounded bg-surface border border-border">
+          <div className="flex items-center justify-between p-2.5 rounded bg-surface-2 border border-border">
             <div className="flex items-center gap-2 text-muted-foreground">
-              <ShieldAlert className="size-3.5 text-medium" />
+              <ShieldAlert className="size-3.5 text-critical" />
               <span className="label-mono text-[10px]">THREAT RISK SCORE</span>
             </div>
-            <span
-              className={cn(
-                'font-mono text-xs font-bold px-2 py-0.5 rounded border',
-                node.risk_score >= 75
-                  ? 'bg-critical/15 text-critical border-critical/30'
-                  : node.risk_score >= 50
-                  ? 'bg-high/15 text-high border-high/30'
-                  : 'bg-clean/15 text-clean border-clean/30'
-              )}
-            >
-              {Math.round(node.risk_score)} / 100
-            </span>
+            {(() => {
+              const tokens = getSeverityTokens(node.risk_score);
+              return (
+                <span className={cn('font-mono text-xs font-bold px-2 py-0.5 rounded border tabular-nums', tokens.badgeClass)}>
+                  {Math.round(node.risk_score)} / 100
+                </span>
+              );
+            })()}
           </div>
         )}
 
@@ -87,29 +149,81 @@ export default function NodeDetailPanel({
           <div className="space-y-2.5">
             <div>
               <span className="label-mono text-[9px] block mb-1">SUBJECT</span>
-              <p className="font-medium text-foreground bg-surface p-2.5 rounded border border-border text-xs">
+              <p className="font-medium text-foreground bg-surface-2 p-2.5 rounded border border-border text-xs break-words">
                 {node.subject || node.label}
               </p>
             </div>
             <div>
               <span className="label-mono text-[9px] block mb-1">SENDER</span>
-              <p className="font-mono text-xs text-foreground bg-surface p-2 rounded border border-border break-all">
+              <p className="text-xs text-foreground bg-surface-2 p-2 rounded border border-border break-all">
                 {node.sender || 'Unknown'}
               </p>
             </div>
             {node.analyzed_at && (
               <div>
-                <span className="label-mono text-[9px] block mb-1">ANALYZED AT</span>
-                <p className="text-foreground font-mono text-xs">{new Date(node.analyzed_at).toLocaleString()}</p>
+                <span className="label-mono text-[9px] block mb-1">INGESTED TIMESTAMP</span>
+                <p className="text-foreground text-xs">{safeFormatDate(node.analyzed_at)}</p>
               </div>
             )}
-            <div className="pt-2">
-              <Link to={`/emails/${getCleanEmailId(node.id)}`}>
-                <Button className="w-full gap-2 h-8 text-xs font-mono font-semibold" size="sm">
-                  VIEW FULL FORENSICS
-                  <ExternalLink className="size-3.5" />
-                </Button>
-              </Link>
+            <div className="pt-2 flex flex-col gap-2">
+              <Button
+                onClick={() => navigate(`/emails/${getCleanEmailId(node.id)}`)}
+                className="w-full gap-2 h-8 text-xs font-mono font-semibold bg-primary text-primary-foreground"
+                size="sm"
+              >
+                <span>OPEN INVESTIGATION WORKSTATION</span>
+                <ExternalLink className="size-3.5" />
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(`/cases?new=true&title=${encodeURIComponent(`Investigate Email: ${node.subject || node.label}`)}`)}
+                className="w-full gap-1.5 h-7 text-xs font-mono border-border"
+              >
+                <FolderPlus className="size-3 text-muted-foreground" />
+                <span>Attach to Case</span>
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Domain Node Details */}
+        {node.type === 'domain' && (
+          <div className="space-y-2.5">
+            {node.registrar && (
+              <div>
+                <span className="label-mono text-[9px] block mb-1">REGISTRAR</span>
+                <p className="text-foreground bg-surface-2 p-2 rounded border border-border">{node.registrar}</p>
+              </div>
+            )}
+            {node.created_date && (
+              <div>
+                <span className="label-mono text-[9px] block mb-1">CREATION DATE</span>
+                <p className="text-foreground bg-surface-2 p-2 rounded border border-border">{node.created_date}</p>
+              </div>
+            )}
+
+            <div className="pt-2 flex flex-col gap-2">
+              <a
+                href={getExternalLookupUrl(node.label || node.id, 'domain')}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded border border-border bg-surface-2 hover:bg-surface-3 text-xs font-mono font-semibold text-foreground transition-colors"
+              >
+                <span>VirusTotal Dossier</span>
+                <ExternalLink className="size-3 text-primary" />
+              </a>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(`/cases?new=true&title=${encodeURIComponent(`Investigate Domain: ${node.label || node.id}`)}`)}
+                className="w-full gap-1.5 h-7 text-xs font-mono border-border"
+              >
+                <FolderPlus className="size-3 text-muted-foreground" />
+                <span>Attach to Case</span>
+              </Button>
             </div>
           </div>
         )}
@@ -117,111 +231,94 @@ export default function NodeDetailPanel({
         {/* IP Node Details */}
         {node.type === 'ip' && (
           <div className="space-y-2.5">
-            <div className="grid grid-cols-2 gap-2">
-              <div className="p-2 bg-surface rounded border border-border">
-                <span className="label-mono text-[9px] block">COUNTRY</span>
-                <span className="font-semibold text-foreground text-xs">{node.country || 'Unknown'}</span>
+            {node.country && (
+              <div>
+                <span className="label-mono text-[9px] block mb-1">GEOLOCATION</span>
+                <p className="text-foreground bg-surface-2 p-2 rounded border border-border">
+                  {node.country} {node.country_code ? `(${node.country_code})` : ''}
+                </p>
               </div>
-              <div className="p-2 bg-surface rounded border border-border">
-                <span className="label-mono text-[9px] block">CITY</span>
-                <span className="font-semibold text-foreground text-xs">{node.city || 'Unknown'}</span>
+            )}
+            {node.asn && (
+              <div>
+                <span className="label-mono text-[9px] block mb-1">AUTONOMOUS SYSTEM (ASN)</span>
+                <p className="text-foreground bg-surface-2 p-2 rounded border border-border">{node.asn}</p>
               </div>
+            )}
+
+            <div className="pt-2 flex flex-col gap-2">
+              <a
+                href={getExternalLookupUrl(node.label || node.id, 'ip')}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded border border-border bg-surface-2 hover:bg-surface-3 text-xs font-mono font-semibold text-foreground transition-colors"
+              >
+                <span>AbuseIPDB / VirusTotal</span>
+                <ExternalLink className="size-3 text-primary" />
+              </a>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(`/cases?new=true&title=${encodeURIComponent(`Investigate IP: ${node.label || node.id}`)}`)}
+                className="w-full gap-1.5 h-7 text-xs font-mono border-border"
+              >
+                <FolderPlus className="size-3 text-muted-foreground" />
+                <span>Attach to Case</span>
+              </Button>
             </div>
-            <div className="p-2 bg-surface rounded border border-border">
-              <span className="label-mono text-[9px] block">ISP / ORGANIZATION</span>
-              <span className="font-mono text-xs text-foreground">{node.isp || 'Unknown'}</span>
+          </div>
+        )}
+
+        {/* Campaign Details */}
+        {node.type === 'campaign' && (
+          <div className="space-y-2.5">
+            <div>
+              <span className="label-mono text-[9px] block mb-1">CAMPAIGN ATTRIBUTION</span>
+              <p className="text-foreground bg-surface-2 p-2.5 rounded border border-border">
+                {node.label}
+              </p>
             </div>
-            {node.infrastructure_type && node.infrastructure_type !== 'unknown' && (
-              <div className="flex items-center justify-between p-2 bg-amber-500/10 border border-amber-500/30 rounded text-amber-400 font-mono text-xs">
-                <span>Infrastructure:</span>
-                <span className="uppercase font-bold text-[10px]">
-                  {node.infrastructure_type}
-                </span>
+            {node.email_count && (
+              <div>
+                <span className="label-mono text-[9px] block mb-1">CORRELATED THREAT CLUSTER</span>
+                <p className="text-primary font-bold">{node.email_count} emails attributed</p>
               </div>
             )}
           </div>
         )}
 
-        {/* Domain Node Details */}
-        {node.type === 'domain' && (
-          <div className="space-y-2.5">
-            <div className="p-2.5 bg-surface rounded border border-border">
-              <span className="label-mono text-[9px] block">DOMAIN NAME</span>
-              <span className="font-mono font-medium text-foreground text-xs">{node.label}</span>
-            </div>
-            <div className="p-2.5 bg-surface rounded border border-border">
-              <span className="label-mono text-[9px] block">REGISTRAR</span>
-              <span className="font-mono text-xs text-foreground">{node.registrar || 'Unknown'}</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="p-2 bg-surface rounded border border-border">
-                <span className="label-mono text-[9px] block">DOMAIN AGE</span>
-                <span className="font-mono text-xs font-semibold text-foreground">
-                  {node.age_days !== undefined && node.age_days >= 0 ? `${node.age_days}d` : 'Unknown'}
-                </span>
-              </div>
-              <div className="p-2 bg-surface rounded border border-border">
-                <span className="label-mono text-[9px] block">NEWLY REGISTERED</span>
-                <span className={cn('font-mono text-xs font-bold', node.is_newly_registered ? 'text-critical' : 'text-clean')}>
-                  {node.is_newly_registered ? 'YES (< 30d)' : 'NO'}
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Connected 1-Hop Neighbors List */}
+        {connectedNeighbors.length > 0 && (
+          <div className="pt-3 border-t border-border/50 space-y-2">
+            <span className="label-mono text-[9px] block">
+              CORRELATED NEIGHBORS ({connectedNeighbors.length})
+            </span>
 
-        {/* ASN Node Details */}
-        {node.type === 'asn' && (
-          <div className="space-y-2.5">
-            <div className="p-2.5 bg-surface rounded border border-border">
-              <span className="label-mono text-[9px] block">AUTONOMOUS SYSTEM</span>
-              <span className="font-mono font-medium text-foreground text-xs">{node.label}</span>
-            </div>
-            <div className="p-2.5 bg-surface rounded border border-border">
-              <span className="label-mono text-[9px] block">ORGANIZATION</span>
-              <span className="font-medium text-foreground text-xs">{node.org || 'Unknown'}</span>
-            </div>
-          </div>
-        )}
-
-        {/* Campaign Node Details */}
-        {node.type === 'campaign' && (
-          <div className="space-y-3">
-            <div className="p-3 bg-pink-500/10 border border-pink-500/30 rounded">
-              <span className="text-pink-400 font-bold font-mono block text-xs mb-1">
-                CAMPAIGN CONFIDENCE: {node.confidence || 85}%
-              </span>
-              <p className="text-foreground/90 text-xs leading-relaxed">
-                {node.summary || 'Coordinated attack campaign detected across shared threat infrastructure.'}
-              </p>
-            </div>
-
-            <div className="p-2.5 bg-surface rounded border border-border">
-              <span className="label-mono text-[9px] block">CORRELATED EMAIL EVIDENCE</span>
-              <span className="font-mono font-bold text-foreground text-xs">{node.email_count || 2} emails linked</span>
-            </div>
-          </div>
-        )}
-
-        {/* Raw Attributes Dump for Deep Investigation */}
-        <div className="pt-2 border-t border-border/50">
-          <span className="label-mono text-[9px] block mb-1.5">
-            NODE METADATA ATTRIBUTES
-          </span>
-          <div className="bg-background/80 p-2.5 rounded border border-border font-mono text-[10px] text-muted-foreground max-h-36 overflow-y-auto space-y-0.5">
-            <div>ID: {node.id}</div>
-            <div>Type: {node.type}</div>
-            {Object.entries(node)
-              .filter(([k]) => !['id', 'type', 'label', 'color', 'val', 'x', 'y', 'vx', 'vy'].includes(k))
-              .map(([k, v]) => (
-                <div key={k} className="truncate">
-                  {k}: {typeof v === 'object' ? JSON.stringify(v) : String(v)}
+            <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+              {connectedNeighbors.map((cn, i) => (
+                <div
+                  key={i}
+                  onClick={() => onSelectNode?.(cn.targetNode)}
+                  className="p-2 rounded bg-surface-2 hover:bg-surface-3 border border-border/70 flex items-center justify-between gap-2 cursor-pointer transition-colors"
+                >
+                  <div className="truncate min-w-0">
+                    <span className="label-mono text-[8px] block text-muted-foreground">
+                      {cn.relationship.replace(/_/g, ' ')}
+                    </span>
+                    <span className="font-semibold text-foreground truncate block text-xs" title={cn.targetNode.label}>
+                      {cn.targetNode.label}
+                    </span>
+                  </div>
+                  <ArrowRight className="size-3 text-muted-foreground shrink-0" />
                 </div>
               ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
 }
 
+export default NodeDetailPanel;

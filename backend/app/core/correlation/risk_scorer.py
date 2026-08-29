@@ -188,32 +188,47 @@ class RiskScorer:
             return 0.0, "NLP analysis unavailable"
 
         label = getattr(nlp_result, "label", "Legitimate")
-        confidence = float(getattr(nlp_result, "confidence", 0.0))
-        urgency = float(getattr(nlp_result, "urgency_score", 0.0))
+        raw_conf = getattr(nlp_result, "confidence", None)
+        raw_evidence = getattr(nlp_result, "evidence_score", None)
+        raw_urgency = getattr(nlp_result, "urgency_score", 0.0)
 
         if isinstance(nlp_result, dict):
             label = nlp_result.get("label", "Legitimate")
-            confidence = float(nlp_result.get("confidence", 0.0))
-            urgency = float(nlp_result.get("urgency_score", 0.0))
+            raw_conf = nlp_result.get("confidence", None)
+            raw_evidence = nlp_result.get("evidence_score", None)
+            raw_urgency = nlp_result.get("urgency_score", 0.0)
 
-        if 0.0 < confidence <= 1.0:
+        confidence = float(raw_conf) if raw_conf is not None else None
+        evidence_score = float(raw_evidence) if raw_evidence is not None else 0.0
+        urgency = float(raw_urgency) if raw_urgency is not None else 0.0
+
+        if confidence is not None and 0.0 < confidence <= 1.0:
             confidence = confidence * 100.0
+        if 0.0 < evidence_score <= 1.0:
+            evidence_score = evidence_score * 100.0
+
+        score_to_use = confidence if confidence is not None else evidence_score
 
         if label == "Legitimate":
-            risk = max(0.0, (100.0 - confidence) * 0.15)
+            risk = max(0.0, score_to_use * 0.15) if score_to_use > 0 else 0.0
         elif label in ("Phishing", "BEC/Fraud"):
-            risk = min(100.0, max(75.0, confidence))
+            risk = min(100.0, max(75.0, score_to_use))
         elif label == "Impersonation":
-            risk = min(100.0, max(65.0, confidence * 0.9))
+            risk = min(100.0, max(65.0, score_to_use * 0.9))
         elif label == "Suspicious":
-            risk = min(100.0, max(50.0, confidence * 0.8))
+            risk = min(100.0, max(50.0, score_to_use * 0.8))
         else:
             risk = 30.0
 
         if urgency >= 70:
             risk = min(100.0, risk + 10.0)
 
-        details = f"Classification: {label} (confidence: {confidence:.1f}%)"
+        if confidence is not None:
+            details = f"Classification: {label} (confidence: {confidence:.1f}%)"
+        elif evidence_score > 0:
+            details = f"Classification: {label} (evidence score: {evidence_score:.1f}%)"
+        else:
+            details = f"Classification: {label}"
         return risk, details
 
     def _extract_auth_details(self, header_result: Any) -> str:

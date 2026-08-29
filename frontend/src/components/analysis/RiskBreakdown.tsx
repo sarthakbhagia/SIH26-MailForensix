@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import { BarChart3 } from 'lucide-react';
+import { getSeverityTokens } from '@/lib/severity';
 
 export interface RiskFactor {
   name: string;
@@ -34,15 +35,8 @@ export function RiskBreakdown({ overallScore, factors, breakdownMap }: RiskBreak
     renderedFactors = [];
   }
 
-  const getScoreColor = (score: number) => {
-    if (score >= 75) return { text: 'text-critical', bar: 'bg-critical', stroke: 'var(--critical)' };
-    if (score >= 50) return { text: 'text-high', bar: 'bg-high', stroke: 'var(--high)' };
-    if (score >= 25) return { text: 'text-medium', bar: 'bg-medium', stroke: 'var(--medium)' };
-    return { text: 'text-clean', bar: 'bg-clean', stroke: 'var(--clean)' };
-  };
-
   return (
-    <div className="panel p-5 space-y-4">
+    <div className="panel p-4 sm:p-5 space-y-4">
       <div className="flex items-center justify-between border-b border-border/50 pb-3">
         <div className="flex items-center gap-2">
           <BarChart3 className="size-4 text-primary" />
@@ -50,7 +44,7 @@ export function RiskBreakdown({ overallScore, factors, breakdownMap }: RiskBreak
         </div>
         <div className="flex items-center gap-2">
           <span className="label-mono text-[10px]">COMPOSITE</span>
-          <span className="font-mono text-sm font-bold text-primary">{overallScore}/100</span>
+          <span className="font-mono text-sm font-bold text-primary tabular-nums">{overallScore}/100</span>
         </div>
       </div>
 
@@ -61,16 +55,16 @@ export function RiskBreakdown({ overallScore, factors, breakdownMap }: RiskBreak
           </div>
         ) : (
           renderedFactors.map((factor, idx) => {
-            const color = getScoreColor(factor.score);
+            const tokens = getSeverityTokens(factor.score);
             return (
               <div key={idx} className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs font-mono">
                   <span className="text-foreground/90 font-medium">{factor.name}</span>
-                  <span className={cn('font-bold', color.text)}>{factor.score}%</span>
+                  <span className={cn('font-bold tabular-nums', tokens.textColor)}>{factor.score}%</span>
                 </div>
                 <div className="h-1.5 w-full rounded-full bg-surface-2 overflow-hidden border border-border/40">
                   <div
-                    className={cn('h-full rounded-full transition-all duration-700', color.bar)}
+                    className={cn('h-full rounded-full transition-all duration-500', tokens.dotClass)}
                     style={{ width: `${factor.score}%` }}
                   />
                 </div>
@@ -83,4 +77,4 @@ export function RiskBreakdown({ overallScore, factors, breakdownMap }: RiskBreak
   );
 }
 
-export default RiskBreakdown;
+export default RiskBreakdown;

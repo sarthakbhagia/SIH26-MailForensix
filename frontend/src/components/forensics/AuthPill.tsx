@@ -1,26 +1,18 @@
-﻿import React from 'react';
+import React from 'react';
 import { cn } from '@/lib/utils';
 import { CheckCircle2, XCircle, AlertTriangle, HelpCircle, Loader2 } from 'lucide-react';
-
-export type AuthStatus = 'pass' | 'fail' | 'softfail' | 'neutral' | 'none' | 'unavailable' | string;
+import { getAuthStatusTokens, AuthStatus } from '@/lib/severity';
 
 export interface AuthPillProps extends React.HTMLAttributes<HTMLDivElement> {
   protocol: 'SPF' | 'DKIM' | 'DMARC' | 'ALIGNMENT' | string;
-  status: AuthStatus;
+  status: AuthStatus | string;
   domain?: string;
   details?: string;
   dnsState?: 'verified' | 'disagrees' | 'pending' | null;
   record?: string;
 }
 
-export function getAuthColor(status: AuthStatus): string {
-  const s = String(status || '').toLowerCase();
-  if (s === 'pass' || s === 'true' || s === 'aligned') return 'var(--clean)';
-  if (s === 'fail' || s === 'false') return 'var(--critical)';
-  if (s === 'softfail') return 'var(--high)';
-  if (s === 'neutral') return 'var(--medium)';
-  return 'var(--muted-foreground)';
-}
+export { type AuthStatus };
 
 export function AuthPill({
   protocol,
@@ -32,28 +24,27 @@ export function AuthPill({
   className,
   ...props
 }: AuthPillProps) {
-  const s = String(status || 'unavailable').toLowerCase();
-  const color = getAuthColor(s);
+  const authInfo = getAuthStatusTokens(status);
 
   const getStatusIcon = () => {
-    if (s === 'pass' || s === 'true' || s === 'aligned') {
-      return <CheckCircle2 className="size-3.5" style={{ color }} />;
+    if (authInfo.status === 'pass') {
+      return <CheckCircle2 className="size-3.5 text-clean" />;
     }
-    if (s === 'fail' || s === 'false') {
-      return <XCircle className="size-3.5" style={{ color }} />;
+    if (authInfo.status === 'fail') {
+      return <XCircle className="size-3.5 text-critical" />;
     }
-    if (s === 'softfail' || s === 'neutral') {
-      return <AlertTriangle className="size-3.5" style={{ color }} />;
+    if (authInfo.status === 'softfail' || authInfo.status === 'neutral') {
+      return <AlertTriangle className="size-3.5 text-medium" />;
     }
-    return <HelpCircle className="size-3.5" style={{ color }} />;
+    return <HelpCircle className="size-3.5 text-muted-foreground" />;
   };
 
   return (
-    <div className={cn('panel flex flex-col justify-between gap-2 p-4 transition-colors', className)} {...props}>
+    <div className={cn('panel flex flex-col justify-between gap-2 p-3.5 transition-colors', className)} {...props}>
       {/* Header Row */}
       <div className="flex items-center justify-between">
         <span className="label-mono font-bold tracking-wider">{protocol}</span>
-        <div className="flex items-center gap-1.5 font-mono text-xs uppercase font-bold" style={{ color }}>
+        <div className={cn('flex items-center gap-1.5 font-mono text-xs uppercase font-bold', authInfo.tokens.textColor)}>
           {getStatusIcon()}
           <span>{status || 'NONE'}</span>
         </div>
@@ -62,7 +53,7 @@ export function AuthPill({
       {/* Domain / Details */}
       {(domain || details) && (
         <div className="space-y-0.5">
-          {domain && <p className="font-mono text-xs text-foreground truncate">{domain}</p>}
+          {domain && <p className="font-mono text-xs text-foreground font-medium truncate">{domain}</p>}
           {details && <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">{details}</p>}
         </div>
       )}
@@ -83,17 +74,17 @@ export function AuthPill({
               {dnsState === 'pending' ? (
                 <>
                   <Loader2 className="size-2.5 animate-spin text-muted-foreground" />
-                  <span className="text-[9px]">verifying</span>
+                  <span>verifying</span>
                 </>
               ) : dnsState === 'verified' ? (
                 <>
                   <CheckCircle2 className="size-2.5 text-clean" />
-                  <span className="text-[9px] text-clean">verified</span>
+                  <span className="text-clean">verified</span>
                 </>
               ) : (
                 <>
                   <XCircle className="size-2.5 text-critical" />
-                  <span className="text-[9px] text-critical">mismatch</span>
+                  <span className="text-critical">mismatch</span>
                 </>
               )}
             </div>

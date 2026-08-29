@@ -312,12 +312,20 @@
     </div>
 
     <!-- 2. Executive Summary -->
+    <!-- 2. Executive Summary -->
     <div class="exec-banner {% if threat_assessment.severity == 'critical' %}exec-critical{% elif threat_assessment.severity == 'high' %}exec-high{% elif threat_assessment.severity == 'medium' %}exec-medium{% else %}exec-low{% endif %}">
         <table class="exec-grid">
             <tr>
                 <td style="border: none;">
                     <div class="exec-title">
-                        VERDICT: {{ nlp_classification.label|default('Suspicious')|upper }} ({{ (nlp_classification.confidence|default(0.0))|round(1) }}% Confidence)
+                        VERDICT: {{ nlp_classification.label|default('Suspicious')|upper }}
+                        {% if nlp_classification.confidence is not none and nlp_classification.confidence_calibrated %}
+                            ({{ (nlp_classification.confidence)|round(1) }}% Confidence)
+                        {% elif nlp_classification.confidence is not none %}
+                            (Evidence Score: {{ (nlp_classification.confidence)|round(1) }}%)
+                        {% else %}
+                            (Confidence: Not Computed)
+                        {% endif %}
                     </div>
                     <div class="exec-action">
                         <strong>Recommended SOC Action:</strong> {{ threat_assessment.recommended_action|default('Review and monitor') }}
@@ -390,13 +398,21 @@
             <tr>
                 <th style="width: 25%;">Classification Model</th>
                 <th style="width: 25%;">Assigned Verdict</th>
-                <th style="width: 20%;">Confidence Level</th>
+                <th style="width: 20%;">Confidence / Evidence</th>
                 <th style="width: 30%;">Threat Characteristics</th>
             </tr>
             <tr>
-                <td><strong>Ensemble Neural Classifier</strong></td>
+                <td><strong>{% if nlp_classification.confidence_method == 'ensemble_stacking' %}Ensemble Neural Classifier{% elif nlp_classification.confidence_method == 'transformer_softmax' %}Transformer ML Model{% else %}Rule-Based Heuristic Engine{% endif %}</strong></td>
                 <td><span class="badge {% if nlp_classification.label|lower in ['phishing', 'bec', 'malware'] %}badge-fail{% elif nlp_classification.label|lower == 'suspicious' %}badge-warn{% else %}badge-pass{% endif %}">{{ nlp_classification.label|default('Unknown')|upper }}</span></td>
-                <td><strong>{{ (nlp_classification.confidence|default(0.0))|round(1) }}%</strong></td>
+                <td>
+                    {% if nlp_classification.confidence is not none and nlp_classification.confidence_calibrated %}
+                        <strong>{{ (nlp_classification.confidence)|round(1) }}%</strong> <span style="font-size: 6.5pt; color: #64748b;">(Calibrated)</span>
+                    {% elif nlp_classification.confidence is not none %}
+                        <strong>{{ (nlp_classification.confidence)|round(1) }}%</strong> <span style="font-size: 6.5pt; color: #64748b;">(Heuristic Evidence)</span>
+                    {% else %}
+                        <span style="color: #64748b; font-style: italic;">Not Computed</span>
+                    {% endif %}
+                </td>
                 <td>{{ (nlp_classification.details and nlp_classification.details.indicators)|default('Automated feature extraction') }}</td>
             </tr>
         </table>
@@ -605,10 +621,14 @@
             <tr>
                 <td class="label-col">Attribution Confidence</td>
                 <td colspan="3">
-                    {% if attribution.confidence and attribution.confidence > 0 %}
-                        {{ (attribution.confidence|default(0.0))|round(1) }}% Confidence based on infrastructure correlation graph
+                    {% if attribution.confidence is not none and attribution.confidence_calibrated %}
+                        <strong>{{ (attribution.confidence)|round(1) }}%</strong> (Calibrated Graph Correlation)
+                    {% elif attribution.evidence_support_score is not none %}
+                        <strong>{{ (attribution.evidence_support_score)|round(1) }}%</strong> (Heuristic Evidence Support)
+                    {% elif attribution.confidence is not none %}
+                        <strong>{{ (attribution.confidence)|round(1) }}%</strong> (Uncalibrated)
                     {% else %}
-                        Low Confidence / Emerging Signature
+                        <span style="color: #64748b; font-style: italic;">Not Computed / Emerging Signature</span>
                     {% endif %}
                 </td>
             </tr>

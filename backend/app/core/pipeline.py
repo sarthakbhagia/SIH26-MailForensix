@@ -3,7 +3,7 @@ import dataclasses
 import logging
 from dataclasses import asdict
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -37,10 +37,11 @@ class AnalysisPipeline:
 
     async def run(
         self,
-        email_id: str,
+        email_id: Union[str, UUID],
         db: AsyncSession,
     ) -> Optional[AnalysisResult]:
-        result = await db.execute(select(Email).filter(Email.id == UUID(email_id)))
+        parsed_uuid = email_id if isinstance(email_id, UUID) else UUID(str(email_id))
+        result = await db.execute(select(Email).filter(Email.id == parsed_uuid))
         email = result.scalar_one_or_none()
 
         if not email:
@@ -50,149 +51,175 @@ class AnalysisPipeline:
         email.status = EmailStatus.processing
         await db.commit()
 
-        # Extract domain from sender for geo intel
-        sender_domain = email.sender.split("@")[-1] if "@" in (email.sender or "") else ""
+        try:
+            # Extract domain from sender for geo intel
+            sender_str = str(email.sender or "")
+            sender_domain = sender_str.split("@")[-1] if "@" in sender_str else ""
 
-        # Run analysis modules IN PARALLEL using asyncio.gather()
-        email_headers = email.headers or {}
-        header_result, geo_result, nlp_result, link_result, attachment_result = await asyncio.gather(
-            self.header_forensics.analyze(
-                email.raw_eml, email_headers, email.sender,
-                email_headers.get("received_hops", [])
-            ),
-            self.geo_intel.analyze(
-                email_headers.get("received_hops", []), sender_domain,
-                email_headers=email_headers,
-            ),
-            asyncio.to_thread(self.nlp_classifier.classify,
-                              email.subject, email.body_text, email.sender, email_headers),
-            self.link_analyzer.analyze(email.urls or []),
-            asyncio.to_thread(self.attachment_analyzer.analyze, email.attachments or []),
-            return_exceptions=True,
-        )
+            # Run analysis modules IN PARALLEL using asyncio.gather()
+            email_headers = email.headers or {}
+            header_result, geo_result, nlp_result, link_result, attachment_result = await asyncio.gather(
+                self.header_forensics.analyze(
+                    email.raw_eml or b"", email_headers, sender_str,
+                    email_headers.get("received_hops", [])
+                ),
+                self.geo_intel.analyze(
+                    email_headers.get("received_hops", []), sender_domain,
+                    email_headers=email_headers,
+                ),
+                asyncio.to_thread(self.nlp_classifier.classify,
+                                  email.subject or "", email.body_text or "", sender_str, email_headers),
+                self.link_analyzer.analyze(email.urls or []),
+                asyncio.to_thread(self.attachment_analyzer.analyze, email.attachments or []),
+                return_exceptions=True,
+            )
 
-        # Handle errors from individual modules gracefully
-        default_header = self._get_default_header()
-        default_geo = self._get_default_geo()
-        default_nlp = self._get_default_nlp()
-        default_link = self._get_default_link()
-        default_attachment = self._get_default_attachment()
+            # Handle errors from individual modules gracefully
+            default_header = self._get_default_header()
+            default_geo = self._get_default_geo()
+            default_nlp = self._get_default_nlp()
+            default_link = self._get_default_link()
+            default_attachment = self._get_default_attachment()
 
-        if isinstance(header_result, Exception):
-            logger.warning(f"HeaderForensics error for email {email_id}: {header_result}")
-            header_result = default_header
-        if isinstance(geo_result, Exception):
-            logger.warning(f"GeoIntelligence error for email {email_id}: {geo_result}")
-            geo_result = default_geo
-        if isinstance(nlp_result, Exception):
-            logger.warning(f"NLPClassifier error for email {email_id}: {nlp_result}")
-            nlp_result = default_nlp
-        if isinstance(link_result, Exception):
-            logger.warning(f"LinkAnalyzer error for email {email_id}: {link_result}")
-            link_result = default_link
-        if isinstance(attachment_result, Exception):
-            logger.warning(f"AttachmentAnalyzer error for email {email_id}: {attachment_result}")
-            attachment_result = default_attachment
+            if isinstance(header_result, Exception):
+                logger.warning(f"HeaderForensics error for email {email_id}: {header_result}")
+                header_result = default_header
+            if isinstance(geo_result, Exception):
+                logger.warning(f"GeoIntelligence error for email {email_id}: {geo_result}")
+                geo_result = default_geo
+            if isinstance(nlp_result, Exception):
+                logger.warning(f"NLPClassifier error for email {email_id}: {nlp_result}")
+                nlp_result = default_nlp
+            if isinstance(link_result, Exception):
+                logger.warning(f"LinkAnalyzer error for email {email_id}: {link_result}")
+                link_result = default_link
+            if isinstance(attachment_result, Exception):
+                logger.warning(f"AttachmentAnalyzer error for email {email_id}: {attachment_result}")
+                attachment_result = default_attachment
 
-        # Build IOC list from all modules
-        iocs = self._collect_iocs(
-            header_result, geo_result, link_result, attachment_result
-        )
+            # Build IOC list from all modules
+            iocs = self._collect_iocs(
+                header_result, geo_result, link_result, attachment_result
+            )
 
-        # Compute multi-factor risk score using RiskScorer
-        risk_composite = self.risk_scorer.compute(
-            nlp_result, header_result, geo_result,
-            link_result, attachment_result
-        )
+            # Compute multi-factor risk score using RiskScorer
+            risk_composite = self.risk_scorer.compute(
+                nlp_result, header_result, geo_result,
+                link_result, attachment_result
+            )
 
-        # Determine attribution category
-        attribution_category = self._determine_attribution(
-            header_result, geo_result, nlp_result
-        )
-
-        # Prepare serializable dictionaries for storage and graph
-        relay_hops_dict = [self._asdict(hop) for hop in getattr(header_result, "relay_path", [])]
-        geo_data_dict = [self._asdict(geo) for geo in getattr(geo_result, "geo_locations", [])]
-        domain_intel_dict = self._asdict(geo_result.domain_intel) if getattr(geo_result, "domain_intel", None) else {}
-
-        # Build / update attribution graph entity for this email
-        self.graph_engine.add_email(
-            {"id": str(email.id), "sender": email.sender, "subject": email.subject},
-            {
-                "relay_path": relay_hops_dict,
-                "geo_data": geo_data_dict,
-                "domain_intel": domain_intel_dict,
-                "composite_risk_score": risk_composite.overall_score,
-                "analyzed_at": datetime.now(timezone.utc).isoformat(),
-            }
-        )
-        graph_json = self.graph_engine.get_subgraph_for_email(str(email.id), hops=2)
-
-        # Build analysis result record
-        analysis = AnalysisResult(
-            email_id=email.id,
-            nlp_label=nlp_result.label,
-            nlp_confidence=nlp_result.confidence,
-            nlp_details={
-                "probabilities": getattr(nlp_result, "probabilities", {}),
-                "urgency_score": getattr(nlp_result, "urgency_score", 0.0),
-                "bec_indicators": getattr(nlp_result, "bec_indicators", []),
-                "impersonation_signals": getattr(nlp_result, "impersonation_signals", []),
-            },
-            auth_status={
-                "spf": getattr(getattr(header_result, "spf", None), "status", "none"),
-                "spf_status": getattr(getattr(header_result, "spf", None), "status", "none"),
-                "spf_domain": getattr(getattr(header_result, "spf", None), "domain", ""),
-                "spf_ip": getattr(getattr(header_result, "spf", None), "ip", ""),
-                "spf_record": getattr(getattr(header_result, "spf", None), "record", ""),
-                "spf_details": getattr(getattr(header_result, "spf", None), "details", ""),
-
-                "dkim": getattr(getattr(header_result, "dkim", None), "status", "none"),
-                "dkim_status": getattr(getattr(header_result, "dkim", None), "status", "none"),
-                "dkim_domain": getattr(getattr(header_result, "dkim", None), "domain", ""),
-                "dkim_selector": getattr(getattr(header_result, "dkim", None), "selector", ""),
-                "dkim_details": getattr(getattr(header_result, "dkim", None), "details", ""),
-
-                "dmarc": getattr(getattr(header_result, "dmarc", None), "status", "none"),
-                "dmarc_status": getattr(getattr(header_result, "dmarc", None), "status", "none"),
-                "dmarc_domain": getattr(getattr(header_result, "dmarc", None), "domain", ""),
-                "dmarc_policy": getattr(getattr(header_result, "dmarc", None), "policy", "none"),
-                "policy": getattr(getattr(header_result, "dmarc", None), "policy", "none"),
-                "alignment_spf": getattr(getattr(header_result, "dmarc", None), "alignment_spf", False),
-                "alignment_dkim": getattr(getattr(header_result, "dmarc", None), "alignment_dkim", False),
-                "dmarc_record": getattr(getattr(header_result, "dmarc", None), "record", ""),
-                "dmarc_details": getattr(getattr(header_result, "dmarc", None), "details", ""),
-
-                "auth_confidence_score": getattr(header_result, "auth_confidence_score", 100.0),
-            },
-            relay_path=relay_hops_dict,
-            geo_data=geo_data_dict,
-            ip_reputation={"score": getattr(geo_result, "ip_reputation_score", 50.0)},
-            domain_intel=domain_intel_dict,
-            iocs=[self._asdict(ioc) for ioc in iocs],
-            composite_risk_score=risk_composite.overall_score,
-            risk_breakdown={
-                "factors": [self._asdict(f) for f in risk_composite.factors],
-                "severity": risk_composite.severity,
-                "recommended_action": risk_composite.recommended_action,
-                "nlp": next((f.raw_score for f in risk_composite.factors if "NLP" in f.name), 0.0),
-                "auth": next((f.raw_score for f in risk_composite.factors if "Authentication" in f.name), 0.0),
-                "ip": next((f.raw_score for f in risk_composite.factors if "IP" in f.name), 0.0),
-                "link": next((f.raw_score for f in risk_composite.factors if "Link" in f.name), 0.0),
-                "attachment": next((f.raw_score for f in risk_composite.factors if "Attachment" in f.name), 0.0),
-            },
-            attribution_category=attribution_category,
-            attribution_confidence=self._compute_attribution_confidence(
+            # Determine attribution category
+            attribution_category = self._determine_attribution(
                 header_result, geo_result, nlp_result
-            ),
-            graph_data=graph_json,
-            analyzed_at=datetime.now(timezone.utc).replace(tzinfo=None),
-        )
+            )
 
-        db.add(analysis)
-        email.status = EmailStatus.analyzed
-        await db.commit()
-        await db.refresh(analysis)
+            # Prepare serializable dictionaries for storage and graph
+            relay_hops_dict = [self._asdict(hop) for hop in getattr(header_result, "relay_path", [])]
+            geo_data_dict = [self._asdict(geo) for geo in getattr(geo_result, "geo_locations", [])]
+            domain_intel_dict = self._asdict(geo_result.domain_intel) if getattr(geo_result, "domain_intel", None) else {}
+
+            # Calculate attribution evidence support score across evaluated domains
+            attribution_evidence_score = self._compute_attribution_evidence_support(
+                header_result, geo_result, nlp_result
+            )
+
+            # Build / update attribution graph entity for this email
+            self.graph_engine.add_email(
+                {"id": str(email.id), "sender": email.sender, "subject": email.subject},
+                {
+                    "relay_path": relay_hops_dict,
+                    "geo_data": geo_data_dict,
+                    "domain_intel": domain_intel_dict,
+                    "composite_risk_score": risk_composite.overall_score,
+                    "attribution_evidence_score": attribution_evidence_score,
+                    "analyzed_at": datetime.now(timezone.utc).isoformat(),
+                }
+            )
+            graph_json = self.graph_engine.get_subgraph_for_email(str(email.id), hops=2)
+            if isinstance(graph_json, dict):
+                graph_json["attribution_evidence_score"] = attribution_evidence_score
+
+            # Delete any existing AnalysisResult row before inserting new one to support clean re-analysis
+            existing_res = await db.execute(select(AnalysisResult).filter(AnalysisResult.email_id == email.id))
+            existing_analysis = existing_res.scalar_one_or_none()
+            if existing_analysis:
+                await db.delete(existing_analysis)
+                await db.flush()
+
+            # Build analysis result record
+            analysis = AnalysisResult(
+                email_id=email.id,
+                nlp_label=nlp_result.label,
+                nlp_confidence=nlp_result.confidence,
+                nlp_details={
+                    "probabilities": getattr(nlp_result, "probabilities", {}),
+                    "urgency_score": getattr(nlp_result, "urgency_score", 0.0),
+                    "bec_indicators": getattr(nlp_result, "bec_indicators", []),
+                    "impersonation_signals": getattr(nlp_result, "impersonation_signals", []),
+                    "confidence_calibrated": getattr(nlp_result, "confidence_calibrated", False),
+                    "confidence_method": getattr(nlp_result, "confidence_method", "rule_heuristic"),
+                    "evidence_score": getattr(nlp_result, "evidence_score", None),
+                },
+                auth_status={
+                    "spf": getattr(getattr(header_result, "spf", None), "status", "none"),
+                    "spf_status": getattr(getattr(header_result, "spf", None), "status", "none"),
+                    "spf_domain": getattr(getattr(header_result, "spf", None), "domain", ""),
+                    "spf_ip": getattr(getattr(header_result, "spf", None), "ip", ""),
+                    "spf_record": getattr(getattr(header_result, "spf", None), "record", ""),
+                    "spf_details": getattr(getattr(header_result, "spf", None), "details", ""),
+
+                    "dkim": getattr(getattr(header_result, "dkim", None), "status", "none"),
+                    "dkim_status": getattr(getattr(header_result, "dkim", None), "status", "none"),
+                    "dkim_domain": getattr(getattr(header_result, "dkim", None), "domain", ""),
+                    "dkim_selector": getattr(getattr(header_result, "dkim", None), "selector", ""),
+                    "dkim_details": getattr(getattr(header_result, "dkim", None), "details", ""),
+
+                    "dmarc": getattr(getattr(header_result, "dmarc", None), "status", "none"),
+                    "dmarc_status": getattr(getattr(header_result, "dmarc", None), "status", "none"),
+                    "dmarc_domain": getattr(getattr(header_result, "dmarc", None), "domain", ""),
+                    "dmarc_policy": getattr(getattr(header_result, "dmarc", None), "policy", "none"),
+                    "policy": getattr(getattr(header_result, "dmarc", None), "policy", "none"),
+                    "alignment_spf": getattr(getattr(header_result, "dmarc", None), "alignment_spf", False),
+                    "alignment_dkim": getattr(getattr(header_result, "dmarc", None), "alignment_dkim", False),
+                    "dmarc_record": getattr(getattr(header_result, "dmarc", None), "record", ""),
+                    "dmarc_details": getattr(getattr(header_result, "dmarc", None), "details", ""),
+
+                    "auth_confidence_score": getattr(header_result, "auth_confidence_score", 100.0),
+                },
+                relay_path=relay_hops_dict,
+                geo_data=geo_data_dict,
+                ip_reputation={"score": getattr(geo_result, "ip_reputation_score", 50.0)},
+                domain_intel=domain_intel_dict,
+                iocs=[self._asdict(ioc) for ioc in iocs],
+                composite_risk_score=risk_composite.overall_score,
+                risk_breakdown={
+                    "factors": [self._asdict(f) for f in risk_composite.factors],
+                    "severity": risk_composite.severity,
+                    "recommended_action": risk_composite.recommended_action,
+                    "nlp": next((f.raw_score for f in risk_composite.factors if "NLP" in f.name), 0.0),
+                    "auth": next((f.raw_score for f in risk_composite.factors if "Authentication" in f.name), 0.0),
+                    "ip": next((f.raw_score for f in risk_composite.factors if "IP" in f.name), 0.0),
+                    "link": next((f.raw_score for f in risk_composite.factors if "Link" in f.name), 0.0),
+                    "attachment": next((f.raw_score for f in risk_composite.factors if "Attachment" in f.name), 0.0),
+                },
+                attribution_category=attribution_category,
+                attribution_confidence=None,
+                graph_data=graph_json,
+                analyzed_at=datetime.now(timezone.utc).replace(tzinfo=None),
+            )
+
+            db.add(analysis)
+            email.status = EmailStatus.analyzed
+            await db.commit()
+            await db.refresh(analysis)
+        except Exception as exc:
+            logger.error(f"Analysis pipeline failed for email {email_id}: {exc}", exc_info=True)
+            try:
+                email.status = EmailStatus.error
+                await db.commit()
+            except Exception as db_err:
+                logger.error(f"Failed to record error status for email {email_id}: {db_err}")
+            raise exc
 
         # Phase 4 Integration: Alerting & Tamper-Evident Audit Logging
         alert_created = False
@@ -395,17 +422,29 @@ class AnalysisPipeline:
             return "Direct Malicious Actor"
         return "Unknown"
 
-    def _compute_attribution_confidence(
+    def _compute_attribution_evidence_support(
         self, header, geo, nlp
     ) -> float:
+        """Compute heuristic evidence support score across evaluated analysis domains."""
         factors = 0
         total = 4
-        if getattr(getattr(header, "spf", None), "status", "") == "pass":
+        # 1. Header authentication evaluated
+        if getattr(header, "spf", None) or getattr(header, "dkim", None) or getattr(header, "dmarc", None):
             factors += 1
-        if getattr(getattr(header, "dkim", None), "status", "") == "pass":
+        # 2. Network/Geo routing evaluated
+        if geo and (getattr(geo, "geo_locations", None) or getattr(geo, "domain_intel", None)):
             factors += 1
-        if geo and getattr(geo, "ip_reputation_score", 0) >= 50:
+        # 3. NLP classifier produced evidence
+        if getattr(nlp, "confidence", None) is not None or getattr(nlp, "evidence_score", None) is not None:
             factors += 1
-        if getattr(nlp, "label", "Legitimate") != "Legitimate":
+        # 4. Definite attribution category identified
+        category = self._determine_attribution(header, geo, nlp)
+        if category and category != "Unknown":
             factors += 1
-        return round((factors / total) * 100, 1)
+        return round((max(1, factors) / total) * 100.0, 1)
+
+    def _compute_attribution_confidence(
+        self, header, geo, nlp
+    ) -> Optional[float]:
+        """Backward-compatible method returning evidence support score for callers."""
+        return self._compute_attribution_evidence_support(header, geo, nlp)

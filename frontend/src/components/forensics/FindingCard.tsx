@@ -1,8 +1,9 @@
-﻿import React from 'react';
+import React from 'react';
 import { cn } from '@/lib/utils';
 import { AlertCircle, AlertTriangle, ShieldAlert, CheckCircle } from 'lucide-react';
+import { getSeverityTokens, SeverityLevel } from '@/lib/severity';
 
-export type FindingSeverity = 'critical' | 'high' | 'medium' | 'low' | 'clean' | 'info' | string;
+export type FindingSeverity = SeverityLevel | string;
 
 export interface FindingCardProps extends React.HTMLAttributes<HTMLDivElement> {
   severity: FindingSeverity;
@@ -14,13 +15,7 @@ export interface FindingCardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export function getFindingColor(severity: FindingSeverity): string {
-  const s = String(severity || '').toLowerCase();
-  if (s === 'critical' || s === 'fraud' || s === 'malware') return 'var(--critical)';
-  if (s === 'high' || s === 'phishing') return 'var(--high)';
-  if (s === 'medium' || s === 'impersonation' || s === 'suspicious') return 'var(--medium)';
-  if (s === 'low') return 'var(--low)';
-  if (s === 'clean' || s === 'legitimate') return 'var(--clean)';
-  return 'var(--muted-foreground)';
+  return getSeverityTokens(severity).colorVar;
 }
 
 export function FindingCard({
@@ -33,45 +28,39 @@ export function FindingCard({
   className,
   ...props
 }: FindingCardProps) {
-  const s = String(severity || 'info').toLowerCase();
-  const color = getFindingColor(s);
+  const tokens = getSeverityTokens(severity);
 
   const getSeverityIcon = () => {
-    if (s === 'critical' || s === 'fraud') return <ShieldAlert className="size-4" style={{ color }} />;
-    if (s === 'high' || s === 'phishing') return <AlertTriangle className="size-4" style={{ color }} />;
-    if (s === 'medium' || s === 'suspicious') return <AlertCircle className="size-4" style={{ color }} />;
-    return <CheckCircle className="size-4" style={{ color }} />;
+    if (tokens.level === 'critical') return <ShieldAlert className="size-4 text-critical" />;
+    if (tokens.level === 'high') return <AlertTriangle className="size-4 text-high" />;
+    if (tokens.level === 'medium') return <AlertCircle className="size-4 text-medium" />;
+    return <CheckCircle className="size-4 text-clean" />;
   };
 
   return (
     <div
-      className={cn('panel border-l-2 p-4 transition-all hover:border-l-4', className)}
-      style={{ borderLeftColor: color }}
+      className={cn('panel border-l-2 p-3.5 transition-all hover:border-l-4', className)}
+      style={{ borderLeftColor: tokens.hex }}
       {...props}
     >
       {/* Header Info */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           {getSeverityIcon()}
-          <span className="font-mono text-xs uppercase font-bold tracking-wider" style={{ color }}>
+          <span className={cn('font-mono text-xs uppercase font-bold tracking-wider', tokens.textColor)}>
             {severity}
           </span>
           {category && (
             <>
               <span className="text-muted-foreground/50 text-xs">·</span>
-              <span className="label-mono text-[10px] text-muted-foreground">{category}</span>
+              <span className="label-mono text-[10px]">{category}</span>
             </>
           )}
         </div>
 
         {weight !== undefined && weight > 0 && (
           <span
-            className="rounded-full border px-2.5 py-0.5 font-mono text-[10px] font-semibold"
-            style={{
-              color,
-              borderColor: color,
-              backgroundColor: `color-mix(in oklch, ${color} 10%, transparent)`,
-            }}
+            className={cn('px-2 py-0.5 rounded font-mono text-[10px] font-semibold border', tokens.badgeClass)}
           >
             +{weight} risk
           </span>
@@ -79,7 +68,7 @@ export function FindingCard({
       </div>
 
       {/* Finding Title */}
-      <p className="mt-2 text-sm font-semibold text-foreground leading-snug">{title}</p>
+      <p className="mt-2 text-xs sm:text-sm font-semibold text-foreground leading-snug">{title}</p>
 
       {/* Finding Detail */}
       {detail && (
@@ -88,11 +77,11 @@ export function FindingCard({
 
       {/* Optional Metadata Tags */}
       {tags && tags.length > 0 && (
-        <div className="mt-3 flex flex-wrap items-center gap-1.5 pt-2 border-t border-border/40">
+        <div className="mt-2.5 flex flex-wrap items-center gap-1.5 pt-2 border-t border-border/40">
           {tags.map((tag, idx) => (
             <span
               key={idx}
-              className="rounded bg-surface px-2 py-0.5 font-mono text-[10px] text-muted-foreground border border-border/60"
+              className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground border border-border"
             >
               {tag}
             </span>

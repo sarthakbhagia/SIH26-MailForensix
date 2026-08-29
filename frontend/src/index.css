@@ -4,74 +4,104 @@
 
 @layer base {
   :root {
-    --radius: 0.375rem;
-    --background: oklch(0.16 0.015 250);
-    --foreground: oklch(0.94 0.008 240);
-    --surface: oklch(0.20 0.017 250);
-    --surface-2: oklch(0.24 0.018 250);
-    --grid: oklch(0.32 0.020 250 / 45%);
-    --card: oklch(0.20 0.017 250);
-    --card-foreground: oklch(0.94 0.008 240);
-    --popover: oklch(0.21 0.018 250);
-    --popover-foreground: oklch(0.94 0.008 240);
-    --border: oklch(0.31 0.020 250);
-    --input: oklch(0.29 0.020 250);
+    /* Radius scale: Crisp 4px workstation default */
+    --radius: 0.25rem;
+
+    /* Base Canvas & Layered Flat Surfaces */
+    --background: oklch(0.13 0.015 250);
+    --foreground: oklch(0.96 0.005 240);
+    --foreground-secondary: oklch(0.82 0.012 245);
+    --surface: oklch(0.17 0.018 250);
+    --surface-2: oklch(0.21 0.020 250);
+    --surface-3: oklch(0.25 0.022 250);
+    --surface-overlay: oklch(0.11 0.015 250 / 80%);
+
+    /* Razor-sharp 1px Borders */
+    --border: oklch(0.27 0.020 250);
+    --border-subtle: oklch(0.21 0.018 250);
+    --border-strong: oklch(0.35 0.025 250);
+    --input: oklch(0.27 0.020 250);
     --ring: oklch(0.79 0.130 194);
+    --grid: oklch(0.27 0.020 250 / 30%);
 
+    /* Core Action & State Tokens */
     --primary: oklch(0.79 0.130 194);
-    --primary-foreground: oklch(0.17 0.030 240);
-    --secondary: oklch(0.27 0.020 250);
+    --primary-foreground: oklch(0.13 0.025 250);
+    --secondary: oklch(0.21 0.020 250);
     --secondary-foreground: oklch(0.92 0.008 240);
-    --muted: oklch(0.25 0.018 250);
-    --muted-foreground: oklch(0.68 0.020 245);
+    --muted: oklch(0.21 0.020 250);
+    --muted-foreground: oklch(0.65 0.020 245);
     --accent: oklch(0.80 0.150 78);
-    --accent-foreground: oklch(0.18 0.030 250);
-    --destructive: oklch(0.60 0.220 22);
-    --destructive-foreground: oklch(0.97 0.010 240);
+    --accent-foreground: oklch(0.13 0.025 250);
+    --destructive: oklch(0.62 0.230 22);
+    --destructive-foreground: oklch(0.98 0.005 240);
 
-    --critical: oklch(0.62 0.230 20);
-    --critical-foreground: oklch(0.97 0.010 240);
+    /* Containers */
+    --card: oklch(0.17 0.018 250);
+    --card-foreground: oklch(0.96 0.005 240);
+    --popover: oklch(0.25 0.022 250);
+    --popover-foreground: oklch(0.96 0.005 240);
+
+    /* Restrained Threat Telemetry Palette */
+    --critical: oklch(0.62 0.230 22);
+    --critical-foreground: oklch(0.98 0.005 240);
     --high: oklch(0.72 0.180 45);
+    --high-foreground: oklch(0.98 0.005 240);
     --medium: oklch(0.82 0.150 88);
+    --medium-foreground: oklch(0.13 0.025 250);
     --low: oklch(0.78 0.110 200);
+    --low-foreground: oklch(0.13 0.025 250);
     --clean: oklch(0.78 0.170 148);
+    --clean-foreground: oklch(0.13 0.025 250);
 
-    --shadow-panel: 0 1px 0 0 oklch(1 0 0 / 6%) inset, 0 18px 40px -24px oklch(0 0 0 / 80%);
-    --shadow-glow: 0 0 0 1px oklch(0.78 0.13 195 / 35%), 0 0 32px -6px oklch(0.78 0.13 195 / 45%);
+    /* Shadows: Subtle crisp ambient, no muddy glow */
+    --shadow-panel: 0 1px 3px 0 oklch(0 0 0 / 40%), 0 1px 2px -1px oklch(0 0 0 / 30%);
+    --shadow-glow: 0 0 0 1px oklch(0.79 0.130 194 / 30%), 0 0 16px -4px oklch(0.79 0.130 194 / 25%);
   }
 
   .dark {
-    --radius: 0.375rem;
-    --background: oklch(0.16 0.015 250);
-    --foreground: oklch(0.94 0.008 240);
-    --surface: oklch(0.20 0.017 250);
-    --surface-2: oklch(0.24 0.018 250);
-    --grid: oklch(0.32 0.020 250 / 45%);
-    --card: oklch(0.20 0.017 250);
-    --card-foreground: oklch(0.94 0.008 240);
-    --popover: oklch(0.21 0.018 250);
-    --popover-foreground: oklch(0.94 0.008 240);
-    --border: oklch(0.31 0.020 250);
-    --input: oklch(0.29 0.020 250);
+    --radius: 0.25rem;
+    --background: oklch(0.13 0.015 250);
+    --foreground: oklch(0.96 0.005 240);
+    --foreground-secondary: oklch(0.82 0.012 245);
+    --surface: oklch(0.17 0.018 250);
+    --surface-2: oklch(0.21 0.020 250);
+    --surface-3: oklch(0.25 0.022 250);
+    --surface-overlay: oklch(0.11 0.015 250 / 80%);
+
+    --border: oklch(0.27 0.020 250);
+    --border-subtle: oklch(0.21 0.018 250);
+    --border-strong: oklch(0.35 0.025 250);
+    --input: oklch(0.27 0.020 250);
     --ring: oklch(0.79 0.130 194);
+    --grid: oklch(0.27 0.020 250 / 30%);
 
     --primary: oklch(0.79 0.130 194);
-    --primary-foreground: oklch(0.17 0.030 240);
-    --secondary: oklch(0.27 0.020 250);
+    --primary-foreground: oklch(0.13 0.025 250);
+    --secondary: oklch(0.21 0.020 250);
     --secondary-foreground: oklch(0.92 0.008 240);
-    --muted: oklch(0.25 0.018 250);
-    --muted-foreground: oklch(0.68 0.020 245);
+    --muted: oklch(0.21 0.020 250);
+    --muted-foreground: oklch(0.65 0.020 245);
     --accent: oklch(0.80 0.150 78);
-    --accent-foreground: oklch(0.18 0.030 250);
-    --destructive: oklch(0.60 0.220 22);
-    --destructive-foreground: oklch(0.97 0.010 240);
+    --accent-foreground: oklch(0.13 0.025 250);
+    --destructive: oklch(0.62 0.230 22);
+    --destructive-foreground: oklch(0.98 0.005 240);
 
-    --critical: oklch(0.62 0.230 20);
-    --critical-foreground: oklch(0.97 0.010 240);
+    --card: oklch(0.17 0.018 250);
+    --card-foreground: oklch(0.96 0.005 240);
+    --popover: oklch(0.25 0.022 250);
+    --popover-foreground: oklch(0.96 0.005 240);
+
+    --critical: oklch(0.62 0.230 22);
+    --critical-foreground: oklch(0.98 0.005 240);
     --high: oklch(0.72 0.180 45);
+    --high-foreground: oklch(0.98 0.005 240);
     --medium: oklch(0.82 0.150 88);
+    --medium-foreground: oklch(0.13 0.025 250);
     --low: oklch(0.78 0.110 200);
+    --low-foreground: oklch(0.13 0.025 250);
     --clean: oklch(0.78 0.170 148);
+    --clean-foreground: oklch(0.13 0.025 250);
   }
 }
 
@@ -81,13 +111,10 @@
   }
   body {
     background-color: var(--background);
-    background-image:
-      radial-gradient(circle at 12% -10%, oklch(0.79 0.13 194 / 10%), transparent 55%),
-      radial-gradient(circle at 100% 0%, oklch(0.80 0.15 78 / 8%), transparent 45%);
-    background-attachment: fixed;
     color: var(--foreground);
     font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
     letter-spacing: -0.015em;
@@ -95,26 +122,59 @@
 }
 
 @layer utilities {
+  /* Flat Workstation Surface Layers */
   .panel {
-    background: linear-gradient(180deg, var(--surface), var(--background));
+    background-color: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-panel);
   }
 
-  .label-mono {
-    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
-    font-size: 0.6875rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--muted-foreground);
+  .panel-elevated {
+    background-color: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-panel);
   }
 
+  .panel-subtle {
+    background-color: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+  }
+
+  .panel-interactive {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: background-color 150ms ease, border-color 150ms ease;
+  }
+  .panel-interactive:hover {
+    background-color: var(--surface-2);
+    border-color: var(--border-strong);
+  }
+
+  /* Standardized Monospace Metadata Label: >= 11px for legibility */
+  .label-mono {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    font-size: 0.6875rem; /* 11px */
+    line-height: 1rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+    font-weight: 500;
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Technical Grid Pattern */
   .grid-bg {
     background-image:
       linear-gradient(to right, var(--grid) 1px, transparent 1px),
       linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
-    background-size: 34px 34px;
+    background-size: 32px 32px;
   }
 
   .shadow-panel {

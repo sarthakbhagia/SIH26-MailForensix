@@ -1,47 +1,54 @@
-import { Marker } from "react-map-gl/maplibre";
+import { Marker } from 'react-map-gl/maplibre';
+import { getInfrastructureTokens, getSeverityHex } from '@/lib/severity';
 
-interface GeoMarkerProps {
+export interface GeoMarkerProps {
   latitude: number;
   longitude: number;
   index: number;
-  infrastructureType: "residential" | "corporate" | "aws_cloud" | "known_vpn" | "tor_exit_node" | "proxy" | string;
-  riskScore: number;
+  infrastructureType?: string;
+  riskScore?: number;
   delay?: number;
+  isSelected?: boolean;
+  onClick?: () => void;
 }
 
-export function GeoMarker({ latitude, longitude, infrastructureType, riskScore }: GeoMarkerProps) {
-  const size = riskScore > 70 ? 12 : riskScore > 40 ? 8 : 6;
-  const colorMap: Record<string, string> = {
-    residential: "green",
-    corporate: "orange",
-    aws_cloud: "orange",
-    known_vpn: "red",
-    tor_exit_node: "red",
-    proxy: "red",
-  };
-
-  const color = colorMap[infrastructureType] || "gray";
+export function GeoMarker({
+  latitude,
+  longitude,
+  index,
+  infrastructureType = 'residential',
+  riskScore = 0,
+  isSelected = false,
+  onClick,
+}: GeoMarkerProps) {
+  const infra = getInfrastructureTokens(infrastructureType);
+  const color = (infra.category === 'tor' || infra.category === 'vpn') ? '#ff2a55' : infra.category === 'hosting' ? '#ffb020' : getSeverityHex(riskScore);
 
   return (
     <Marker
       latitude={latitude}
       longitude={longitude}
-      anchor="bottom"
+      anchor="center"
+      onClick={(e) => {
+        e.originalEvent.stopPropagation();
+        onClick?.();
+      }}
     >
-
       <div
-        style={{
-          width: `${size * 2}px`,
-          height: `${size * 2}px`,
-          borderRadius: "50%",
-          backgroundColor: color,
-          border: "2px solid white",
-          boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-        }}
-      />
-      <div className="text-center text-xs mt-1" style={{ color: color }}>
-        {riskScore}
+        className="group relative flex items-center justify-center cursor-pointer transition-transform hover:scale-125"
+        style={{ width: '26px', height: '26px' }}
+      >
+        <div
+          className={`size-5 rounded-full flex items-center justify-center font-mono text-[9px] font-bold text-black shadow-md border-2 border-background ${
+            isSelected ? 'ring-4 ring-primary scale-110' : ''
+          }`}
+          style={{ backgroundColor: color }}
+        >
+          #{index + 1}
+        </div>
       </div>
     </Marker>
   );
 }
+
+export default GeoMarker;

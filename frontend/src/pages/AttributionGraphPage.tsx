@@ -1,14 +1,23 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Network, Users, Share2, Layers, RefreshCw, AlertCircle } from 'lucide-react';
-import { api } from '../lib/api';
-import AttributionGraph from '../components/graph/AttributionGraph';
-import GraphControls from '../components/graph/GraphControls';
-import NodeDetailPanel from '../components/graph/NodeDetailPanel';
-import CampaignCanvas from '../components/graph/CampaignCanvas';
-import { Button } from '../components/ui/button';
-import { GraphNode, GraphLink, GraphFilters, GraphNodeType } from '../types/graph';
-import { cn } from '../lib/utils';
+import {
+  Network,
+  Users,
+  Share2,
+  Layers,
+  RefreshCw,
+  AlertCircle,
+  ArrowLeft,
+} from 'lucide-react';
+import { api } from '@/lib/api';
+import AttributionGraph from '@/components/graph/AttributionGraph';
+import GraphControls from '@/components/graph/GraphControls';
+import NodeDetailPanel from '@/components/graph/NodeDetailPanel';
+import CampaignCanvas from '@/components/graph/CampaignCanvas';
+import { Button } from '@/components/ui/button';
+import { GraphNode, GraphLink, GraphFilters, GraphNodeType } from '@/types/graph';
+import { cn } from '@/lib/utils';
 
 const defaultFilters: GraphFilters = {
   searchQuery: '',
@@ -25,8 +34,18 @@ const defaultFilters: GraphFilters = {
 };
 
 export default function AttributionGraphPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  const urlEmailId = searchParams.get('emailId');
+  const urlCampaignId = searchParams.get('campaignId');
+  const urlNodeId = searchParams.get('nodeId');
+
   const [activeTab, setActiveTab] = useState<'graph' | 'campaigns'>('graph');
-  const [filters, setFilters] = useState<GraphFilters>(defaultFilters);
+  const [filters, setFilters] = useState<GraphFilters>({
+    ...defaultFilters,
+    selectedCampaignId: urlCampaignId || null,
+  });
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
 
   // Fetch full attribution graph and campaign data
@@ -57,6 +76,29 @@ export default function AttributionGraphPage() {
     campaign_count: 0,
   };
 
+  // Sync initial URL params to select target node (e.g. from email or IOC pivot)
+  useEffect(() => {
+    if (rawNodes.length > 0) {
+      if (urlEmailId && !selectedNode) {
+        const target = rawNodes.find(
+          (n) => n.id === `email:${urlEmailId}` || n.id === urlEmailId || n.id.includes(urlEmailId)
+        );
+        if (target) setSelectedNode(target);
+      } else if (urlNodeId && !selectedNode) {
+        const target = rawNodes.find(
+          (n) =>
+            n.id === urlNodeId ||
+            n.id === `ip:${urlNodeId}` ||
+            n.id === `domain:${urlNodeId}` ||
+            n.id.endsWith(`:${urlNodeId}`) ||
+            urlNodeId.endsWith(`:${n.id}`) ||
+            n.label.toLowerCase() === urlNodeId.toLowerCase()
+        );
+        if (target) setSelectedNode(target);
+      }
+    }
+  }, [rawNodes, urlEmailId, urlNodeId, selectedNode]);
+
   // Apply filters to nodes and prune dangling links
   const filteredGraphData = useMemo(() => {
     if (!rawNodes.length) return { nodes: [], links: [] };
@@ -70,7 +112,7 @@ export default function AttributionGraphPage() {
         return false;
       }
 
-      // Risk score filter (only applied if node has a risk score)
+      // Risk score filter
       if (node.risk_score !== undefined && node.risk_score !== null) {
         if (node.risk_score < filters.minRiskScore) {
           return false;
@@ -82,9 +124,9 @@ export default function AttributionGraphPage() {
         const camp = campaigns.find((c) => c.campaign_id === filters.selectedCampaignId);
         if (camp) {
           const isCampNode = node.id === `campaign:${camp.campaign_id}`;
-          const isMemberEmail = camp.email_ids.some((eid) => node.id === `email:${eid}`);
-          const isSharedIP = camp.shared_indicators.ips.some((ip) => node.id === `ip:${ip}`);
-          const isSharedDomain = camp.shared_indicators.domains.some((d) => node.id === `domain:${d}`);
+          const isMemberEmail = camp.email_ids.some((eid) => node.id === `email:${eid}` || node.id === eid);
+          const isSharedIP = camp.shared_indicators.ips.some((ip) => node.id === `ip:${ip}` || node.id === ip);
+          const isSharedDomain = camp.shared_indicators.domains.some((d) => node.id === `domain:${d}` || node.id === d);
           if (!isCampNode && !isMemberEmail && !isSharedIP && !isSharedDomain) {
             return false;
           }
@@ -134,6 +176,7 @@ export default function AttributionGraphPage() {
   const handleResetFilters = () => {
     setFilters(defaultFilters);
     setSelectedNode(null);
+    setSearchParams({});
   };
 
   const handleSelectCampaignFromCanvas = (campaignId: string) => {
@@ -142,100 +185,115 @@ export default function AttributionGraphPage() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-5.5rem)] space-y-3 max-w-7xl mx-auto pb-6">
-      {/* Header & Stats Badges */}
+    <div className="flex flex-col h-[calc(100vh-4.5rem)] space-y-3 max-w-full pb-4">
+      {/* 1. Header Toolbar */}
       <div className="panel p-4 flex flex-wrap items-center justify-between gap-4 shrink-0">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <Share2 className="size-5 text-primary" />
-            Threat Attribution Graph
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Share2 className="size-4 text-primary" />
+            Threat Attribution Workbench
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Cross-email correlation engine detecting shared infrastructure, relays, and campaign clusters.
+            Cross-email correlation engine detecting shared infrastructure, adversary relays, and campaign clusters.
           </p>
         </div>
 
-        {/* View Toggle Tabs */}
-        <div className="flex items-center gap-1.5 bg-surface-2 p-1 rounded border border-border">
-          <button
-            onClick={() => setActiveTab('graph')}
-            className={cn(
-              'px-3 py-1 rounded text-xs font-mono font-semibold flex items-center gap-1.5 transition-all',
-              activeTab === 'graph' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-            )}
-          >
-            <Network className="size-3.5" />
-            ATTRIBUTION GRAPH
-          </button>
-          <button
-            onClick={() => setActiveTab('campaigns')}
-            className={cn(
-              'px-3 py-1 rounded text-xs font-mono font-semibold flex items-center gap-1.5 transition-all',
-              activeTab === 'campaigns' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-            )}
-          >
-            <Users className="size-3.5" />
-            CAMPAIGN CLUSTERS ({campaigns.length})
-          </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {urlEmailId && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(`/emails/${urlEmailId}`)}
+              className="h-8 text-xs font-mono gap-1.5 border-border bg-surface hover:bg-surface-2 text-foreground"
+              title="Return to Email Analysis Workstation"
+            >
+              <ArrowLeft className="size-3.5" />
+              <span>Back to Analysis</span>
+            </Button>
+          )}
+
+          {/* View Switcher Tabs */}
+          <div className="flex items-center gap-1.5 bg-surface-2 p-1 rounded border border-border">
+            <button
+              onClick={() => setActiveTab('graph')}
+              className={cn(
+                'px-3 py-1 rounded text-xs font-mono font-semibold flex items-center gap-1.5 transition-all',
+                activeTab === 'graph' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <Network className="size-3.5" />
+              ATTRIBUTION TOPOLOGY
+            </button>
+            <button
+              onClick={() => setActiveTab('campaigns')}
+              className={cn(
+                'px-3 py-1 rounded text-xs font-mono font-semibold flex items-center gap-1.5 transition-all',
+                activeTab === 'campaigns' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <Users className="size-3.5" />
+              CAMPAIGN CLUSTERS ({campaigns.length})
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Stats Summary Bar */}
+      {/* 2. Top Stats Ledger Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 shrink-0">
-        <div className="panel p-3 flex items-center gap-3">
+        <div className="panel p-2.5 flex items-center gap-3">
           <div className="p-2 rounded bg-primary/10 text-primary border border-primary/20">
-            <Network className="size-4" />
+            <Network className="size-3.5" />
           </div>
           <div>
             <span className="label-mono text-[9px] block">TOTAL ENTITIES</span>
-            <span className="text-base font-bold font-mono text-foreground">{stats.node_count}</span>
+            <span className="text-sm font-bold font-mono text-foreground">{stats.node_count}</span>
           </div>
         </div>
 
-        <div className="panel p-3 flex items-center gap-3">
+        <div className="panel p-2.5 flex items-center gap-3">
           <div className="p-2 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">
-            <Share2 className="size-4" />
+            <Share2 className="size-3.5" />
           </div>
           <div>
             <span className="label-mono text-[9px] block">CORRELATION EDGES</span>
-            <span className="text-base font-bold font-mono text-foreground">{stats.edge_count}</span>
+            <span className="text-sm font-bold font-mono text-foreground">{stats.edge_count}</span>
           </div>
         </div>
 
-        <div className="panel p-3 flex items-center gap-3">
+        <div className="panel p-2.5 flex items-center gap-3">
           <div className="p-2 rounded bg-clean/10 text-clean border border-clean/20">
-            <Layers className="size-4" />
+            <Layers className="size-3.5" />
           </div>
           <div>
             <span className="label-mono text-[9px] block">ANALYZED EVIDENCE</span>
-            <span className="text-base font-bold font-mono text-foreground">{stats.email_count}</span>
+            <span className="text-sm font-bold font-mono text-foreground">{stats.email_count}</span>
           </div>
         </div>
 
-        <div className="panel p-3 flex items-center gap-3">
+        <div className="panel p-2.5 flex items-center gap-3">
           <div className="p-2 rounded bg-pink-500/10 text-pink-400 border border-pink-500/20">
-            <Users className="size-4" />
+            <Users className="size-3.5" />
           </div>
           <div>
-            <span className="label-mono text-[9px] block">ATTRIBUTION CAMPAIGNS</span>
-            <span className="text-base font-bold font-mono text-foreground">{stats.campaign_count}</span>
+            <span className="label-mono text-[9px] block">CAMPAIGN CLUSTERS</span>
+            <span className="text-sm font-bold font-mono text-foreground">{stats.campaign_count}</span>
           </div>
         </div>
       </div>
 
-      {/* Main Content Area */}
+      {/* 3. Main Workbench Workspace */}
       {isLoading ? (
         <div className="panel flex-1 flex flex-col items-center justify-center p-12 text-center">
           <RefreshCw className="size-8 text-primary animate-spin mb-3" />
-          <p className="text-sm font-semibold text-foreground">Extracting Graph Topology...</p>
+          <p className="text-sm font-semibold text-foreground">Extracting Entity Topology & Link Graph...</p>
           <p className="label-mono text-[10px] text-muted-foreground mt-1">Cross-referencing IOCs and relay nodes</p>
         </div>
       ) : isError ? (
         <div className="panel flex-1 flex flex-col items-center justify-center p-12 text-center border-critical/40">
           <AlertCircle className="size-10 text-critical mb-3" />
-          <h3 className="text-base font-semibold text-foreground">Failed to Load Graph</h3>
+          <h3 className="text-base font-semibold text-foreground">Failed to Load Attribution Graph</h3>
           <p className="text-xs text-muted-foreground max-w-sm mt-1 mb-4">
-            {error instanceof Error ? error.message : 'An unexpected error occurred while communicating with the server.'}
+            {error instanceof Error ? error.message : 'An error occurred while loading graph intelligence.'}
           </p>
           <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2 text-xs font-mono border-border">
             <RefreshCw className="size-3.5" />
@@ -247,7 +305,8 @@ export default function AttributionGraphPage() {
           <CampaignCanvas campaigns={campaigns} onSelectCampaign={handleSelectCampaignFromCanvas} />
         </div>
       ) : (
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col min-h-0 space-y-2">
+          {/* Controls Bar */}
           <GraphControls
             filters={filters}
             onFilterChange={setFilters}
@@ -255,18 +314,27 @@ export default function AttributionGraphPage() {
             onExportJson={handleExportJson}
             onReset={handleResetFilters}
           />
-          <div className="flex-1 flex min-h-0 relative">
+
+          {/* Graph Canvas + Dockable Inspector */}
+          <div className="flex-1 flex min-h-0 relative overflow-hidden rounded border border-border">
             <AttributionGraph
               graphData={filteredGraphData}
               selectedNodeId={selectedNode?.id}
               highlightCampaignId={filters.selectedCampaignId}
-              onNodeClick={(node) => setSelectedNode(node)}
+              onNodeClick={(node) => {
+                setSelectedNode(node);
+                setSearchParams({ nodeId: node.id });
+              }}
               onBackgroundClick={() => setSelectedNode(null)}
             />
+
             {selectedNode && (
               <NodeDetailPanel
                 node={selectedNode}
                 onClose={() => setSelectedNode(null)}
+                allLinks={rawLinks}
+                allNodes={rawNodes}
+                onSelectNode={(node) => setSelectedNode(node)}
               />
             )}
           </div>
@@ -275,4 +343,3 @@ export default function AttributionGraphPage() {
     </div>
   );
 }
-

@@ -3,20 +3,59 @@ import { EmailSummary, EmailDetail, EmailUploadResponse } from '../types/email';
 import { AnalysisResult } from '../types/analysis';
 import { Case } from '../types/case';
 import { AlertFilterParams, AlertListResponse, AlertStats } from '../types/alert';
+import { User } from '../types/auth';
+
+let authToken: string | null = null;
+
+export function setAuthToken(token: string | null) {
+  authToken = token;
+}
 
 const apiClient = axios.create({
   baseURL: '/api',
 });
 
+apiClient.interceptors.request.use((config) => {
+  if (authToken) {
+    config.headers.Authorization = authToken;
+  }
+  return config;
+});
+
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('API Error:', error);
+    const url = error.config?.url || '';
+    const status = error.response?.status;
+
+    if (status === 401) {
+      const isAuthMeRequest = url.includes('/auth/me');
+      const hasToken = !!authToken;
+
+      if (isAuthMeRequest || !hasToken) {
+        authToken = null;
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('mailforensix_auth');
+          sessionStorage.setItem('auth_redirect', window.location.pathname + window.location.search);
+          window.location.href = '/login';
+        }
+      }
+    } else {
+      console.error('API Error:', error);
+    }
     return Promise.reject(error);
   }
 );
 
 export const api = {
+  setAuthToken,
+  login: (credentials: { email: string; password: string }) => {
+    const formData = new FormData();
+    formData.append('username', credentials.email);
+    formData.append('password', credentials.password);
+    return apiClient.post<{ access_token: string; token_type: string }>('/auth/login', formData);
+  },
+  getCurrentUser: () => apiClient.get<User>('/auth/me'),
   uploadEmail: (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -33,6 +72,7 @@ export const api = {
     }),
   getEmail: (id: string) => apiClient.get<EmailDetail>(`/emails/${id}`),
   getAnalysis: (emailId: string) => apiClient.get<AnalysisResult>(`/analysis/${emailId}`),
+  reanalyzeEmail: (emailId: string) => apiClient.post<{ status: string; email_id: string; message: string }>(`/analysis/${emailId}/retry`),
   getCases: (params?: import('../types/case').CaseFilterParams) =>
     apiClient.get<Case[]>('/cases', { params }),
   getCase: (id: string) => apiClient.get<Case>(`/cases/${id}`),

@@ -12,9 +12,9 @@ const config = {
   theme: {
     container: {
       center: true,
-      padding: '2rem',
+      padding: '1.5rem',
       screens: {
-        '2xl': '1400px',
+        '2xl': '1440px',
       },
     },
     extend: {
@@ -23,14 +23,23 @@ const config = {
         mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       colors: {
-        border: 'var(--border)',
+        border: {
+          DEFAULT: 'var(--border)',
+          subtle: 'var(--border-subtle)',
+          strong: 'var(--border-strong)',
+        },
         input: 'var(--input)',
         ring: 'var(--ring)',
         background: 'var(--background)',
-        foreground: 'var(--foreground)',
+        foreground: {
+          DEFAULT: 'var(--foreground)',
+          secondary: 'var(--foreground-secondary)',
+        },
         surface: {
           DEFAULT: 'var(--surface)',
           2: 'var(--surface-2)',
+          3: 'var(--surface-3)',
+          overlay: 'var(--surface-overlay)',
         },
         grid: 'var(--grid)',
         primary: {
@@ -65,15 +74,28 @@ const config = {
           DEFAULT: 'var(--critical)',
           foreground: 'var(--critical-foreground)',
         },
-        high: 'var(--high)',
-        medium: 'var(--medium)',
-        low: 'var(--low)',
-        clean: 'var(--clean)',
+        high: {
+          DEFAULT: 'var(--high)',
+          foreground: 'var(--high-foreground)',
+        },
+        medium: {
+          DEFAULT: 'var(--medium)',
+          foreground: 'var(--medium-foreground)',
+        },
+        low: {
+          DEFAULT: 'var(--low)',
+          foreground: 'var(--low-foreground)',
+        },
+        clean: {
+          DEFAULT: 'var(--clean)',
+          foreground: 'var(--clean-foreground)',
+        },
         severity: {
           critical: 'var(--critical)',
           high: 'var(--high)',
           medium: 'var(--medium)',
-          low: 'var(--clean)',
+          low: 'var(--low)',
+          clean: 'var(--clean)',
         },
       },
       boxShadow: {
@@ -82,8 +104,8 @@ const config = {
       },
       borderRadius: {
         lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        md: 'calc(var(--radius) - 1px)',
+        sm: 'calc(var(--radius) - 2px)',
       },
       keyframes: {
         'accordion-down': {

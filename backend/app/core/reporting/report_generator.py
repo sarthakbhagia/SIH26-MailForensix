@@ -31,14 +31,14 @@ def _normalize_uuid(val: Optional[Union[str, UUID]]) -> Optional[UUID]:
         return None
 
 
-def _normalize_percentage(val: Optional[Union[float, int, str]]) -> float:
-    """Normalize percentage/confidence value to canonical 0-100 float scale."""
-    if val is None:
-        return 0.0
+def _normalize_percentage(val: Optional[Union[float, int, str]]) -> Optional[float]:
+    """Normalize percentage/confidence value to canonical 0-100 float scale, preserving None for missing/uncomputed values."""
+    if val is None or val == "":
+        return None
     try:
         f_val = float(val)
     except (ValueError, TypeError):
-        return 0.0
+        return None
     # If provided as a fraction in (0.0, 1.0], scale to 0-100 (e.g. 0.45 -> 45.0, 0.98 -> 98.0)
     # 0.0 stays 0.0, and values > 1.0 stay on 0-100 scale (e.g. 45.0 stays 45.0).
     if 0.0 < f_val <= 1.0:
@@ -58,25 +58,38 @@ class ReportGenerator:
 
     def _assemble_report_data(self, email: Email, analysis: AnalysisResult) -> Dict[str, Any]:
         """Assemble comprehensive forensic telemetry into a unified dictionary."""
-        report_id = str(uuid4())
-        current_time = now_utc()
+        report_id = f"REP-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{str(email.id)[:8].upper()}"
 
-        # Email Headers & Metadata
-        headers = email.headers or {}
-        msg_id = (
-            headers.get("message-id")
-            or headers.get("Message-ID")
-            or headers.get("Message-Id")
-            or "N/A"
-        )
-        recipients = email.recipients if isinstance(email.recipients, list) else ([email.recipients] if email.recipients else [])
+        # Parse Recipients
+        raw_recipients = email.recipients
+        recipients = []
+        if isinstance(raw_recipients, list):
+            recipients = [str(r) for r in raw_recipients if r]
+        elif isinstance(raw_recipients, str):
+            try:
+                import json
+                parsed = json.loads(raw_recipients)
+                if isinstance(parsed, list):
+                    recipients = [str(r) for r in parsed if r]
+                else:
+                    recipients = [raw_recipients]
+            except Exception:
+                recipients = [raw_recipients]
 
-        # Risk & Threat Assessment
+        # Extract Message-ID
+        msg_id = "N/A"
+        if isinstance(email.headers, dict):
+            msg_id = (
+                email.headers.get("Message-ID")
+                or email.headers.get("message-id")
+                or email.headers.get("Message-Id")
+                or "N/A"
+            )
+
+        # Threat Assessment
         risk_score = float(analysis.composite_risk_score or 0.0)
-        if risk_score >= 90:
+        if risk_score >= 75:
             severity = "critical"
-        elif risk_score >= 75:
-            severity = "high"
         elif risk_score >= 50:
             severity = "medium"
         else:
@@ -134,6 +147,21 @@ class ReportGenerator:
         raw_header_date = (email.headers.get("Date") or email.headers.get("date")) if isinstance(email.headers, dict) else None
         email_date_display = format_ist(raw_header_date, "%Y-%m-%d %H:%M:%S IST") if raw_header_date else ingested_at_ist
 
+        # NLP Classification & Defensible Confidence Extraction
+        nlp_details = analysis.nlp_details if isinstance(analysis.nlp_details, dict) else {}
+        is_nlp_calibrated = bool(nlp_details.get("confidence_calibrated", False))
+        nlp_method = nlp_details.get("confidence_method", "rule_heuristic" if analysis.nlp_label else None)
+        nlp_evidence = nlp_details.get("evidence_score", analysis.nlp_confidence)
+        
+        raw_nlp_conf = analysis.nlp_confidence
+        normalized_nlp_conf = _normalize_percentage(raw_nlp_conf)
+
+        raw_attr_conf = getattr(analysis, "attribution_confidence", None)
+        normalized_attr_conf = _normalize_percentage(raw_attr_conf)
+        attr_support = graph_data.get("attribution_evidence_score") if isinstance(graph_data, dict) else None
+        if attr_support is None and hasattr(analysis, "attribution_evidence_score"):
+            attr_support = getattr(analysis, "attribution_evidence_score")
+
         return {
             "report_id": report_id,
             "version": "1.0",
@@ -161,8 +189,12 @@ class ReportGenerator:
             },
             "nlp_classification": {
                 "label": analysis.nlp_label or "Unknown",
-                "confidence": _normalize_percentage(analysis.nlp_confidence),
-                "details": analysis.nlp_details or {},
+                "confidence": normalized_nlp_conf,
+                "confidence_formatted": f"{normalized_nlp_conf:.1f}%" if normalized_nlp_conf is not None else "Not Computed",
+                "confidence_calibrated": is_nlp_calibrated,
+                "confidence_method": nlp_method,
+                "evidence_score": _normalize_percentage(nlp_evidence) if nlp_evidence is not None else None,
+                "details": nlp_details,
             },
             "authentication": auth_summary,
             "infrastructure_and_network": {
@@ -173,7 +205,10 @@ class ReportGenerator:
             "indicators_of_compromise": iocs,
             "attribution": {
                 "category": getattr(analysis, "attribution_category", None) or "Opportunistic Cybercrime",
-                "confidence": _normalize_percentage(getattr(analysis, "attribution_confidence", None)),
+                "confidence": normalized_attr_conf,
+                "confidence_formatted": f"{normalized_attr_conf:.1f}%" if normalized_attr_conf is not None else "Not Computed",
+                "confidence_calibrated": False,
+                "evidence_support_score": _normalize_percentage(attr_support) if attr_support is not None else None,
                 "campaign_id": campaign_id,
                 "cluster_id": cluster_id,
                 "details": getattr(analysis, "attribution", {}) or graph_data,
@@ -256,9 +291,16 @@ class ReportGenerator:
         nlp = report_data["nlp_classification"]
         sev_color = colors.HexColor("#dc2626") if t["severity"] == "critical" else colors.HexColor("#d97706") if t["severity"] == "high" else colors.HexColor("#16a34a")
         
+        if nlp.get("confidence") is not None and nlp.get("confidence_calibrated", False):
+            nlp_conf_display = f"{nlp['confidence']:.1f}% Confidence"
+        elif nlp.get("confidence") is not None:
+            nlp_conf_display = f"Evidence Score: {nlp['confidence']:.1f}%"
+        else:
+            nlp_conf_display = "Confidence: Not Computed"
+
         banner_data = [
             [
-                Paragraph(f"<b>Classification:</b> {nlp['label']} ({nlp['confidence']:.1f}% Confidence)<br/><b>Action:</b> {t['recommended_action']}", body_style),
+                Paragraph(f"<b>Classification:</b> {nlp['label']} ({nlp_conf_display})<br/><b>Action:</b> {t['recommended_action']}", body_style),
                 Paragraph(f"<b>RISK SCORE: {t['overall_risk_score']:.1f} / 100</b><br/>Severity: {t['severity'].upper()}", ParagraphStyle("Score", parent=body_style, textColor=sev_color, fontName="Helvetica-Bold")),
             ]
         ]
@@ -279,7 +321,7 @@ class ReportGenerator:
         meta_table_data = [
             [Paragraph("<b>Sender:</b>", body_style), Paragraph(str(meta["sender"]), body_style)],
             [Paragraph("<b>Subject:</b>", body_style), Paragraph(str(meta["subject"]), body_style)],
-            [Paragraph("<b>Recipients:</b>", body_style), Paragraph(", ".join(meta["recipients"]), body_style)],
+            [Paragraph("<b>Recipients:</b>", body_style), Paragraph(", ".join(str(r) for r in meta["recipients"]) if meta["recipients"] else "N/A", body_style)],
             [Paragraph("<b>Date / Ingested:</b>", body_style), Paragraph(str(meta["date"]), body_style)],
             [Paragraph("<b>Message-ID:</b>", body_style), Paragraph(str(meta["message_id"]), mono_style)],
             [Paragraph("<b>SHA-256:</b>", body_style), Paragraph(str(hashes["sha256"]), mono_style)],
@@ -299,7 +341,7 @@ class ReportGenerator:
         story.append(Paragraph("2. Threat Classification & NLP Analysis", section_style))
         nlp_table_data = [
             [Paragraph("<b>Predicted Threat Label:</b>", body_style), Paragraph(str(nlp["label"]), body_style)],
-            [Paragraph("<b>Model Confidence:</b>", body_style), Paragraph(f"{nlp['confidence']:.1f}%", body_style)],
+            [Paragraph("<b>Model Confidence:</b>", body_style), Paragraph(nlp_conf_display, body_style)],
             [Paragraph("<b>Classification Details:</b>", body_style), Paragraph(str(nlp.get("details", {})), mono_style)],
         ]
         nlp_table = Table(nlp_table_data, colWidths=[140, 400])
@@ -399,9 +441,18 @@ class ReportGenerator:
         # 7. Attribution Assessment
         story.append(Paragraph("7. Attribution Assessment", section_style))
         att = report_data.get("attribution", {})
+        if att.get("confidence") is not None and att.get("confidence_calibrated", False):
+            attr_conf_display = f"{att['confidence']:.1f}% (Calibrated Graph Correlation)"
+        elif att.get("evidence_support_score") is not None:
+            attr_conf_display = f"{att['evidence_support_score']:.1f}% (Heuristic Evidence Support)"
+        elif att.get("confidence") is not None:
+            attr_conf_display = f"{att['confidence']:.1f}% (Uncalibrated)"
+        else:
+            attr_conf_display = "Not Computed / Emerging Signature"
+
         att_data = [
             [Paragraph("<b>Actor Category:</b>", body_style), Paragraph(str(att.get("category", "Unknown")), body_style)],
-            [Paragraph("<b>Attribution Confidence:</b>", body_style), Paragraph(f"{att.get('confidence', 0):.1f}%", body_style)],
+            [Paragraph("<b>Attribution Confidence:</b>", body_style), Paragraph(attr_conf_display, body_style)],
             [Paragraph("<b>Campaign Cluster ID:</b>", body_style), Paragraph(str(att.get("campaign_id", "N/A")), mono_style)],
         ]
         att_table = Table(att_data, colWidths=[140, 400])

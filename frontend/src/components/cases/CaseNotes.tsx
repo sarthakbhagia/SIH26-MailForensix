@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { formatDistanceToNow } from 'date-fns';
 import { AlertCircle, Loader2, MessageSquare, Plus, Send, User } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAddCaseNote, useCaseNotes } from '@/hooks/useCases';
+import { safeFormatDistanceToNow } from '@/lib/utils';
 
 interface CaseNotesProps {
   caseId: string;
@@ -139,9 +139,7 @@ export default function CaseNotes({ caseId }: CaseNotesProps) {
                   </span>
                 </div>
                 <span className="text-[10px] text-muted-foreground font-mono">
-                  {note.created_at
-                    ? formatDistanceToNow(new Date(note.created_at), { addSuffix: true })
-                    : 'recently'}
+                  {safeFormatDistanceToNow(note.created_at, { addSuffix: true }, 'recently')}
                 </span>
               </div>
 

@@ -3,8 +3,11 @@ from typing import List, Optional, Dict, Any, Union
 from uuid import UUID
 
 class NLPResult(BaseModel):
-    label: str
-    confidence: float
+    label: str = "Unknown"
+    confidence: Optional[float] = None
+    confidence_calibrated: bool = False
+    confidence_method: Optional[str] = None
+    evidence_score: Optional[float] = None
     details: Dict[str, Any] = {}
 
 class AuthResult(BaseModel):
@@ -24,7 +27,7 @@ class AuthResult(BaseModel):
     dmarc_details: Optional[str] = ""
     alignment_spf: Optional[bool] = False
     alignment_dkim: Optional[bool] = False
-    auth_confidence_score: Optional[float] = 100.0
+    auth_confidence_score: Optional[float] = None
     details: Dict[str, Any] = {}
 
 class GeoLocation(BaseModel):
@@ -66,12 +69,17 @@ class IOCItem(BaseModel):
 
 class AnalysisResponse(BaseModel):
     email_id: UUID
-    nlp_result: Optional[NLPResult]
-    auth_result: Optional[AuthResult]
-    relay_path: Optional[List[RelayHop]]
-    geo_data: Optional[List[GeoLocation]]
-    iocs: Optional[List[IOCItem]]
+    status: str = "analyzed"
+    error_message: Optional[str] = None
+    nlp_result: Optional[NLPResult] = None
+    auth_result: Optional[AuthResult] = None
+    relay_path: Optional[List[RelayHop]] = None
+    geo_data: Optional[List[GeoLocation]] = None
+    iocs: Optional[List[IOCItem]] = None
     composite_risk_score: Optional[float] = None
     risk_breakdown: Optional[Dict[str, Any]] = None
     attribution_category: Optional[str] = None
     attribution_confidence: Optional[float] = None
+    attribution_confidence_calibrated: bool = False
+    attribution_evidence_score: Optional[float] = None
+

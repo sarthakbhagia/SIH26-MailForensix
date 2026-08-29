@@ -3,18 +3,20 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center rounded px-2 py-0.5 text-[11px] font-sans font-medium transition-colors focus:outline-none focus:ring-1 focus:ring-ring select-none border",
   {
     variants: {
       variant: {
-        default: "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
-        secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
-        outline: "text-foreground",
-        critical: "border-transparent bg-severity-critical text-white",
-        high: "border-transparent bg-severity-high text-white",
-        medium: "border-transparent bg-severity-medium text-white",
-        low: "border-transparent bg-severity-low text-white",
+        default: "border-primary/40 bg-primary/15 text-primary font-semibold",
+        secondary: "border-border bg-surface-2 text-foreground",
+        destructive: "border-destructive/40 bg-destructive/15 text-destructive font-semibold",
+        outline: "border-border bg-surface text-foreground",
+        critical: "border-critical/40 bg-critical/15 text-critical font-semibold",
+        high: "border-high/40 bg-high/15 text-high font-semibold",
+        medium: "border-medium/40 bg-medium/15 text-medium font-semibold",
+        low: "border-low/35 bg-low/15 text-low font-semibold",
+        clean: "border-clean/40 bg-clean/15 text-clean font-semibold",
+        info: "border-border bg-surface-2 text-muted-foreground",
       },
     },
     defaultVariants: {

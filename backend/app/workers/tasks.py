@@ -64,7 +64,8 @@ def enrich_threat_intel_task(
             )
 
             async with AsyncSessionLocal() as session:
-                stmt = select(AnalysisResult).filter(AnalysisResult.email_id == UUID(email_id))
+                parsed_uuid = email_id if isinstance(email_id, UUID) else UUID(str(email_id))
+                stmt = select(AnalysisResult).filter(AnalysisResult.email_id == parsed_uuid)
                 res = await session.execute(stmt)
                 analysis = res.scalar_one_or_none()
 

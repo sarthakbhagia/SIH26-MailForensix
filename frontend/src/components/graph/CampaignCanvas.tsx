@@ -27,7 +27,7 @@ export default function CampaignCanvas({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {campaigns.map((camp) => {
-        const isHighConfidence = camp.confidence >= 75;
+        const isHighConfidence = (camp.confidence ?? 0) >= 75;
         return (
           <div key={camp.campaign_id} className="panel p-4 hover:border-pink-500/50 transition-all flex flex-col justify-between space-y-3">
             <div className="space-y-2">
@@ -35,14 +35,16 @@ export default function CampaignCanvas({
                 <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-pink-500/10 text-pink-400 border border-pink-500/30">
                   {camp.attribution}
                 </span>
-                <span
-                  className={cn(
-                    'font-mono text-[10px] font-bold px-1.5 py-0.5 rounded border',
-                    isHighConfidence ? 'bg-critical/15 text-critical border-critical/30' : 'bg-high/15 text-high border-high/30'
-                  )}
-                >
-                  {camp.confidence}% CONFIDENCE
-                </span>
+                {camp.confidence != null && (
+                  <span
+                    className={cn(
+                      'font-mono text-[10px] font-bold px-1.5 py-0.5 rounded border',
+                      isHighConfidence ? 'bg-critical/15 text-critical border-critical/30' : 'bg-high/15 text-high border-high/30'
+                    )}
+                  >
+                    {camp.confidence}% CONFIDENCE
+                  </span>
+                )}
               </div>
 
               <div className="flex items-center gap-2 pt-1">

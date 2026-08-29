@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { formatDistanceToNow } from 'date-fns';
 import {
   Activity,
   Clock,
@@ -14,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useCaseTimeline } from '@/hooks/useCases';
 import { CaseTimelineItem } from '@/types/case';
+import { safeFormatDistanceToNow } from '@/lib/utils';
 
 interface CaseTimelineProps {
   caseId: string;
@@ -133,9 +133,7 @@ export default function CaseTimeline({ caseId, onEmailClick }: CaseTimelineProps
                     <span>{item.actor || 'System'}</span>
                     <span>•</span>
                     <span>
-                      {item.timestamp
-                        ? formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })
-                        : 'recently'}
+                      {safeFormatDistanceToNow(item.timestamp, { addSuffix: true }, 'recently')}
                     </span>
                   </div>
                 </div>

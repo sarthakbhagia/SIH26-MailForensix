@@ -1,31 +1,22 @@
-﻿import React from 'react';
+import React from 'react';
 import { cn } from '@/lib/utils';
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { getAuthStatusTokens } from '@/lib/severity';
 
-interface StatusPillProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface StatusPillProps extends React.HTMLAttributes<HTMLDivElement> {
   label: string;
-  state: 'pass' | 'fail' | 'softfail' | 'neutral' | 'none' | 'unavailable' | string;
+  state: string;
   dnsState?: 'verified' | 'disagrees' | 'pending' | null;
 }
 
 export function StatusPill({ label, state, dnsState, className, ...props }: StatusPillProps) {
-  const s = String(state).toLowerCase();
-  const color =
-    s === 'pass'
-      ? 'var(--clean)'
-      : s === 'fail'
-      ? 'var(--critical)'
-      : s === 'softfail'
-      ? 'var(--high)'
-      : s === 'neutral'
-      ? 'var(--medium)'
-      : 'var(--muted-foreground)';
+  const authInfo = getAuthStatusTokens(state);
 
   return (
-    <div className={cn('panel flex flex-col gap-1.5 px-4 py-3', className)} {...props}>
+    <div className={cn('panel flex flex-col gap-1.5 px-3.5 py-2.5', className)} {...props}>
       <div className="flex items-center justify-between">
         <span className="label-mono">{label}</span>
-        <span className="font-mono text-sm uppercase font-semibold" style={{ color }}>
+        <span className={cn('font-mono text-xs uppercase font-semibold', authInfo.tokens.textColor)}>
           {state}
         </span>
       </div>
@@ -34,17 +25,17 @@ export function StatusPill({ label, state, dnsState, className, ...props }: Stat
           {dnsState === 'pending' ? (
             <>
               <Loader2 className="size-2.5 animate-spin text-muted-foreground" />
-              <span className="font-mono text-[0.55rem] text-muted-foreground">dns lookup…</span>
+              <span className="font-mono text-[10px] text-muted-foreground">dns lookup…</span>
             </>
           ) : dnsState === 'verified' ? (
             <>
               <CheckCircle2 className="size-2.5 text-clean" />
-              <span className="font-mono text-[0.55rem] text-clean">dns verified</span>
+              <span className="font-mono text-[10px] text-clean">dns verified</span>
             </>
           ) : (
             <>
               <XCircle className="size-2.5 text-critical" />
-              <span className="font-mono text-[0.55rem] text-critical">dns disagrees</span>
+              <span className="font-mono text-[10px] text-critical">dns disagrees</span>
             </>
           )}
         </div>
@@ -52,3 +43,5 @@ export function StatusPill({ label, state, dnsState, className, ...props }: Stat
     </div>
   );
 }
+
+export default StatusPill;

@@ -1,15 +1,23 @@
 import { useState } from 'react';
-import { AlertCircle, Check, FileCode, FileDown, Loader2 } from 'lucide-react';
+import {
+  AlertCircle,
+  Check,
+  FileCode,
+  FileDown,
+  Loader2,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
+import { cn } from '@/lib/utils';
 
-interface ReportDownloadProps {
+export interface ReportDownloadProps {
   emailId: string | null;
   emailSubject?: string;
   disabled?: boolean;
+  className?: string;
 }
 
-export default function ReportDownload({ emailId, disabled }: ReportDownloadProps) {
+export default function ReportDownload({ emailId, emailSubject, disabled, className }: ReportDownloadProps) {
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [isDownloadingJson, setIsDownloadingJson] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState<'pdf' | 'json' | null>(null);
@@ -27,7 +35,8 @@ export default function ReportDownload({ emailId, disabled }: ReportDownloadProp
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `forensic_report_${emailId}.pdf`;
+      const sanitizedSubject = (emailSubject || emailId).replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 30);
+      a.download = `forensic_report_${sanitizedSubject}_${emailId.substring(0, 8)}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -37,7 +46,8 @@ export default function ReportDownload({ emailId, disabled }: ReportDownloadProp
       setTimeout(() => setDownloadSuccess(null), 3000);
     } catch (err: any) {
       console.error('PDF download error:', err);
-      setErrorMsg('Failed to generate/download forensic PDF report. Please try again.');
+      const detail = err?.response?.data?.detail || 'Failed to generate cryptographic PDF report. Please verify email analysis is complete.';
+      setErrorMsg(detail);
     } finally {
       setIsDownloadingPdf(false);
     }
@@ -56,7 +66,8 @@ export default function ReportDownload({ emailId, disabled }: ReportDownloadProp
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `forensic_report_${emailId}.json`;
+      const sanitizedSubject = (emailSubject || emailId).replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 30);
+      a.download = `forensic_dossier_${sanitizedSubject}_${emailId.substring(0, 8)}.json`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -66,7 +77,8 @@ export default function ReportDownload({ emailId, disabled }: ReportDownloadProp
       setTimeout(() => setDownloadSuccess(null), 3000);
     } catch (err: any) {
       console.error('JSON export error:', err);
-      setErrorMsg('Failed to export forensic JSON report. Please try again.');
+      const detail = err?.response?.data?.detail || 'Failed to export forensic JSON dossier. Please verify email analysis is complete.';
+      setErrorMsg(detail);
     } finally {
       setIsDownloadingJson(false);
     }
@@ -75,12 +87,13 @@ export default function ReportDownload({ emailId, disabled }: ReportDownloadProp
   const isDisabled = disabled || !emailId;
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
+    <div className={cn('flex flex-col gap-1.5', className)}>
+      <div className="flex flex-wrap items-center gap-2">
+        {/* PDF Download Button */}
         <Button
           onClick={handleDownloadPdf}
           disabled={isDisabled || isDownloadingPdf}
-          className="h-8 text-xs font-mono font-bold px-3.5 gap-2"
+          className="h-8 text-xs font-mono font-bold px-3 gap-1.5 bg-primary text-primary-foreground"
         >
           {isDownloadingPdf ? (
             <Loader2 className="size-3.5 animate-spin" />
@@ -89,14 +102,15 @@ export default function ReportDownload({ emailId, disabled }: ReportDownloadProp
           ) : (
             <FileDown className="size-3.5" />
           )}
-          <span>{isDownloadingPdf ? 'GENERATING PDF...' : 'DOWNLOAD PDF'}</span>
+          <span>{isDownloadingPdf ? 'COMPILING PDF...' : 'DOWNLOAD PDF'}</span>
         </Button>
 
+        {/* JSON Export Button */}
         <Button
           variant="outline"
           onClick={handleDownloadJson}
           disabled={isDisabled || isDownloadingJson}
-          className="h-8 text-xs font-mono font-bold px-3.5 gap-2 border-border bg-surface hover:bg-muted"
+          className="h-8 text-xs font-mono font-bold px-3 gap-1.5 border-border bg-surface hover:bg-surface-2 text-foreground"
         >
           {isDownloadingJson ? (
             <Loader2 className="size-3.5 animate-spin" />
@@ -110,12 +124,11 @@ export default function ReportDownload({ emailId, disabled }: ReportDownloadProp
       </div>
 
       {errorMsg && (
-        <div className="flex items-center gap-1.5 text-xs text-critical bg-critical/10 border border-critical/20 rounded px-3 py-1.5 mt-1 font-mono">
+        <div className="flex items-center gap-1.5 text-xs text-critical bg-critical/10 border border-critical/30 rounded px-2.5 py-1 font-mono">
           <AlertCircle className="size-3.5 shrink-0" />
-          <span>{errorMsg}</span>
+          <span className="text-[11px]">{errorMsg}</span>
         </div>
       )}
     </div>
   );
 }
-

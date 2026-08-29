@@ -1,6 +1,14 @@
 import { useCallback, useState } from 'react';
 import { useDropzone, FileRejection } from 'react-dropzone';
-import { Upload, FileText, Loader2, HardDriveDownload } from 'lucide-react';
+import {
+  Upload,
+  Loader2,
+  HardDriveDownload,
+  CheckCircle2,
+  AlertCircle,
+  X,
+  FileCode,
+} from 'lucide-react';
 import { useUploadEmail } from '@/hooks/useEmails';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
@@ -9,63 +17,74 @@ import { useQueryClient } from '@tanstack/react-query';
 
 const EMAIL_EXTENSIONS = ['.eml', '.msg', '.txt', '.emlx', '.rfc822'];
 
+type IngestStage = 'READY' | 'UPLOADING' | 'PARSING' | 'ANALYZING' | 'COMPLETE' | 'FAILED';
+
 function isEmailFile(file: File): boolean {
   const name = file.name.toLowerCase();
   return EMAIL_EXTENSIONS.some((ext) => name.endsWith(ext));
 }
 
-export default function EmailUpload() {
+export interface EmailUploadProps {
+  className?: string;
+  onUploadSuccess?: () => void;
+}
+
+export default function EmailUpload({ className, onUploadSuccess }: EmailUploadProps) {
   const uploadMutation = useUploadEmail();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [uploadingFiles, setUploadingFiles] = useState<string[]>([]);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isProcessing, setIsProcessing] = useState(false);
+
+  const [stage, setStage] = useState<IngestStage>('READY');
+  const [activeFileNames, setActiveFileNames] = useState<string[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const processUpload = async (files: File[]) => {
     if (files.length === 0) return;
 
-    setIsProcessing(true);
-    setUploadingFiles(files.map((f) => f.name));
-    setUploadProgress(20);
-
-    const progressInterval = setInterval(() => {
-      setUploadProgress((p) => Math.min(p + 18, 88));
-    }, 150);
+    setActiveFileNames(files.map((f) => f.name));
+    setErrorMessage(null);
+    setStage('UPLOADING');
 
     try {
+      // Transition from Uploading to Parsing
+      const parseTimeout = setTimeout(() => {
+        setStage('PARSING');
+      }, 400);
+
       if (files.length === 1) {
         await uploadMutation.mutateAsync(files[0]);
       } else {
         await api.uploadEmails(files);
       }
 
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-      queryClient.invalidateQueries({ queryKey: ['emails'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboardStats'] });
+      clearTimeout(parseTimeout);
+      setStage('ANALYZING');
 
+      // Invalidate queries to refresh evidence ledger and stats
+      await queryClient.invalidateQueries({ queryKey: ['emails'] });
+      await queryClient.invalidateQueries({ queryKey: ['dashboardStats'] });
+
+      setStage('COMPLETE');
       toast({
         title: files.length === 1 ? 'Evidence Artifact Ingested' : `${files.length} Evidence Artifacts Ingested`,
-        description: 'MIME parsing, threat scoring & IOC extraction initiated.',
+        description: 'MIME payload parsed, authentication validated & threat scored.',
       });
 
-      setTimeout(() => {
-        setUploadingFiles([]);
-        setUploadProgress(0);
-        setIsProcessing(false);
-      }, 1400);
-    } catch (err) {
-      clearInterval(progressInterval);
-      setUploadProgress(0);
-      setIsProcessing(false);
-      setUploadingFiles([]);
+      onUploadSuccess?.();
 
-      const errorMsg = err instanceof Error ? err.message : 'Failed to ingest artifact.';
+      setTimeout(() => {
+        setStage('READY');
+        setActiveFileNames([]);
+      }, 2500);
+    } catch (err: any) {
+      setStage('FAILED');
+      const errDetail = err?.response?.data?.detail || err?.message || 'Ingestion pipeline encountered an error.';
+      setErrorMessage(String(errDetail));
+
       toast({
         variant: 'destructive',
         title: 'Ingestion Pipeline Error',
-        description: errorMsg,
+        description: errDetail,
       });
     }
   };
@@ -82,11 +101,7 @@ export default function EmailUpload() {
 
       if (validFiles.length === 0) {
         if (fileRejections.length > 0) {
-          toast({
-            variant: 'destructive',
-            title: 'Unsupported Artifact Type',
-            description: `Please upload standard email artifacts (${EMAIL_EXTENSIONS.join(', ')}).`,
-          });
+          setErrorMessage(`Unsupported format. Accepted: ${EMAIL_EXTENSIONS.join(', ')}`);
         }
         return;
       }
@@ -109,90 +124,130 @@ export default function EmailUpload() {
     multiple: true,
   });
 
+  const isBusy = stage === 'UPLOADING' || stage === 'PARSING' || stage === 'ANALYZING';
+
   return (
-    <div className="panel p-5 h-full flex flex-col justify-between space-y-4">
-      <div>
-        <div className="flex items-center justify-between border-b border-border/50 pb-3">
-          <div className="flex items-center gap-2">
-            <HardDriveDownload className="size-4 text-primary" />
-            <h3 className="text-sm font-semibold tracking-tight text-foreground">Ingest Email Evidence</h3>
-          </div>
-          <span className="label-mono text-[9px]">RFC-822 / MIME</span>
+    <div className={cn('panel p-4 flex flex-col justify-between space-y-3 select-none h-full', className)}>
+      {/* Ingestion Header */}
+      <div className="flex items-center justify-between border-b border-border/50 pb-2.5 shrink-0">
+        <div className="flex items-center gap-2">
+          <HardDriveDownload className="size-4 text-primary" />
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">
+            Ingestion Dock
+          </h3>
         </div>
+
+        {/* Live Stage Status Indicator */}
+        <span
+          className={cn(
+            'inline-flex items-center gap-1 font-mono text-[9px] font-bold uppercase px-2 py-0.5 rounded border',
+            stage === 'READY' && 'bg-surface-2 text-muted-foreground border-border',
+            isBusy && 'bg-primary/10 text-primary border-primary/30 animate-pulse',
+            stage === 'COMPLETE' && 'bg-clean/15 text-clean border-clean/30',
+            stage === 'FAILED' && 'bg-critical/15 text-critical border-critical/30'
+          )}
+        >
+          {isBusy && <span className="size-1.5 rounded-full bg-primary animate-ping" />}
+          {stage === 'COMPLETE' && <CheckCircle2 className="size-2.5 text-clean" />}
+          {stage === 'FAILED' && <AlertCircle className="size-2.5 text-critical" />}
+          {stage}
+        </span>
       </div>
 
+      {/* Dropzone Area */}
       <div
         {...getRootProps()}
         className={cn(
-          'flex flex-col items-center justify-center flex-1 min-h-[300px] p-6 border-2 border-dashed rounded-lg cursor-pointer transition-all duration-200 text-center select-none bg-surface/40',
+          'flex flex-col items-center justify-center flex-1 min-h-[220px] p-4 border-2 border-dashed rounded cursor-pointer transition-all duration-150 text-center bg-surface-2/30',
           isDragActive && !isDragReject
-            ? 'border-primary bg-primary/10 shadow-glow scale-[1.01]'
+            ? 'border-primary bg-primary/10 scale-[1.01]'
             : isDragReject
             ? 'border-critical bg-critical/10'
-            : 'border-border/70 hover:border-primary/60 hover:bg-surface-2/40'
+            : 'border-border/70 hover:border-primary/50 hover:bg-surface-2/60'
         )}
       >
-        <input {...getInputProps()} />
+        <input {...getInputProps()} disabled={isBusy} />
 
-        {isProcessing ? (
-          <div className="flex flex-col items-center space-y-3.5 w-full max-w-xs">
-            <Loader2 className="size-10 text-primary animate-spin" />
+        {isBusy ? (
+          <div className="flex flex-col items-center space-y-3 w-full max-w-[220px]">
+            <Loader2 className="size-8 text-primary animate-spin" />
             <div className="space-y-1 text-center">
-              <h4 className="text-xs font-mono font-bold text-foreground break-all">
-                {uploadingFiles.length === 1 ? uploadingFiles[0] : `${uploadingFiles.length} Artifacts Processing`}
+              <h4 className="text-xs font-mono font-bold text-foreground truncate max-w-[200px]">
+                {activeFileNames.length === 1 ? activeFileNames[0] : `${activeFileNames.length} Evidence Artifacts`}
               </h4>
-              <p className="label-mono text-[10px] text-muted-foreground">
-                PARSING HEADERS, PAYLOADS & IOCS...
+              <p className="label-mono text-[9px] text-muted-foreground">
+                {stage === 'UPLOADING' && 'TRANSMITTING ARTIFACT BINARY...'}
+                {stage === 'PARSING' && 'PARSING RFC-822 HEADERS & MIME...'}
+                {stage === 'ANALYZING' && 'RUNNING NLP & THREAT HEURISTICS...'}
               </p>
             </div>
-
-            <div className="w-full h-1.5 bg-surface-2 rounded-full overflow-hidden border border-border/40 mt-1">
-              <div
-                className="h-full bg-primary transition-all duration-300 ease-out"
-                style={{ width: `${uploadProgress}%` }}
-              />
+          </div>
+        ) : stage === 'COMPLETE' ? (
+          <div className="flex flex-col items-center space-y-2 text-clean">
+            <CheckCircle2 className="size-9" />
+            <div className="space-y-0.5">
+              <h4 className="text-xs font-bold font-mono">INGESTION COMPLETE</h4>
+              <p className="text-[10px] text-muted-foreground font-mono">
+                {activeFileNames.length} artifact(s) added to evidence ledger
+              </p>
             </div>
-            <span className="font-mono text-[10px] text-primary font-semibold">{uploadProgress}%</span>
           </div>
         ) : (
           <>
             <div
               className={cn(
-                'p-3.5 rounded-full mb-3.5 transition-colors duration-200 border',
-                isDragActive
-                  ? 'bg-primary/20 text-primary border-primary/40'
-                  : 'bg-surface text-muted-foreground border-border'
+                'p-2.5 rounded-full mb-2.5 transition-colors border',
+                isDragActive ? 'bg-primary/20 text-primary border-primary/40' : 'bg-surface text-muted-foreground border-border'
               )}
             >
-              <Upload className="size-6" />
+              <Upload className="size-5" />
             </div>
 
-            <h4 className="text-sm font-semibold tracking-tight text-foreground mb-1">
-              {isDragActive ? 'Drop artifact to ingest' : 'Drag & drop evidence files here'}
+            <h4 className="text-xs font-semibold tracking-tight text-foreground mb-0.5">
+              {isDragActive ? 'Drop evidence artifact' : 'Drag & drop raw email files'}
             </h4>
-            <p className="text-xs text-muted-foreground max-w-[240px] mb-3 leading-relaxed">
-              Automated ingestion extracts SPF/DKIM/DMARC, hops, IOCs, and NLP threat classification.
+            <p className="text-[11px] text-muted-foreground max-w-[210px] mb-2.5 leading-tight">
+              Automated extraction of headers, relay hops, attachments, and URLs.
             </p>
 
-            <div className="flex flex-wrap items-center justify-center gap-1 mb-4">
+            {/* Supported Extensions List */}
+            <div className="flex flex-wrap items-center justify-center gap-1 mb-3">
               {EMAIL_EXTENSIONS.map((ext) => (
                 <span
                   key={ext}
-                  className="font-mono text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-surface border border-border/60 text-muted-foreground"
+                  className="font-mono text-[9px] font-semibold uppercase px-1.5 py-0.2 rounded bg-surface border border-border/70 text-muted-foreground"
                 >
                   {ext}
                 </span>
               ))}
             </div>
 
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-surface border border-border hover:bg-muted text-foreground text-xs font-mono transition-colors">
-              <FileText className="size-3 text-primary" />
+            <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-surface border border-border hover:bg-surface-2 text-foreground text-[11px] font-mono transition-colors">
+              <FileCode className="size-3 text-primary" />
               <span>Browse Local Disk</span>
             </div>
           </>
         )}
       </div>
+
+      {/* Error Message Toast in Dock */}
+      {errorMessage && (
+        <div className="p-2.5 rounded bg-critical/10 border border-critical/30 flex items-start justify-between gap-2 text-critical text-xs font-mono shrink-0">
+          <div className="flex items-start gap-1.5 min-w-0">
+            <AlertCircle className="size-3.5 shrink-0 mt-0.5" />
+            <span className="text-[11px] break-words">{errorMessage}</span>
+          </div>
+          <button
+            onClick={() => {
+              setErrorMessage(null);
+              setStage('READY');
+            }}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <X className="size-3.5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
-

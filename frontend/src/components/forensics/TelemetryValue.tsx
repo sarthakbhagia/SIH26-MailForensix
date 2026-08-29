@@ -1,7 +1,7 @@
-﻿import React from 'react';
+import React from 'react';
 import { cn } from '@/lib/utils';
 
-interface TelemetryValueProps extends React.HTMLAttributes<HTMLSpanElement> {
+export interface TelemetryValueProps extends React.HTMLAttributes<HTMLSpanElement> {
   value: React.ReactNode;
   highlight?: boolean;
 }
@@ -10,7 +10,7 @@ export function TelemetryValue({ value, highlight, className, ...props }: Teleme
   return (
     <span
       className={cn(
-        'font-mono text-xs break-all',
+        'font-mono text-xs break-all tabular-nums',
         highlight ? 'text-primary font-semibold' : 'text-foreground',
         className
       )}
@@ -20,3 +20,5 @@ export function TelemetryValue({ value, highlight, className, ...props }: Teleme
     </span>
   );
 }
+
+export default TelemetryValue;

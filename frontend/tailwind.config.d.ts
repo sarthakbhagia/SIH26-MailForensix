@@ -16,14 +16,23 @@ declare const config: {
                 mono: [string, string, string, string];
             };
             colors: {
-                border: string;
+                border: {
+                    DEFAULT: string;
+                    subtle: string;
+                    strong: string;
+                };
                 input: string;
                 ring: string;
                 background: string;
-                foreground: string;
+                foreground: {
+                    DEFAULT: string;
+                    secondary: string;
+                };
                 surface: {
                     DEFAULT: string;
                     2: string;
+                    3: string;
+                    overlay: string;
                 };
                 grid: string;
                 primary: {
@@ -58,15 +67,28 @@ declare const config: {
                     DEFAULT: string;
                     foreground: string;
                 };
-                high: string;
-                medium: string;
-                low: string;
-                clean: string;
+                high: {
+                    DEFAULT: string;
+                    foreground: string;
+                };
+                medium: {
+                    DEFAULT: string;
+                    foreground: string;
+                };
+                low: {
+                    DEFAULT: string;
+                    foreground: string;
+                };
+                clean: {
+                    DEFAULT: string;
+                    foreground: string;
+                };
                 severity: {
                     critical: string;
                     high: string;
                     medium: string;
                     low: string;
+                    clean: string;
                 };
             };
             boxShadow: {

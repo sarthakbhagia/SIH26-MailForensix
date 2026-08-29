@@ -1,5 +1,8 @@
-import { Mail, ShieldAlert, FolderKanban, Activity } from 'lucide-react';
+
+import { useNavigate } from 'react-router-dom';
+import { Mail, ShieldAlert, FolderKanban, Activity, ArrowUpRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getSeverityTokens } from '@/lib/severity';
 
 export interface StatsCardsProps {
   data?: {
@@ -12,17 +15,19 @@ export interface StatsCardsProps {
 }
 
 export function StatsCards({ data, isLoading = false }: StatsCardsProps) {
+  const navigate = useNavigate();
+
   if (isLoading) {
     return (
-      <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="panel p-4.5 animate-pulse space-y-3">
+          <div key={i} className="panel p-3.5 animate-pulse space-y-2.5">
             <div className="flex justify-between items-center">
               <div className="h-3 w-20 bg-muted/60 rounded" />
-              <div className="size-7 rounded bg-muted/50" />
+              <div className="size-6 rounded bg-muted/50" />
             </div>
-            <div className="h-7 w-16 bg-muted/60 rounded" />
-            <div className="h-2.5 w-28 bg-muted/40 rounded" />
+            <div className="h-6 w-16 bg-muted/60 rounded" />
+            <div className="h-2.5 w-24 bg-muted/40 rounded" />
           </div>
         ))}
       </div>
@@ -34,97 +39,91 @@ export function StatsCards({ data, isLoading = false }: StatsCardsProps) {
   const activeCases = data?.active_cases ?? 0;
   const avgRiskScore = data?.avg_risk_score ?? 0.0;
 
-  const stats = [
+  const riskTokens = getSeverityTokens(avgRiskScore);
+  const threatPercentage = totalEmails > 0 ? ((threatsDetected / totalEmails) * 100).toFixed(1) : '0';
+  const cleanEmails = Math.max(0, totalEmails - threatsDetected);
+
+  const metrics = [
     {
-      title: 'TOTAL INGESTION',
+      id: 'metric-ingested',
+      label: 'TOTAL ENVELOPES ANALYZED',
       value: totalEmails.toLocaleString(),
+      subtext: `${cleanEmails} clean / ${threatsDetected} flagged`,
       icon: Mail,
-      subtext: totalEmails === 1 ? '1 Processed Envelope' : `${totalEmails.toLocaleString()} Processed Envelopes`,
-      color: 'text-primary',
-      borderAccent: 'hover:border-primary/50',
-      badgeBg: 'bg-primary/10 text-primary border-primary/20',
+      accentColor: 'text-primary',
+      badgeClass: 'bg-primary/10 text-primary border-primary/20',
+      action: () => navigate('/ingest'),
+      actionLabel: 'View Ledger',
     },
     {
-      title: 'THREATS FLAGGED',
+      id: 'metric-threats',
+      label: 'THREATS & PHISHING FLAGGED',
       value: threatsDetected.toLocaleString(),
+      subtext: `${threatPercentage}% of monitored volume (Score > 50)`,
       icon: ShieldAlert,
-      subtext: 'Composite Risk ≥ 50.0',
-      color: 'text-critical',
-      borderAccent: 'hover:border-critical/50',
-      badgeBg: 'bg-critical/10 text-critical border-critical/25',
+      accentColor: 'text-critical',
+      badgeClass: 'bg-critical/10 text-critical border-critical/25',
+      action: () => navigate('/ingest'),
+      actionLabel: 'Triage Vectors',
     },
     {
-      title: 'ACTIVE CASES',
+      id: 'metric-cases',
+      label: 'ACTIVE SOC INVESTIGATIONS',
       value: activeCases.toLocaleString(),
+      subtext: 'Open & in-progress case files',
       icon: FolderKanban,
-      subtext: 'Open SOC Investigations',
-      color: 'text-accent',
-      borderAccent: 'hover:border-accent/50',
-      badgeBg: 'bg-accent/10 text-accent border-accent/25',
+      accentColor: 'text-accent',
+      badgeClass: 'bg-accent/10 text-accent border-accent/25',
+      action: () => navigate('/cases'),
+      actionLabel: 'Manage Cases',
     },
     {
-      title: 'AVERAGE RISK SCORE',
+      id: 'metric-score',
+      label: 'ENVIRONMENT RISK RATING',
       value: avgRiskScore.toFixed(1),
+      subtext: `${riskTokens.label} SEVERITY TIER`,
       icon: Activity,
-      subtext:
-        avgRiskScore >= 75
-          ? 'CRITICAL SEVERITY TIER'
-          : avgRiskScore >= 50
-          ? 'HIGH / ELEVATED TIER'
-          : avgRiskScore >= 25
-          ? 'MEDIUM / MODERATE TIER'
-          : 'NOMINAL / CLEAN TIER',
-      color:
-        avgRiskScore >= 75
-          ? 'text-critical'
-          : avgRiskScore >= 50
-          ? 'text-high'
-          : avgRiskScore >= 25
-          ? 'text-medium'
-          : 'text-clean',
-      borderAccent:
-        avgRiskScore >= 75
-          ? 'hover:border-critical/50'
-          : avgRiskScore >= 50
-          ? 'hover:border-high/50'
-          : 'hover:border-clean/50',
-      badgeBg:
-        avgRiskScore >= 75
-          ? 'bg-critical/10 text-critical border-critical/25'
-          : avgRiskScore >= 50
-          ? 'bg-high/10 text-high border-high/25'
-          : 'bg-clean/10 text-clean border-clean/25',
+      accentColor: riskTokens.textColor,
+      badgeClass: riskTokens.badgeClass,
+      action: () => navigate('/map'),
+      actionLabel: 'Inspect Telemetry',
     },
   ];
 
   return (
-    <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-      {stats.map((stat, index) => {
-        const Icon = stat.icon;
+    <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+      {metrics.map((metric) => {
+        const Icon = metric.icon;
         return (
           <div
-            key={index}
-            className={cn(
-              'panel p-4.5 transition-all duration-200 group flex flex-col justify-between',
-              stat.borderAccent
-            )}
+            key={metric.id}
+            onClick={metric.action}
+            className="panel p-3.5 transition-all duration-150 hover:border-border-strong hover:bg-surface-2 cursor-pointer group flex flex-col justify-between"
           >
-            <div className="flex items-center justify-between gap-2 pb-2">
-              <span className="label-mono font-semibold tracking-wider text-[10px]">
-                {stat.title}
+            {/* Top Label & Icon */}
+            <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-border/40">
+              <span className="label-mono text-[10px] text-muted-foreground group-hover:text-foreground transition-colors truncate">
+                {metric.label}
               </span>
-              <div className={cn('p-1.5 rounded border', stat.badgeBg)}>
+              <div className={cn('p-1 rounded border shrink-0', metric.badgeClass)}>
                 <Icon className="size-3.5" />
               </div>
             </div>
 
-            <div className="space-y-1">
-              <div className="text-2xl lg:text-3xl font-bold font-mono tracking-tight text-foreground">
-                {stat.value}
+            {/* Main Numeric Metric */}
+            <div className="pt-2 space-y-0.5">
+              <div className="text-2xl font-bold font-mono tracking-tight text-foreground tabular-nums">
+                {metric.value}
               </div>
-              <p className="label-mono text-[10px] text-muted-foreground truncate">
-                <span className={cn('font-semibold', stat.color)}>{stat.subtext}</span>
+              <p className="text-[11px] font-mono text-muted-foreground truncate">
+                {metric.subtext}
               </p>
+            </div>
+
+            {/* Subtle Hover Action Footer */}
+            <div className="pt-2 mt-2 border-t border-border/30 flex items-center justify-between text-[10px] font-mono text-muted-foreground group-hover:text-primary transition-colors">
+              <span>{metric.actionLabel}</span>
+              <ArrowUpRight className="size-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </div>
           </div>
         );
@@ -134,6 +133,3 @@ export function StatsCards({ data, isLoading = false }: StatsCardsProps) {
 }
 
 export default StatsCards;
-
-
-

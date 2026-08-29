@@ -1,15 +1,30 @@
-﻿import React from 'react';
+import React from 'react';
 import { cn } from '@/lib/utils';
 
-interface PanelProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface PanelProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
+  elevated?: boolean;
+  subtle?: boolean;
+  interactive?: boolean;
   grid?: boolean;
 }
 
-export function Panel({ children, grid, className, ...props }: PanelProps) {
+export function Panel({ children, elevated, subtle, interactive, grid, className, ...props }: PanelProps) {
   return (
-    <div className={cn('panel', grid && 'grid-bg', className)} {...props}>
+    <div
+      className={cn(
+        'panel',
+        elevated && 'panel-elevated',
+        subtle && 'panel-subtle',
+        interactive && 'panel-interactive',
+        grid && 'grid-bg',
+        className
+      )}
+      {...props}
+    >
       {children}
     </div>
   );
 }
+
+export default Panel;

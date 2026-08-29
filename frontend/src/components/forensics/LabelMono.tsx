@@ -1,7 +1,7 @@
-﻿import React from 'react';
+import React from 'react';
 import { cn } from '@/lib/utils';
 
-interface LabelMonoProps extends React.HTMLAttributes<HTMLSpanElement> {
+export interface LabelMonoProps extends React.HTMLAttributes<HTMLSpanElement> {
   children: React.ReactNode;
 }
 
@@ -12,3 +12,5 @@ export function LabelMono({ children, className, ...props }: LabelMonoProps) {
     </span>
   );
 }
+
+export default LabelMono;

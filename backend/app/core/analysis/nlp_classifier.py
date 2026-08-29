@@ -69,12 +69,15 @@ CLASS_ORDER = ["Legitimate", "Suspicious", "Phishing", "BEC/Fraud", "Impersonati
 @dataclass
 class NLPClassificationResult:
     label: str
-    confidence: float
+    confidence: Optional[float]
     probabilities: Dict[str, float]
     urgency_score: float
     bec_indicators: List[str]
     impersonation_signals: List[str]
     contributing_factors: List[str]
+    confidence_calibrated: bool = False
+    confidence_method: Optional[str] = None
+    evidence_score: Optional[float] = None
 
 
 class NLPClassifier:
@@ -118,12 +121,14 @@ class NLPClassifier:
 
     def classify(
         self,
-        subject: str,
-        body_text: str,
-        sender: str,
-        headers: dict,
+        subject: Optional[str],
+        body_text: Optional[str],
+        sender: Optional[str],
+        headers: Optional[dict],
     ) -> NLPClassificationResult:
-        full_text = (subject + " " + body_text).lower()
+        full_text = f"{subject or ''} {body_text or ''}".lower()
+        sender_str = str(sender or "")
+        headers_dict = headers if isinstance(headers, dict) else {}
 
         # 1. Rule Heuristic Analysis
         phishing_score = 0
@@ -242,6 +247,9 @@ class NLPClassifier:
                 contributing_factors=ensemble_pred.contributing_factors or self._build_factors(
                     phishing_score, bec_score, urgency_score, display_name, actual_email, impersonation_signals
                 ),
+                confidence_calibrated=True,
+                confidence_method="ensemble_stacking",
+                evidence_score=ensemble_pred.confidence,
             )
 
         # 5. Rule-Based Classification Baseline
@@ -256,7 +264,8 @@ class NLPClassifier:
         else:
             label = "Legitimate"
 
-        confidence = min(100.0, max_score * 3.0) if max_score > 0 else 0.0
+        class_idx = CLASS_ORDER.index(label) if label in CLASS_ORDER else 0
+        raw_rule_score = float(rule_probs[class_idx]) * 100.0
 
         probabilities = {
             CLASS_ORDER[i]: round(float(rule_probs[i]) * 100.0, 1)
@@ -267,14 +276,22 @@ class NLPClassifier:
             phishing_score, bec_score, urgency_score, display_name, actual_email, impersonation_signals
         )
 
+        # For rule-based heuristic classification:
+        # If clean email (no signals), do NOT claim 100% confidence. It is an uncalibrated heuristic rule match.
+        has_threat_signals = bool(phishing_score or bec_score or urgency_total or impersonation_signals)
+        computed_confidence = round(raw_rule_score, 1) if has_threat_signals else None
+
         return NLPClassificationResult(
             label=label,
-            confidence=round(confidence, 1),
+            confidence=computed_confidence,
             probabilities=probabilities,
             urgency_score=urgency_score,
             bec_indicators=matched_bec,
             impersonation_signals=impersonation_signals,
             contributing_factors=contributing,
+            confidence_calibrated=False,
+            confidence_method="rule_heuristic",
+            evidence_score=round(raw_rule_score, 1),
         )
 
     def _build_factors(

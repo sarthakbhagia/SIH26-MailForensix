@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { cn } from '@/lib/utils';
 
 export interface TraceMapProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -35,7 +35,7 @@ export function TraceMap({
   ip,
   provider,
   infrastructure,
-  confidence = 85,
+  confidence,
   className,
   ...props
 }: TraceMapProps) {
@@ -60,42 +60,44 @@ export function TraceMap({
         {/* Render Radar Ping & Crosshairs if point exists */}
         {point && (
           <g>
-            {/* Coordinate Crosshairs */}
-            <line
-              x1={point.x}
-              y1={0}
-              x2={point.x}
-              y2={360}
-              stroke="var(--primary)"
-              strokeOpacity="0.35"
-              strokeDasharray="4 6"
+            <circle
+              cx={point.x}
+              cy={point.y}
+              r="24"
+              fill="rgba(56, 189, 248, 0.15)"
+              className="animate-ping"
+              style={{ transformOrigin: `${point.x}px ${point.y}px` }}
+            />
+            <circle
+              cx={point.x}
+              cy={point.y}
+              r="12"
+              fill="rgba(56, 189, 248, 0.25)"
+            />
+            <circle
+              cx={point.x}
+              cy={point.y}
+              r="4"
+              fill="var(--primary)"
             />
             <line
-              x1={0}
+              x1={point.x - 20}
               y1={point.y}
-              x2={720}
+              x2={point.x + 20}
               y2={point.y}
               stroke="var(--primary)"
-              strokeOpacity="0.35"
-              strokeDasharray="4 6"
+              strokeWidth="0.75"
+              strokeDasharray="2,2"
             />
-
-            {/* Ambient radar glow */}
-            <circle cx={point.x} cy={point.y} r="28" fill="var(--critical)" fillOpacity="0.12" />
-
-            {/* Pulsing Radar Ring */}
-            <circle cx={point.x} cy={point.y} r="14" fill="var(--critical)" fillOpacity="0.25">
-              <animate attributeName="r" values="10;24;10" dur="2.4s" repeatCount="indefinite" />
-              <animate
-                attributeName="fill-opacity"
-                values="0.35;0.02;0.35"
-                dur="2.4s"
-                repeatCount="indefinite"
-              />
-            </circle>
-
-            {/* Center Origin Dot */}
-            <circle cx={point.x} cy={point.y} r="4.5" fill="var(--critical)" stroke="#FFFFFF" strokeWidth="1" />
+            <line
+              x1={point.x}
+              y1={point.y - 20}
+              x2={point.x}
+              y2={point.y + 20}
+              stroke="var(--primary)"
+              strokeWidth="0.75"
+              strokeDasharray="2,2"
+            />
           </g>
         )}
       </svg>
@@ -114,10 +116,12 @@ export function TraceMap({
       </div>
 
       {/* Bottom-Right Confidence Badge */}
-      <div className="absolute bottom-4 right-4 rounded-md border border-border bg-background/80 px-3 py-2 text-right backdrop-blur shadow-sm pointer-events-none">
-        <p className="label-mono">geo confidence</p>
-        <p className="font-mono text-lg font-bold text-primary">{confidence}%</p>
-      </div>
+      {confidence != null && (
+        <div className="absolute bottom-4 right-4 rounded-md border border-border bg-background/80 px-3 py-2 text-right backdrop-blur shadow-sm pointer-events-none">
+          <p className="label-mono">geo confidence</p>
+          <p className="font-mono text-lg font-bold text-primary">{confidence}%</p>
+        </div>
+      )}
     </div>
   );
 }
