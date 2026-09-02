@@ -21,14 +21,11 @@ export interface ThreatPostureBarProps {
 
 export function ThreatPostureBar({
   avgRiskScore = 0,
-  totalEmails = 0,
-  threatsDetected = 0,
   unackAlerts = 0,
   activeCases = 0,
 }: ThreatPostureBarProps) {
   const navigate = useNavigate();
   const tokens = getSeverityTokens(avgRiskScore);
-  const threatRatio = totalEmails > 0 ? ((threatsDetected / totalEmails) * 100).toFixed(1) : '0.0';
 
   const getPostureTitle = (score: number) => {
     if (score >= 75) return 'CRITICAL THREAT POSTURE';
@@ -111,13 +108,7 @@ export function ThreatPostureBar({
 
         {/* Right: Operational Metric Highlights & Quick Triage Pivots */}
         <div className="flex flex-wrap items-center gap-2 shrink-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-border/40">
-          <div className="grid grid-cols-2 gap-2 text-xs font-mono pr-2 border-r border-border/40 hidden sm:grid">
-            <div className="px-2.5 py-1 rounded bg-surface-2 border border-border">
-              <span className="label-mono text-[9px] block">THREAT RATIO</span>
-              <span className={cn('font-bold tabular-nums', threatsDetected > 0 ? 'text-critical' : 'text-clean')}>
-                {threatRatio}%
-              </span>
-            </div>
+          <div className="flex items-center gap-2 text-xs font-mono pr-2 border-r border-border/40 hidden sm:flex">
             <div className="px-2.5 py-1 rounded bg-surface-2 border border-border">
               <span className="label-mono text-[9px] block">ACTIVE CASES</span>
               <span className="font-bold text-foreground tabular-nums">{activeCases}</span>

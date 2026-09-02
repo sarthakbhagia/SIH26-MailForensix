@@ -74,16 +74,19 @@ async def run_all_verifications():
 
         # Poll for analysis completion
         analysis_data = None
-        for _ in range(20):
+        for _ in range(30):
             await asyncio.sleep(0.5)
             analysis_res = await client.get(f"/api/analysis/{phish_email_id}")
             if analysis_res.status_code == 200:
-                analysis_data = analysis_res.json()
-                break
+                data = analysis_res.json()
+                if data.get("status") == "analyzed":
+                    analysis_data = data
+                    break
 
         print(f"[ALERT 2] Analysis Status: {analysis_res.status_code}")
         if analysis_data:
-            print(f"[ALERT 2] Composite Risk Score: {analysis_data.get('composite_risk_score')}, NLP: {analysis_data.get('nlp_result', {}).get('label')}")
+            nlp = analysis_data.get("nlp_result") or {}
+            print(f"[ALERT 2] Composite Risk Score: {analysis_data.get('composite_risk_score')}, NLP: {nlp.get('label')}")
 
         # Check alerts created
         alerts_res = await client.get("/api/alerts/")

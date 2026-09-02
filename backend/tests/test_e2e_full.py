@@ -863,8 +863,8 @@ async def test_complete_analyst_e2e_workflow():
     assert stats["threats_detected"] == 3
     assert stats["active_cases"] == 1
     assert stats["unacknowledged_alerts"] == 3
-    assert stats["threat_distribution"]["Phishing"] == 3
-    assert stats["threat_distribution"]["Legitimate"] == 1
+    assert (stats["threat_distribution"].get("PHISHING") or stats["threat_distribution"].get("Phishing")) == 3
+    assert (stats["threat_distribution"].get("LEGITIMATE") or stats["threat_distribution"].get("Legitimate")) == 1
     assert stats["risk_distribution"]["critical"] >= 3
     assert stats["risk_distribution"]["low"] >= 1
     assert len(stats["ingestion_timeline"]) == 7

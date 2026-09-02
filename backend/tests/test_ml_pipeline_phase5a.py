@@ -24,11 +24,17 @@ from ml.src.calibration.calibrator import ProbabilityCalibrator, compute_multicl
 from ml.src.experiments.phase5a_experiments import apply_decision_policy, evaluate_predictions
 
 
+_base_dir = Path(__file__).resolve().parent.parent
+_oof_exists = (_base_dir / "ml" / "data" / "artifacts" / "oof_predictions.parquet").exists()
+_val_feat_exists = (_base_dir / "ml" / "data" / "features" / "validation.parquet").exists()
+
+
 @pytest.fixture
 def base_dir():
-    return Path(__file__).resolve().parent.parent
+    return _base_dir
 
 
+@pytest.mark.skipif(not _oof_exists, reason="Offline training artifact oof_predictions.parquet excluded from git")
 def test_oof_completeness_and_group_isolation(base_dir):
     oof_path = base_dir / "ml" / "data" / "artifacts" / "oof_predictions.parquet"
     train_feat_path = base_dir / "ml" / "data" / "features" / "train.parquet"
@@ -49,6 +55,7 @@ def test_oof_completeness_and_group_isolation(base_dir):
     assert set(df_oof["fold"].unique()) == {1, 2, 3, 4, 5}
 
 
+@pytest.mark.skipif(not _oof_exists, reason="Offline training artifact oof_predictions.parquet excluded from git")
 def test_oof_no_nlp_proxy_contamination(base_dir):
     oof_path = base_dir / "ml" / "data" / "artifacts" / "oof_predictions.parquet"
     df_oof = pd.read_parquet(oof_path)
@@ -64,6 +71,7 @@ def test_oof_no_nlp_proxy_contamination(base_dir):
     assert np.mean(max_diff_from_proxy) > 0.05, "NLP OOF predictions appear proxy-contaminated!"
 
 
+@pytest.mark.skipif(not _oof_exists, reason="Offline training artifact oof_predictions.parquet excluded from git")
 def test_class_order_consistency(base_dir):
     oof_path = base_dir / "ml" / "data" / "artifacts" / "oof_predictions.parquet"
     df_oof = pd.read_parquet(oof_path)
@@ -76,6 +84,7 @@ def test_class_order_consistency(base_dir):
         assert np.allclose(row_sums, 1.0, atol=1e-3), f"{p_type} probability rows do not sum to 1"
 
 
+@pytest.mark.skipif(not _oof_exists, reason="Offline training artifact oof_predictions.parquet excluded from git")
 def test_train_only_class_weight_computation(base_dir):
     oof_path = base_dir / "ml" / "data" / "artifacts" / "oof_predictions.parquet"
     df_oof = pd.read_parquet(oof_path)
@@ -88,6 +97,7 @@ def test_train_only_class_weight_computation(base_dir):
     assert weights[1] > 10.0, "Suspicious class weight should reflect extreme imbalance"
 
 
+@pytest.mark.skipif(not _val_feat_exists, reason="Offline training artifact validation.parquet excluded from git")
 def test_validation_only_threshold_selection(base_dir):
     val_feat = pd.read_parquet(base_dir / "ml" / "data" / "features" / "validation.parquet")
     y_val = val_feat["label"].values.astype(int)

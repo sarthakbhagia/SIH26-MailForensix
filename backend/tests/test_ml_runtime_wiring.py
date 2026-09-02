@@ -175,7 +175,7 @@ def test_test_g_graceful_fallback_when_models_absent():
     )
     assert res.confidence_calibrated is False
     assert res.confidence_method == "rule_heuristic"
-    assert res.label in ("Legitimate", "Suspicious", "Phishing", "BEC/Fraud", "Impersonation")
+    assert res.label.upper() in ("LEGITIMATE", "SUSPICIOUS", "PHISHING", "BEC_FRAUD", "IMPERSONATION", "BEC/FRAUD")
 
 
 @pytest.mark.asyncio

@@ -26,13 +26,27 @@ export function ThreatChart({
 
   const nlpChartData = useMemo(() => {
     if (!threatDistribution || Object.keys(threatDistribution).length === 0) return [];
-    return Object.entries(threatDistribution)
-      .filter(([_, count]) => count > 0)
-      .map(([name, value], idx) => ({
-        name,
-        value,
-        color: getSeverityColorVar(name) || DEFAULT_PALETTE[idx % DEFAULT_PALETTE.length],
-      }));
+    
+    // Aggregation by canonical normalized category
+    const aggregated: Record<string, number> = {};
+    for (const [rawName, count] of Object.entries(threatDistribution)) {
+      if (!count || count <= 0) continue;
+      const norm = rawName.trim().toUpperCase().replace(/[\/\-\s]+/g, '_');
+      let canonical = norm;
+      if (['LEGITIMATE', 'CLEAN', 'BENIGN', 'SAFE'].includes(norm)) canonical = 'LEGITIMATE';
+      else if (['SUSPICIOUS', 'ANOMALOUS'].includes(norm)) canonical = 'SUSPICIOUS';
+      else if (['PHISHING', 'PHISH'].includes(norm)) canonical = 'PHISHING';
+      else if (['BEC_FRAUD', 'BEC', 'FRAUD'].includes(norm)) canonical = 'BEC_FRAUD';
+      else if (['IMPERSONATION', 'SPOOF', 'SPOOFING'].includes(norm)) canonical = 'IMPERSONATION';
+
+      aggregated[canonical] = (aggregated[canonical] || 0) + count;
+    }
+
+    return Object.entries(aggregated).map(([name, value], idx) => ({
+      name,
+      value,
+      color: getSeverityColorVar(name) || DEFAULT_PALETTE[idx % DEFAULT_PALETTE.length],
+    }));
   }, [threatDistribution]);
 
   const riskChartData = useMemo(() => {

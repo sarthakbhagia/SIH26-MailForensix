@@ -1,8 +1,7 @@
 
 import { useNavigate } from 'react-router-dom';
-import { Mail, ShieldAlert, FolderKanban, Activity, ArrowUpRight } from 'lucide-react';
+import { Mail, ShieldAlert, FolderKanban, ArrowUpRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getSeverityTokens } from '@/lib/severity';
 
 export interface StatsCardsProps {
   data?: {
@@ -19,8 +18,8 @@ export function StatsCards({ data, isLoading = false }: StatsCardsProps) {
 
   if (isLoading) {
     return (
-      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
-        {[1, 2, 3, 4].map((i) => (
+      <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        {[1, 2, 3].map((i) => (
           <div key={i} className="panel p-3.5 animate-pulse space-y-2.5">
             <div className="flex justify-between items-center">
               <div className="h-3 w-20 bg-muted/60 rounded" />
@@ -37,9 +36,7 @@ export function StatsCards({ data, isLoading = false }: StatsCardsProps) {
   const totalEmails = data?.total_emails ?? 0;
   const threatsDetected = data?.threats_detected ?? 0;
   const activeCases = data?.active_cases ?? 0;
-  const avgRiskScore = data?.avg_risk_score ?? 0.0;
 
-  const riskTokens = getSeverityTokens(avgRiskScore);
   const threatPercentage = totalEmails > 0 ? ((threatsDetected / totalEmails) * 100).toFixed(1) : '0';
   const cleanEmails = Math.max(0, totalEmails - threatsDetected);
 
@@ -77,21 +74,10 @@ export function StatsCards({ data, isLoading = false }: StatsCardsProps) {
       action: () => navigate('/cases'),
       actionLabel: 'Manage Cases',
     },
-    {
-      id: 'metric-score',
-      label: 'ENVIRONMENT RISK RATING',
-      value: avgRiskScore.toFixed(1),
-      subtext: `${riskTokens.label} SEVERITY TIER`,
-      icon: Activity,
-      accentColor: riskTokens.textColor,
-      badgeClass: riskTokens.badgeClass,
-      action: () => navigate('/map'),
-      actionLabel: 'Inspect Telemetry',
-    },
   ];
 
   return (
-    <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
       {metrics.map((metric) => {
         const Icon = metric.icon;
         return (

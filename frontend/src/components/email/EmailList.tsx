@@ -204,10 +204,14 @@ export function EmailList({ className }: EmailListProps) {
                       <span
                         className={cn(
                           'font-mono text-[10px] font-bold px-1.5 py-0.2 rounded border tabular-nums',
-                          tokens.badgeClass
+                          email.risk_score !== undefined && email.risk_score !== null
+                            ? tokens.badgeClass
+                            : 'bg-surface-2 text-muted-foreground border-border'
                         )}
                       >
-                        RISK {score.toFixed(0)} / 100
+                        {email.risk_score !== undefined && email.risk_score !== null
+                          ? `RISK ${score.toFixed(0)} / 100`
+                          : 'RISK -- / 100'}
                       </span>
 
                       <span className="text-[10px] text-muted-foreground">

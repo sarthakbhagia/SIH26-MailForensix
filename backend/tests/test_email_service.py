@@ -89,6 +89,14 @@ class MockEmailDbSession:
             return FakeScalarResult(None)
 
         # 5. Get AnalysisResult by email_id
+        if "FROM analysis_results" in stmt_str and "analysis_results.email_id IN" in stmt_str:
+            class MockAnalysisRows:
+                def __init__(self, analyses):
+                    self.rows = [(a.email_id, a.composite_risk_score) for a in analyses]
+                def all(self):
+                    return self.rows
+            return MockAnalysisRows(self.analyses)
+
         if "FROM analysis_results" in stmt_str and "analysis_results.email_id =" in stmt_str:
             if self.analyses:
                 return FakeScalarResult(self.analyses[0])
@@ -280,3 +288,28 @@ async def test_get_email_stats():
     assert stats["total_emails"] == 3
     assert stats["analyzed"] == 2
     assert stats["avg_risk_score"] == 85.0
+
+
+@pytest.mark.asyncio
+async def test_list_emails_includes_risk_score():
+    """Verify list_emails attaches composite_risk_score from AnalysisResult."""
+    db = MockEmailDbSession()
+    service = EmailService()
+
+    eid = uuid4()
+    email = Email(
+        id=eid,
+        sender="phish@evil.com",
+        subject="Urgent action required",
+        status=EmailStatus.analyzed,
+        ingested_at=datetime.now(timezone.utc).replace(tzinfo=None),
+    )
+    analysis = AnalysisResult(id=uuid4(), email_id=eid, composite_risk_score=87.5)
+    db.emails.append(email)
+    db.analyses.append(analysis)
+
+    items, total = await service.list_emails(db, 1, 10, {})
+    assert total == 1
+    assert len(items) == 1
+    assert getattr(items[0], "risk_score", None) == 87.5
+

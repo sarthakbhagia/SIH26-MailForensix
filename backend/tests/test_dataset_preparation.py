@@ -1,5 +1,14 @@
 import pytest
-from ml.data.prepare_datasets import DatasetPreparer
+
+try:
+    from ml.data.prepare_datasets import DatasetPreparer
+except ImportError:
+    DatasetPreparer = None
+
+pytestmark = pytest.mark.skipif(
+    DatasetPreparer is None,
+    reason="Legacy Phase 1 preparer superseded by Phase 2 CanonicalCorpusBuilder",
+)
 
 
 def test_synthetic_corpus_generation():

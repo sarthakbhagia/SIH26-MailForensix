@@ -97,7 +97,18 @@ class EmailService:
             return None
 
         result = await resolved_db.execute(select(Email).where(Email.id == parsed_uuid))
-        return result.scalar_one_or_none()
+        email = result.scalar_one_or_none()
+        if email:
+            try:
+                analysis_res = await resolved_db.execute(
+                    select(AnalysisResult.composite_risk_score).where(AnalysisResult.email_id == parsed_uuid)
+                )
+                score = analysis_res.scalar_one_or_none()
+                if score is not None and getattr(email, "risk_score", None) is None:
+                    setattr(email, "risk_score", score)
+            except Exception:
+                pass
+        return email
 
     async def list_emails(
         self,
@@ -181,6 +192,23 @@ class EmailService:
         query = query.order_by(desc(Email.ingested_at), desc(Email.id)).offset(calc_offset).limit(calc_limit)
         result = await resolved_db.execute(query)
         emails = list(result.scalars().all())
+
+        if emails:
+            email_ids = [e.id for e in emails if getattr(e, "id", None) is not None]
+            if email_ids:
+                try:
+                    analysis_res = await resolved_db.execute(
+                        select(AnalysisResult.email_id, AnalysisResult.composite_risk_score).where(
+                            AnalysisResult.email_id.in_(email_ids)
+                        )
+                    )
+                    score_rows = analysis_res.all() if hasattr(analysis_res, "all") else []
+                    score_map = {row[0]: row[1] for row in score_rows if len(row) >= 2}
+                    for e in emails:
+                        if e.id in score_map and getattr(e, "risk_score", None) is None:
+                            setattr(e, "risk_score", score_map[e.id])
+                except Exception as ex:
+                    logger.debug(f"Could not load analysis risk scores: {ex}")
 
         return emails, total
 

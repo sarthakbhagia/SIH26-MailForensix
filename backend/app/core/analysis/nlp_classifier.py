@@ -68,7 +68,7 @@ URGENCY_KEYWORDS = {
 }
 
 MAX_URGENCY_SCORE = sum(URGENCY_KEYWORDS.values())
-CLASS_ORDER = ["Legitimate", "Suspicious", "Phishing", "BEC/Fraud", "Impersonation"]
+CLASS_ORDER = ["LEGITIMATE", "SUSPICIOUS", "PHISHING", "BEC_FRAUD", "IMPERSONATION"]
 
 
 @dataclass
@@ -329,15 +329,15 @@ class NLPClassifier:
 
         # 6. Rule-Based Classification Baseline (Fallback / Standalone)
         if bec_score >= 14:
-            label = "BEC/Fraud"
+            label = "BEC_FRAUD"
         elif len(impersonation_signals) >= 2:
-            label = "Impersonation"
+            label = "IMPERSONATION"
         elif phishing_score >= 15:
-            label = "Phishing"
+            label = "PHISHING"
         elif phishing_score >= 8 or urgency_score >= 40:
-            label = "Suspicious"
+            label = "SUSPICIOUS"
         else:
-            label = "Legitimate"
+            label = "LEGITIMATE"
 
         class_idx = CLASS_ORDER.index(label) if label in CLASS_ORDER else 0
         raw_rule_score = float(rule_probs[class_idx]) * 100.0

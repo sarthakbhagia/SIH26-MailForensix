@@ -146,9 +146,6 @@ export function Sidebar({
                 <span className="font-mono text-xs font-bold tracking-tight text-foreground block truncate">
                   MailForensix
                 </span>
-                <span className="label-mono text-[9px] text-muted-foreground block -mt-0.5 truncate">
-                  DFIR WORKSTATION
-                </span>
               </div>
             )}
           </Link>

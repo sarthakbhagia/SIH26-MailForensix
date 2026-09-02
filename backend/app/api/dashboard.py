@@ -55,16 +55,33 @@ async def get_dashboard_stats(db: AsyncSession = Depends(get_db)) -> Dict[str, A
         )
         unacknowledged_alerts = unack_res.scalar() or 0
 
-        # 6. Threat distribution by NLP classification label
+        # 6. Threat distribution by NLP classification label (strictly normalized & deduplicated)
         dist_res = await db.execute(
             select(AnalysisResult.nlp_label, func.count(AnalysisResult.id))
             .group_by(AnalysisResult.nlp_label)
         )
         threat_distribution: Dict[str, int] = {}
         for row in dist_res.all():
-            label = row[0] if row[0] else "Unclassified"
-            count = row[1] or 0
-            threat_distribution[str(label)] = int(count)
+            raw_label = str(row[0] or "").strip()
+            if not raw_label:
+                normalized_label = "UNCLASSIFIED"
+            else:
+                cleaned = raw_label.upper().replace("/", "_").replace("-", "_").replace(" ", "_")
+                if cleaned in ("LEGITIMATE", "CLEAN", "BENIGN", "SAFE"):
+                    normalized_label = "LEGITIMATE"
+                elif cleaned in ("SUSPICIOUS", "ANOMALOUS"):
+                    normalized_label = "SUSPICIOUS"
+                elif cleaned in ("PHISHING", "PHISH"):
+                    normalized_label = "PHISHING"
+                elif cleaned in ("BEC_FRAUD", "BEC", "FRAUD"):
+                    normalized_label = "BEC_FRAUD"
+                elif cleaned in ("IMPERSONATION", "SPOOF", "SPOOFING"):
+                    normalized_label = "IMPERSONATION"
+                else:
+                    normalized_label = cleaned
+
+            count = int(row[1] or 0)
+            threat_distribution[normalized_label] = threat_distribution.get(normalized_label, 0) + count
 
         # 7. Risk distribution (low <=25, medium <=50, high <=75, critical >75)
         risk_dist_res = await db.execute(

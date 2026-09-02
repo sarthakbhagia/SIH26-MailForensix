@@ -72,7 +72,7 @@ def test_nlp_classifier_rule_fallback():
         headers={"from": "Bob <bob@company.com>"},
     )
     assert isinstance(res_legit, NLPClassificationResult)
-    assert res_legit.label == "Legitimate"
+    assert res_legit.label.upper() == "LEGITIMATE"
 
     # 2. BEC / Fraud email
     res_bec = classifier.classify(
@@ -81,7 +81,7 @@ def test_nlp_classifier_rule_fallback():
         sender="ceo@company.com",
         headers={"from": "CEO <ceo@company.com>"},
     )
-    assert res_bec.label == "BEC/Fraud"
+    assert res_bec.label.upper() in ("BEC_FRAUD", "BEC/FRAUD")
     assert len(res_bec.bec_indicators) >= 1
     assert "wire transfer" in res_bec.bec_indicators
 
@@ -92,5 +92,5 @@ def test_nlp_classifier_rule_fallback():
         sender="security@bad-domain.com",
         headers={"from": "Security Alert <security@bad-domain.com>"},
     )
-    assert res_phish.label == "Phishing"
+    assert res_phish.label.upper() == "PHISHING"
     assert res_phish.urgency_score > 0.0

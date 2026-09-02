@@ -101,10 +101,7 @@ export default function LoginPage() {
           </div>
           <div>
             <span className="font-mono text-xs font-bold tracking-tight text-foreground block">
-              MailForensix SOC
-            </span>
-            <span className="label-mono text-[9px] text-muted-foreground block -mt-0.5">
-              DFIR WORKSTATION v2.4.0
+              MailForensix
             </span>
           </div>
         </div>

@@ -177,12 +177,12 @@ def test_dashboard_stats_endpoint(seeded_dashboard_db):
     # 5. Unacknowledged alerts
     assert data["unacknowledged_alerts"] == 3
 
-    # 6. Threat distribution by label
+    # 6. Threat distribution by label (strictly normalized canonical categories)
     assert data["threat_distribution"] == {
-        "Phishing": 2,
-        "Suspicious": 1,
-        "BEC": 1,
-        "Legitimate": 1,
+        "PHISHING": 2,
+        "SUSPICIOUS": 1,
+        "BEC_FRAUD": 1,
+        "LEGITIMATE": 1,
     }
 
     # 7. Risk distribution (low: 1, medium: 1, high: 1, critical: 2)

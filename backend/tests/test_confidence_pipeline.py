@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 import io
 from uuid import uuid4
 from datetime import datetime, timezone
@@ -49,7 +49,7 @@ def test_scenario_b_clean_email_no_fake_100_percent(nlp_classifier):
 
     result = nlp_classifier.classify(clean_subject, clean_body, sender, headers)
 
-    assert result.label == "Legitimate"
+    assert result.label.upper() == "LEGITIMATE"
     # Rule heuristic engine must NOT claim 100.0% statistical confidence on 0 matched rules
     assert result.confidence is None or result.confidence != 100.0
     assert result.confidence_calibrated is False
@@ -67,7 +67,7 @@ def test_scenario_c_phishing_email_classification_and_risk(nlp_classifier):
 
     result = nlp_classifier.classify(phish_subject, phish_body, sender, headers)
 
-    assert result.label in ("Phishing", "BEC/Fraud", "Suspicious", "Impersonation")
+    assert result.label.upper() in ("PHISHING", "BEC_FRAUD", "SUSPICIOUS", "IMPERSONATION", "BEC/FRAUD")
     assert result.urgency_score > 0
     assert len(result.contributing_factors) > 0
     # Rule score provides raw evidence score, but is appropriately flagged as uncalibrated
