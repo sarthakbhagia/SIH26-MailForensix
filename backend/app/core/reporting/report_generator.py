@@ -165,7 +165,7 @@ class ReportGenerator:
         return {
             "report_id": report_id,
             "version": "1.0",
-            "platform": "PhishGuard Forensic Threat Intelligence Platform",
+            "platform": "MailForensix Forensic Threat Intelligence Platform",
             "generated_at": generated_at_ist,
             "generated_at_iso": to_iso_utc(now_utc()),
             "email_metadata": {
