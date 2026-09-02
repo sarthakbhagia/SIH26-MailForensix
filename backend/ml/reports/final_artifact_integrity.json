@@ -1,0 +1,69 @@
+{
+  "version": "mailforensix-ml-v1.1.0",
+  "timestamp": "2026-09-01T13:19:50.547923+00:00",
+  "git_commit": "d08a53c96a63696a2fde58740e8a92819cb71ada",
+  "dataset_artifacts": {
+    "canonical_corpus": {
+      "path": "ml/data/normalized/canonical_emails.parquet",
+      "sha256": "f5feed16948093bce32bf9a303e7e00c0273ace0b91b15c2c4142b5fbcb43d43"
+    },
+    "split_manifest": {
+      "path": "ml/data/splits/splits.csv",
+      "sha256": "bc0d2ce5d3f2087968e2a8ddd51df3cbd5d6508c6fa93a68ba495f4c7f3e1949"
+    },
+    "feature_matrices": {
+      "train": {
+        "path": "ml/data/features/train.parquet",
+        "sha256": "81546a8a26afc3bdd25919fcfdd3e1dda69c97228350a3abbc3701b1fe28360e"
+      },
+      "validation": {
+        "path": "ml/data/features/validation.parquet",
+        "sha256": "775068753dc482f4a115c07b570e6e056aa9a20ecd9e0a532ca455149d6fb3a4"
+      },
+      "test": {
+        "path": "ml/data/features/test.parquet",
+        "sha256": "e6d14fcb536976804ee2187c9719bf956feaaba195c7da2e8eb9d8a4b26b8e64"
+      }
+    }
+  },
+  "configuration_artifacts": {
+    "label_taxonomy": {
+      "path": "ml/config/labels.yaml",
+      "sha256": "a9686564428ca4323f9fd61e801bbcdb7aee94ebbf16bb8f3582f0cee8983214"
+    },
+    "feature_manifest": {
+      "path": "ml/data/manifests/feature_manifest.json",
+      "sha256": "4ffad056aaef731e0ec8b25857b190168aa301acd68f4c82357e22012e2bfd2c"
+    },
+    "feature_names": {
+      "path": "ml/data/manifests/feature_names.json",
+      "sha256": "b9048f2baec9e15016775e61186f52d3891f279d53c4bfc021ce52be9570884a"
+    }
+  },
+  "promoted_model_artifacts": {
+    "nlp_classifier": {
+      "path": "ml/models/nlp_classifier",
+      "sha256": "a5646c3661584dfccf3b168d48373bf0d8bdd1bca7473def4b451d7b0bb904d5"
+    },
+    "tabular_classifier": {
+      "path": "ml/models/tabular_classifier.joblib",
+      "sha256": "093ca9ef7b94c265b5cf58692044470b14ea3ff239df8a4fc71cc4a25fb4f481"
+    },
+    "ensemble_meta": {
+      "path": "ml/models/ensemble_meta.joblib",
+      "sha256": "803921ee971c399d629bb04ff4bbfa96bf66fbee1cff1900e8eb5f5e0dd6afaf"
+    },
+    "nlp_calibrator": {
+      "path": "ml/models/nlp_calibrator.joblib",
+      "sha256": "80ce774edf9ea4d0290919d80d22c918512a940ec4f615c2cdcc08e7e89da4bc"
+    },
+    "tabular_calibrator": {
+      "path": "ml/models/tabular_calibrator.joblib",
+      "sha256": "5c4ec707bc5d37743770ca5436e38ebba47267f1750d4cda08f6349778c782bb"
+    },
+    "oof_predictions": {
+      "path": "ml/data/artifacts/oof_predictions.parquet",
+      "sha256": "c781ef5e9112700400e87fb806338f5b66c7393ce843678812e910d8a7f57324"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-09-01T12:06:15.188314+00:00",
+  "status": "PASS",
+  "checks": {
+    "no_email_id_overlap": true,
+    "no_exact_duplicate_crossings": true,
+    "no_near_duplicate_crossings": true,
+    "no_group_id_crossings": true,
+    "no_synthetic_in_test_split": true,
+    "all_records_assigned": true
+  },
+  "violations": [],
+  "counts": {
+    "total_records": 14069,
+    "train_count": 9695,
+    "validation_count": 2826,
+    "test_count": 1548
+  },
+  "grouping_statistics": {
+    "unique_leakage_groups": 8323,
+    "multi_member_exact_clusters": 14069,
+    "multi_member_near_clusters": 11828
+  }
+}

@@ -1,0 +1,8 @@
+source_dataset_a,source_dataset_b,matching_records,match_method,similarity_evidence,relationship_classification
+epvme,trec07,413,minhash_lsh_shingle_jaccard,"avg_jaccard=0.8086, max_jaccard=1.0000, threshold=0.7",derived_copy
+clair,trec07,1,minhash_lsh_shingle_jaccard,"avg_jaccard=0.7287, max_jaccard=0.7287, threshold=0.7",near_duplicate
+epvme,nazario,136,minhash_lsh_shingle_jaccard,"avg_jaccard=0.8795, max_jaccard=1.0000, threshold=0.7",derived_copy
+epvme,spamassassin,15,minhash_lsh_shingle_jaccard,"avg_jaccard=0.8169, max_jaccard=0.9643, threshold=0.7",near_duplicate
+nazario,iwspa_ap,0,minhash_lsh_shingle_jaccard,no pairs met jaccard threshold >= 0.7,independent
+clair,zefang_liu,0,minhash_lsh_shingle_jaccard,no pairs met jaccard threshold >= 0.7,independent
+bec2,enron,0,minhash_lsh_shingle_jaccard,no pairs met jaccard threshold >= 0.7,independent

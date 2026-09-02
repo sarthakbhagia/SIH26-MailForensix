@@ -1,0 +1,4 @@
+split,total_records,unique_groups,real_count,synthetic_count,class_distribution,source_distribution
+train,9695,5998,8232,1463,"{'IMPERSONATION': 1234, 'BEC_FRAUD': 1797, 'LEGITIMATE': 4537, 'PHISHING': 2055, 'SUSPICIOUS': 72}","{'epvme': 1234, 'clair': 1564, 'spamassassin': 1892, 'nazario': 731, 'trec07': 723, 'enron': 1242, 'phishing_pot': 1324, 'ceas08': 756, 'bec2': 229}"
+validation,2826,1239,2325,501,"{'PHISHING': 1083, 'LEGITIMATE': 890, 'BEC_FRAUD': 386, 'IMPERSONATION': 451, 'SUSPICIOUS': 16}","{'nazario': 765, 'spamassassin': 353, 'enron': 222, 'phishing_pot': 318, 'clair': 336, 'epvme': 451, 'ceas08': 164, 'bec2': 50, 'trec07': 167}"
+test,1548,1086,1548,0,"{'PHISHING': 423, 'BEC_FRAUD': 336, 'LEGITIMATE': 775, 'SUSPICIOUS': 14}","{'phishing_pot': 286, 'nazario': 137, 'clair': 333, 'trec07': 113, 'enron': 280, 'spamassassin': 225, 'ceas08': 174}"

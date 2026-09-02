@@ -1,0 +1,64 @@
+{
+  "total_oof_records": 9695,
+  "expected_training_records": 9695,
+  "record_count_matches": true,
+  "duplicate_ids": 0,
+  "missing_ids": 0,
+  "extra_ids": 0,
+  "class_counts": {
+    "LEGITIMATE": 4537,
+    "SUSPICIOUS": 72,
+    "PHISHING": 2055,
+    "BEC_FRAUD": 1797,
+    "IMPERSONATION": 1234
+  },
+  "fold_counts": {
+    "fold_1": 1939,
+    "fold_2": 1939,
+    "fold_3": 1939,
+    "fold_4": 1939,
+    "fold_5": 1939
+  },
+  "fold_class_matrix": {
+    "fold_1": {
+      "LEGITIMATE": 951,
+      "SUSPICIOUS": 8,
+      "PHISHING": 400,
+      "BEC_FRAUD": 348,
+      "IMPERSONATION": 232
+    },
+    "fold_2": {
+      "LEGITIMATE": 973,
+      "SUSPICIOUS": 37,
+      "PHISHING": 342,
+      "BEC_FRAUD": 334,
+      "IMPERSONATION": 253
+    },
+    "fold_3": {
+      "LEGITIMATE": 809,
+      "SUSPICIOUS": 6,
+      "PHISHING": 470,
+      "BEC_FRAUD": 423,
+      "IMPERSONATION": 231
+    },
+    "fold_4": {
+      "LEGITIMATE": 966,
+      "SUSPICIOUS": 13,
+      "PHISHING": 412,
+      "BEC_FRAUD": 320,
+      "IMPERSONATION": 228
+    },
+    "fold_5": {
+      "LEGITIMATE": 838,
+      "SUSPICIOUS": 8,
+      "PHISHING": 431,
+      "BEC_FRAUD": 372,
+      "IMPERSONATION": 290
+    }
+  },
+  "group_leakage_count": 0,
+  "self_prediction_violations": 0,
+  "nlp_proxy_contaminated_records": 0,
+  "nlp_proxy_contamination_percentage": 0.0,
+  "class_order_validation": true
+}

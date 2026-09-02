@@ -1,0 +1,38 @@
+{
+  "status": "PASS",
+  "timestamp": "2026-09-01T13:19:51.627818+00:00",
+  "git_commit": "d08a53c96a63696a2fde58740e8a92819cb71ada",
+  "checks": {
+    "email_id_overlap": {
+      "train_val_overlap": 0,
+      "train_test_overlap": 0,
+      "val_test_overlap": 0,
+      "passed": true
+    },
+    "cluster_group_leakage": {
+      "exact_duplicate_violations": 0,
+      "near_duplicate_violations": 0,
+      "group_id_violations": 0,
+      "synthetic_provenance_test_violations": 0,
+      "passed": true
+    },
+    "test_purity": {
+      "test_sample_count": 1548,
+      "test_synthetic_count": 0,
+      "passed": true
+    },
+    "oof_training_isolation": {
+      "oof_total_records": 9695,
+      "oof_outside_train_count": 0,
+      "oof_group_violations": 0,
+      "passed": true
+    },
+    "nlp_metadata_sanitization": {
+      "passed": true
+    },
+    "feature_availability_invariance": {
+      "unavailable_features_detected": [],
+      "passed": true
+    }
+  }
+}

@@ -1,0 +1,1227 @@
+{
+  "validation_experiments": {
+    "Exp_A_Baseline_Ensemble": {
+      "model_name": "Exp A: Baseline Ensemble (15D Unweighted)",
+      "accuracy": 0.9667,
+      "balanced_accuracy": 0.7689,
+      "macro_f1": 0.7682,
+      "weighted_f1": 0.9639,
+      "log_loss": 0.1064,
+      "ece": 0.0264,
+      "brier_score": 0.0453,
+      "confusion_matrix": [
+        [
+          889,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          16,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          27,
+          0,
+          1056,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          336,
+          50
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          451
+        ]
+      ],
+      "class_metrics": {
+        "LEGITIMATE": {
+          "support": 890,
+          "precision": 0.9539,
+          "recall": 0.9989,
+          "f1_score": 0.9759,
+          "true_positive_count": 889,
+          "false_positive_count": 43,
+          "false_negative_count": 1
+        },
+        "SUSPICIOUS": {
+          "support": 16,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0,
+          "true_positive_count": 0,
+          "false_positive_count": 0,
+          "false_negative_count": 16
+        },
+        "PHISHING": {
+          "support": 1083,
+          "precision": 0.9991,
+          "recall": 0.9751,
+          "f1_score": 0.9869,
+          "true_positive_count": 1056,
+          "false_positive_count": 1,
+          "false_negative_count": 27
+        },
+        "BEC_FRAUD": {
+          "support": 386,
+          "precision": 1.0,
+          "recall": 0.8705,
+          "f1_score": 0.9307,
+          "true_positive_count": 336,
+          "false_positive_count": 0,
+          "false_negative_count": 50
+        },
+        "IMPERSONATION": {
+          "support": 451,
+          "precision": 0.9002,
+          "recall": 1.0,
+          "f1_score": 0.9475,
+          "true_positive_count": 451,
+          "false_positive_count": 50,
+          "false_negative_count": 0
+        }
+      }
+    },
+    "Exp_B_LightGBM_Only": {
+      "model_name": "Exp B: LightGBM Only (35 Features)",
+      "accuracy": 0.9689,
+      "balanced_accuracy": 0.9286,
+      "macro_f1": 0.8515,
+      "weighted_f1": 0.973,
+      "log_loss": 0.146,
+      "ece": 0.0254,
+      "brier_score": 0.0575,
+      "confusion_matrix": [
+        [
+          846,
+          41,
+          3,
+          0,
+          0
+        ],
+        [
+          4,
+          12,
+          0,
+          0,
+          0
+        ],
+        [
+          25,
+          0,
+          1058,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          383,
+          3
+        ],
+        [
+          0,
+          0,
+          0,
+          12,
+          439
+        ]
+      ],
+      "class_metrics": {
+        "LEGITIMATE": {
+          "support": 890,
+          "precision": 0.9669,
+          "recall": 0.9506,
+          "f1_score": 0.9586,
+          "true_positive_count": 846,
+          "false_positive_count": 29,
+          "false_negative_count": 44
+        },
+        "SUSPICIOUS": {
+          "support": 16,
+          "precision": 0.2264,
+          "recall": 0.75,
+          "f1_score": 0.3478,
+          "true_positive_count": 12,
+          "false_positive_count": 41,
+          "false_negative_count": 4
+        },
+        "PHISHING": {
+          "support": 1083,
+          "precision": 0.9972,
+          "recall": 0.9769,
+          "f1_score": 0.9869,
+          "true_positive_count": 1058,
+          "false_positive_count": 3,
+          "false_negative_count": 25
+        },
+        "BEC_FRAUD": {
+          "support": 386,
+          "precision": 0.9696,
+          "recall": 0.9922,
+          "f1_score": 0.9808,
+          "true_positive_count": 383,
+          "false_positive_count": 12,
+          "false_negative_count": 3
+        },
+        "IMPERSONATION": {
+          "support": 451,
+          "precision": 0.9932,
+          "recall": 0.9734,
+          "f1_score": 0.9832,
+          "true_positive_count": 439,
+          "false_positive_count": 3,
+          "false_negative_count": 12
+        }
+      }
+    },
+    "Exp_C_NLP_Plus_LightGBM": {
+      "model_name": "Exp C: NLP + LightGBM (10D)",
+      "accuracy": 0.9791,
+      "balanced_accuracy": 0.7878,
+      "macro_f1": 0.7854,
+      "weighted_f1": 0.9764,
+      "log_loss": 0.0921,
+      "ece": 0.0105,
+      "brier_score": 0.0365,
+      "confusion_matrix": [
+        [
+          889,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          16,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          27,
+          0,
+          1056,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          382,
+          4
+        ],
+        [
+          0,
+          0,
+          0,
+          11,
+          440
+        ]
+      ],
+      "class_metrics": {
+        "LEGITIMATE": {
+          "support": 890,
+          "precision": 0.9539,
+          "recall": 0.9989,
+          "f1_score": 0.9759,
+          "true_positive_count": 889,
+          "false_positive_count": 43,
+          "false_negative_count": 1
+        },
+        "SUSPICIOUS": {
+          "support": 16,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0,
+          "true_positive_count": 0,
+          "false_positive_count": 0,
+          "false_negative_count": 16
+        },
+        "PHISHING": {
+          "support": 1083,
+          "precision": 0.9991,
+          "recall": 0.9751,
+          "f1_score": 0.9869,
+          "true_positive_count": 1056,
+          "false_positive_count": 1,
+          "false_negative_count": 27
+        },
+        "BEC_FRAUD": {
+          "support": 386,
+          "precision": 0.972,
+          "recall": 0.9896,
+          "f1_score": 0.9807,
+          "true_positive_count": 382,
+          "false_positive_count": 11,
+          "false_negative_count": 4
+        },
+        "IMPERSONATION": {
+          "support": 451,
+          "precision": 0.991,
+          "recall": 0.9756,
+          "f1_score": 0.9832,
+          "true_positive_count": 440,
+          "false_positive_count": 4,
+          "false_negative_count": 11
+        }
+      }
+    },
+    "Exp_D_Full_Ensemble_15D": {
+      "model_name": "Exp D: NLP + LightGBM + Rules (15D)",
+      "accuracy": 0.9667,
+      "balanced_accuracy": 0.7689,
+      "macro_f1": 0.7682,
+      "weighted_f1": 0.9639,
+      "log_loss": 0.1064,
+      "ece": 0.0264,
+      "brier_score": 0.0453,
+      "confusion_matrix": [
+        [
+          889,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          16,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          27,
+          0,
+          1056,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          336,
+          50
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          451
+        ]
+      ],
+      "class_metrics": {
+        "LEGITIMATE": {
+          "support": 890,
+          "precision": 0.9539,
+          "recall": 0.9989,
+          "f1_score": 0.9759,
+          "true_positive_count": 889,
+          "false_positive_count": 43,
+          "false_negative_count": 1
+        },
+        "SUSPICIOUS": {
+          "support": 16,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0,
+          "true_positive_count": 0,
+          "false_positive_count": 0,
+          "false_negative_count": 16
+        },
+        "PHISHING": {
+          "support": 1083,
+          "precision": 0.9991,
+          "recall": 0.9751,
+          "f1_score": 0.9869,
+          "true_positive_count": 1056,
+          "false_positive_count": 1,
+          "false_negative_count": 27
+        },
+        "BEC_FRAUD": {
+          "support": 386,
+          "precision": 1.0,
+          "recall": 0.8705,
+          "f1_score": 0.9307,
+          "true_positive_count": 336,
+          "false_positive_count": 0,
+          "false_negative_count": 50
+        },
+        "IMPERSONATION": {
+          "support": 451,
+          "precision": 0.9002,
+          "recall": 1.0,
+          "f1_score": 0.9475,
+          "true_positive_count": 451,
+          "false_positive_count": 50,
+          "false_negative_count": 0
+        }
+      }
+    },
+    "Exp_E_Minority_Aware_Meta": {
+      "model_name": "Exp E: Minority-Aware Meta (15D Balanced)",
+      "accuracy": 0.9685,
+      "balanced_accuracy": 0.8314,
+      "macro_f1": 0.864,
+      "weighted_f1": 0.9674,
+      "log_loss": 0.111,
+      "ece": 0.0329,
+      "brier_score": 0.045,
+      "confusion_matrix": [
+        [
+          889,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          11,
+          5,
+          0,
+          0,
+          0
+        ],
+        [
+          27,
+          0,
+          1056,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          336,
+          50
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          451
+        ]
+      ],
+      "class_metrics": {
+        "LEGITIMATE": {
+          "support": 890,
+          "precision": 0.959,
+          "recall": 0.9989,
+          "f1_score": 0.9785,
+          "true_positive_count": 889,
+          "false_positive_count": 38,
+          "false_negative_count": 1
+        },
+        "SUSPICIOUS": {
+          "support": 16,
+          "precision": 1.0,
+          "recall": 0.3125,
+          "f1_score": 0.4762,
+          "true_positive_count": 5,
+          "false_positive_count": 0,
+          "false_negative_count": 11
+        },
+        "PHISHING": {
+          "support": 1083,
+          "precision": 0.9991,
+          "recall": 0.9751,
+          "f1_score": 0.9869,
+          "true_positive_count": 1056,
+          "false_positive_count": 1,
+          "false_negative_count": 27
+        },
+        "BEC_FRAUD": {
+          "support": 386,
+          "precision": 1.0,
+          "recall": 0.8705,
+          "f1_score": 0.9307,
+          "true_positive_count": 336,
+          "false_positive_count": 0,
+          "false_negative_count": 50
+        },
+        "IMPERSONATION": {
+          "support": 451,
+          "precision": 0.9002,
+          "recall": 1.0,
+          "f1_score": 0.9475,
+          "true_positive_count": 451,
+          "false_positive_count": 50,
+          "false_negative_count": 0
+        }
+      }
+    }
+  },
+  "validation_threshold_sweep": {
+    "0.05": {
+      "suspicious_precision": 0.4615,
+      "suspicious_recall": 0.75,
+      "suspicious_f1": 0.5714,
+      "macro_f1": 0.8822,
+      "weighted_f1": 0.9667,
+      "accuracy": 0.966,
+      "phishing_f1": 0.9869,
+      "bec_f1": 0.9307
+    },
+    "0.075": {
+      "suspicious_precision": 0.6111,
+      "suspicious_recall": 0.6875,
+      "suspicious_f1": 0.6471,
+      "macro_f1": 0.898,
+      "weighted_f1": 0.9682,
+      "accuracy": 0.9682,
+      "phishing_f1": 0.9869,
+      "bec_f1": 0.9307
+    },
+    "0.1": {
+      "suspicious_precision": 0.6471,
+      "suspicious_recall": 0.6875,
+      "suspicious_f1": 0.6667,
+      "macro_f1": 0.902,
+      "weighted_f1": 0.9685,
+      "accuracy": 0.9685,
+      "phishing_f1": 0.9869,
+      "bec_f1": 0.9307
+    },
+    "0.125": {
+      "suspicious_precision": 0.7333,
+      "suspicious_recall": 0.6875,
+      "suspicious_f1": 0.7097,
+      "macro_f1": 0.9109,
+      "weighted_f1": 0.9691,
+      "accuracy": 0.9692,
+      "phishing_f1": 0.9869,
+      "bec_f1": 0.9307
+    },
+    "0.15": {
+      "suspicious_precision": 0.7857,
+      "suspicious_recall": 0.6875,
+      "suspicious_f1": 0.7333,
+      "macro_f1": 0.9157,
+      "weighted_f1": 0.9694,
+      "accuracy": 0.9696,
+      "phishing_f1": 0.9869,
+      "bec_f1": 0.9307
+    },
+    "0.175": {
+      "suspicious_precision": 0.8462,
+      "suspicious_recall": 0.6875,
+      "suspicious_f1": 0.7586,
+      "macro_f1": 0.9209,
+      "weighted_f1": 0.9697,
+      "accuracy": 0.9699,
+      "phishing_f1": 0.9869,
+      "bec_f1": 0.9307
+    },
+    "0.2": {
+      "suspicious_precision": 0.8462,
+      "suspicious_recall": 0.6875,
+      "suspicious_f1": 0.7586,
+      "macro_f1": 0.9209,
+      "weighted_f1": 0.9697,
+      "accuracy": 0.9699,
+      "phishing_f1": 0.9869,
+      "bec_f1": 0.9307
+    },
+    "0.225": {
+      "suspicious_precision": 1.0,
+      "suspicious_recall": 0.6875,
+      "suspicious_f1": 0.8148,
+      "macro_f1": 0.9323,
+      "weighted_f1": 0.9704,
+      "accuracy": 0.9706,
+      "phishing_f1": 0.9869,
+      "bec_f1": 0.9307
+    },
+    "0.25": {
+      "suspicious_precision": 1.0,
+      "suspicious_recall": 0.5625,
+      "suspicious_f1": 0.72,
+      "macro_f1": 0.9132,
+      "weighted_f1": 0.9695,
+      "accuracy": 0.9699,
+      "phishing_f1": 0.9869,
+      "bec_f1": 0.9307
+    },
+    "0.275": {
+      "suspicious_precision": 1.0,
+      "suspicious_recall": 0.5625,
+      "suspicious_f1": 0.72,
+      "macro_f1": 0.9132,
+      "weighted_f1": 0.9695,
+      "accuracy": 0.9699,
+      "phishing_f1": 0.9869,
+      "bec_f1": 0.9307
+    },
+    "0.3": {
+      "suspicious_precision": 1.0,
+      "suspicious_recall": 0.5625,
+      "suspicious_f1": 0.72,
+      "macro_f1": 0.9132,
+      "weighted_f1": 0.9695,
+      "accuracy": 0.9699,
+      "phishing_f1": 0.9869,
+      "bec_f1": 0.9307
+    },
+    "0.325": {
+      "suspicious_precision": 1.0,
+      "suspicious_recall": 0.5625,
+      "suspicious_f1": 0.72,
+      "macro_f1": 0.9132,
+      "weighted_f1": 0.9695,
+      "accuracy": 0.9699,
+      "phishing_f1": 0.9869,
+      "bec_f1": 0.9307
+    },
+    "0.35": {
+      "suspicious_precision": 1.0,
+      "suspicious_recall": 0.5,
+      "suspicious_f1": 0.6667,
+      "macro_f1": 0.9024,
+      "weighted_f1": 0.969,
+      "accuracy": 0.9696,
+      "phishing_f1": 0.9869,
+      "bec_f1": 0.9307
+    },
+    "0.375": {
+      "suspicious_precision": 1.0,
+      "suspicious_recall": 0.4375,
+      "suspicious_f1": 0.6087,
+      "macro_f1": 0.8907,
+      "weighted_f1": 0.9685,
+      "accuracy": 0.9692,
+      "phishing_f1": 0.9869,
+      "bec_f1": 0.9307
+    },
+    "0.4": {
+      "suspicious_precision": 1.0,
+      "suspicious_recall": 0.375,
+      "suspicious_f1": 0.5455,
+      "macro_f1": 0.8779,
+      "weighted_f1": 0.968,
+      "accuracy": 0.9689,
+      "phishing_f1": 0.9869,
+      "bec_f1": 0.9307
+    },
+    "0.425": {
+      "suspicious_precision": 1.0,
+      "suspicious_recall": 0.375,
+      "suspicious_f1": 0.5455,
+      "macro_f1": 0.8779,
+      "weighted_f1": 0.968,
+      "accuracy": 0.9689,
+      "phishing_f1": 0.9869,
+      "bec_f1": 0.9307
+    },
+    "0.45": {
+      "suspicious_precision": 1.0,
+      "suspicious_recall": 0.3125,
+      "suspicious_f1": 0.4762,
+      "macro_f1": 0.864,
+      "weighted_f1": 0.9674,
+      "accuracy": 0.9685,
+      "phishing_f1": 0.9869,
+      "bec_f1": 0.9307
+    },
+    "0.475": {
+      "suspicious_precision": 1.0,
+      "suspicious_recall": 0.3125,
+      "suspicious_f1": 0.4762,
+      "macro_f1": 0.864,
+      "weighted_f1": 0.9674,
+      "accuracy": 0.9685,
+      "phishing_f1": 0.9869,
+      "bec_f1": 0.9307
+    },
+    "0.5": {
+      "suspicious_precision": 1.0,
+      "suspicious_recall": 0.3125,
+      "suspicious_f1": 0.4762,
+      "macro_f1": 0.864,
+      "weighted_f1": 0.9674,
+      "accuracy": 0.9685,
+      "phishing_f1": 0.9869,
+      "bec_f1": 0.9307
+    }
+  },
+  "selected_validation_threshold": 0.225,
+  "test_experiments": {
+    "Exp_A_Baseline_Ensemble": {
+      "model_name": "Exp A: Baseline Ensemble (15D Unweighted)",
+      "accuracy": 0.9832,
+      "balanced_accuracy": 0.7424,
+      "macro_f1": 0.7421,
+      "weighted_f1": 0.9788,
+      "log_loss": 0.089,
+      "ece": 0.0204,
+      "brier_score": 0.0315,
+      "confusion_matrix": [
+        [
+          775,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          14,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          9,
+          0,
+          414,
+          0,
+          0
+        ],
+        [
+          3,
+          0,
+          0,
+          333,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "class_metrics": {
+        "LEGITIMATE": {
+          "support": 775,
+          "precision": 0.9675,
+          "recall": 1.0,
+          "f1_score": 0.9835,
+          "true_positive_count": 775,
+          "false_positive_count": 26,
+          "false_negative_count": 0
+        },
+        "SUSPICIOUS": {
+          "support": 14,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0,
+          "true_positive_count": 0,
+          "false_positive_count": 0,
+          "false_negative_count": 14
+        },
+        "PHISHING": {
+          "support": 423,
+          "precision": 1.0,
+          "recall": 0.9787,
+          "f1_score": 0.9892,
+          "true_positive_count": 414,
+          "false_positive_count": 0,
+          "false_negative_count": 9
+        },
+        "BEC_FRAUD": {
+          "support": 336,
+          "precision": 1.0,
+          "recall": 0.9911,
+          "f1_score": 0.9955,
+          "true_positive_count": 333,
+          "false_positive_count": 0,
+          "false_negative_count": 3
+        },
+        "IMPERSONATION": {
+          "status": "NOT AVAILABLE / INSUFFICIENT REAL TEST DATA",
+          "support": 0,
+          "precision": null,
+          "recall": null,
+          "f1_score": null,
+          "false_positive_count": 0
+        }
+      }
+    },
+    "Exp_B_LightGBM_Only": {
+      "model_name": "Exp B: LightGBM Only (35 Features)",
+      "accuracy": 0.9645,
+      "balanced_accuracy": 0.8909,
+      "macro_f1": 0.8139,
+      "weighted_f1": 0.9709,
+      "log_loss": 0.1504,
+      "ece": 0.0292,
+      "brier_score": 0.0633,
+      "confusion_matrix": [
+        [
+          737,
+          35,
+          3,
+          0,
+          0
+        ],
+        [
+          5,
+          9,
+          0,
+          0,
+          0
+        ],
+        [
+          9,
+          0,
+          414,
+          0,
+          0
+        ],
+        [
+          3,
+          0,
+          0,
+          333,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "class_metrics": {
+        "LEGITIMATE": {
+          "support": 775,
+          "precision": 0.9775,
+          "recall": 0.951,
+          "f1_score": 0.964,
+          "true_positive_count": 737,
+          "false_positive_count": 17,
+          "false_negative_count": 38
+        },
+        "SUSPICIOUS": {
+          "support": 14,
+          "precision": 0.2045,
+          "recall": 0.6429,
+          "f1_score": 0.3103,
+          "true_positive_count": 9,
+          "false_positive_count": 35,
+          "false_negative_count": 5
+        },
+        "PHISHING": {
+          "support": 423,
+          "precision": 0.9928,
+          "recall": 0.9787,
+          "f1_score": 0.9857,
+          "true_positive_count": 414,
+          "false_positive_count": 3,
+          "false_negative_count": 9
+        },
+        "BEC_FRAUD": {
+          "support": 336,
+          "precision": 1.0,
+          "recall": 0.9911,
+          "f1_score": 0.9955,
+          "true_positive_count": 333,
+          "false_positive_count": 0,
+          "false_negative_count": 3
+        },
+        "IMPERSONATION": {
+          "status": "NOT AVAILABLE / INSUFFICIENT REAL TEST DATA",
+          "support": 0,
+          "precision": null,
+          "recall": null,
+          "f1_score": null,
+          "false_positive_count": 0
+        }
+      }
+    },
+    "Exp_C_NLP_Plus_LightGBM": {
+      "model_name": "Exp C: NLP + LightGBM (10D)",
+      "accuracy": 0.9832,
+      "balanced_accuracy": 0.7424,
+      "macro_f1": 0.7421,
+      "weighted_f1": 0.9788,
+      "log_loss": 0.0811,
+      "ece": 0.0171,
+      "brier_score": 0.0291,
+      "confusion_matrix": [
+        [
+          775,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          14,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          9,
+          0,
+          414,
+          0,
+          0
+        ],
+        [
+          3,
+          0,
+          0,
+          333,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "class_metrics": {
+        "LEGITIMATE": {
+          "support": 775,
+          "precision": 0.9675,
+          "recall": 1.0,
+          "f1_score": 0.9835,
+          "true_positive_count": 775,
+          "false_positive_count": 26,
+          "false_negative_count": 0
+        },
+        "SUSPICIOUS": {
+          "support": 14,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0,
+          "true_positive_count": 0,
+          "false_positive_count": 0,
+          "false_negative_count": 14
+        },
+        "PHISHING": {
+          "support": 423,
+          "precision": 1.0,
+          "recall": 0.9787,
+          "f1_score": 0.9892,
+          "true_positive_count": 414,
+          "false_positive_count": 0,
+          "false_negative_count": 9
+        },
+        "BEC_FRAUD": {
+          "support": 336,
+          "precision": 1.0,
+          "recall": 0.9911,
+          "f1_score": 0.9955,
+          "true_positive_count": 333,
+          "false_positive_count": 0,
+          "false_negative_count": 3
+        },
+        "IMPERSONATION": {
+          "status": "NOT AVAILABLE / INSUFFICIENT REAL TEST DATA",
+          "support": 0,
+          "precision": null,
+          "recall": null,
+          "f1_score": null,
+          "false_positive_count": 0
+        }
+      }
+    },
+    "Exp_D_Full_Ensemble_15D": {
+      "model_name": "Exp D: NLP + LightGBM + Rules (15D)",
+      "accuracy": 0.9832,
+      "balanced_accuracy": 0.7424,
+      "macro_f1": 0.7421,
+      "weighted_f1": 0.9788,
+      "log_loss": 0.089,
+      "ece": 0.0204,
+      "brier_score": 0.0315,
+      "confusion_matrix": [
+        [
+          775,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          14,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          9,
+          0,
+          414,
+          0,
+          0
+        ],
+        [
+          3,
+          0,
+          0,
+          333,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "class_metrics": {
+        "LEGITIMATE": {
+          "support": 775,
+          "precision": 0.9675,
+          "recall": 1.0,
+          "f1_score": 0.9835,
+          "true_positive_count": 775,
+          "false_positive_count": 26,
+          "false_negative_count": 0
+        },
+        "SUSPICIOUS": {
+          "support": 14,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0,
+          "true_positive_count": 0,
+          "false_positive_count": 0,
+          "false_negative_count": 14
+        },
+        "PHISHING": {
+          "support": 423,
+          "precision": 1.0,
+          "recall": 0.9787,
+          "f1_score": 0.9892,
+          "true_positive_count": 414,
+          "false_positive_count": 0,
+          "false_negative_count": 9
+        },
+        "BEC_FRAUD": {
+          "support": 336,
+          "precision": 1.0,
+          "recall": 0.9911,
+          "f1_score": 0.9955,
+          "true_positive_count": 333,
+          "false_positive_count": 0,
+          "false_negative_count": 3
+        },
+        "IMPERSONATION": {
+          "status": "NOT AVAILABLE / INSUFFICIENT REAL TEST DATA",
+          "support": 0,
+          "precision": null,
+          "recall": null,
+          "f1_score": null,
+          "false_positive_count": 0
+        }
+      }
+    },
+    "Exp_E_Minority_Aware_Argmax": {
+      "model_name": "Exp E: Minority-Aware (Argmax)",
+      "accuracy": 0.9858,
+      "balanced_accuracy": 0.8314,
+      "macro_f1": 0.8739,
+      "weighted_f1": 0.9845,
+      "log_loss": 0.0862,
+      "ece": 0.0204,
+      "brier_score": 0.0286,
+      "confusion_matrix": [
+        [
+          774,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          9,
+          5,
+          0,
+          0,
+          0
+        ],
+        [
+          9,
+          0,
+          414,
+          0,
+          0
+        ],
+        [
+          3,
+          0,
+          0,
+          333,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "class_metrics": {
+        "LEGITIMATE": {
+          "support": 775,
+          "precision": 0.9736,
+          "recall": 0.9987,
+          "f1_score": 0.986,
+          "true_positive_count": 774,
+          "false_positive_count": 21,
+          "false_negative_count": 1
+        },
+        "SUSPICIOUS": {
+          "support": 14,
+          "precision": 1.0,
+          "recall": 0.3571,
+          "f1_score": 0.5263,
+          "true_positive_count": 5,
+          "false_positive_count": 0,
+          "false_negative_count": 9
+        },
+        "PHISHING": {
+          "support": 423,
+          "precision": 1.0,
+          "recall": 0.9787,
+          "f1_score": 0.9892,
+          "true_positive_count": 414,
+          "false_positive_count": 0,
+          "false_negative_count": 9
+        },
+        "BEC_FRAUD": {
+          "support": 336,
+          "precision": 0.997,
+          "recall": 0.9911,
+          "f1_score": 0.994,
+          "true_positive_count": 333,
+          "false_positive_count": 1,
+          "false_negative_count": 3
+        },
+        "IMPERSONATION": {
+          "status": "NOT AVAILABLE / INSUFFICIENT REAL TEST DATA",
+          "support": 0,
+          "precision": null,
+          "recall": null,
+          "f1_score": null,
+          "false_positive_count": 0
+        }
+      }
+    },
+    "Exp_E_Minority_Aware_Thresholded": {
+      "model_name": "Exp E: Minority-Aware (Val-Tuned Tau=0.225)",
+      "accuracy": 0.9871,
+      "balanced_accuracy": 0.9022,
+      "macro_f1": 0.9226,
+      "weighted_f1": 0.9868,
+      "log_loss": 0.0862,
+      "ece": 0.0204,
+      "brier_score": 0.0286,
+      "confusion_matrix": [
+        [
+          772,
+          2,
+          0,
+          1,
+          0
+        ],
+        [
+          5,
+          9,
+          0,
+          0,
+          0
+        ],
+        [
+          9,
+          0,
+          414,
+          0,
+          0
+        ],
+        [
+          3,
+          0,
+          0,
+          333,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "class_metrics": {
+        "LEGITIMATE": {
+          "support": 775,
+          "precision": 0.9785,
+          "recall": 0.9961,
+          "f1_score": 0.9872,
+          "true_positive_count": 772,
+          "false_positive_count": 17,
+          "false_negative_count": 3
+        },
+        "SUSPICIOUS": {
+          "support": 14,
+          "precision": 0.8182,
+          "recall": 0.6429,
+          "f1_score": 0.72,
+          "true_positive_count": 9,
+          "false_positive_count": 2,
+          "false_negative_count": 5
+        },
+        "PHISHING": {
+          "support": 423,
+          "precision": 1.0,
+          "recall": 0.9787,
+          "f1_score": 0.9892,
+          "true_positive_count": 414,
+          "false_positive_count": 0,
+          "false_negative_count": 9
+        },
+        "BEC_FRAUD": {
+          "support": 336,
+          "precision": 0.997,
+          "recall": 0.9911,
+          "f1_score": 0.994,
+          "true_positive_count": 333,
+          "false_positive_count": 1,
+          "false_negative_count": 3
+        },
+        "IMPERSONATION": {
+          "status": "NOT AVAILABLE / INSUFFICIENT REAL TEST DATA",
+          "support": 0,
+          "precision": null,
+          "recall": null,
+          "f1_score": null,
+          "false_positive_count": 0
+        }
+      }
+    }
+  }
+}

@@ -8,6 +8,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from app.config import settings
 from app.models.analysis_result import AnalysisResult
 from app.models.email_case import Email, EmailStatus
 from app.core.analysis.header_forensics import HeaderForensics
@@ -15,7 +16,7 @@ from app.core.analysis.geo_intel import GeoIntelligence
 from app.core.analysis.nlp_classifier import NLPClassifier
 from app.core.analysis.link_analyzer import LinkAnalyzer
 from app.core.analysis.attachment_analyzer import AttachmentAnalyzer
-from app.core.correlation.risk_scorer import RiskScorer
+from app.core.correlation.risk_scorer import RiskScorer, normalize_threat_label
 from app.core.correlation.graph_engine import GraphEngine
 from app.core.reporting.alert_engine import AlertEngine
 from app.services.audit_service import AuditService
@@ -27,7 +28,11 @@ class AnalysisPipeline:
     def __init__(self):
         self.header_forensics = HeaderForensics()
         self.geo_intel = GeoIntelligence()
-        self.nlp_classifier = NLPClassifier()
+        self.nlp_classifier = NLPClassifier(
+            model_path=settings.NLP_MODEL_PATH,
+            ensemble_path=settings.ENSEMBLE_MODEL_PATH,
+            tabular_path=settings.TABULAR_MODEL_PATH,
+        )
         self.link_analyzer = LinkAnalyzer()
         self.attachment_analyzer = AttachmentAnalyzer()
         self.risk_scorer = RiskScorer()
@@ -67,8 +72,15 @@ class AnalysisPipeline:
                     email_headers.get("received_hops", []), sender_domain,
                     email_headers=email_headers,
                 ),
-                asyncio.to_thread(self.nlp_classifier.classify,
-                                  email.subject or "", email.body_text or "", sender_str, email_headers),
+                asyncio.to_thread(
+                    self.nlp_classifier.classify,
+                    email.subject or "",
+                    email.body_text or "",
+                    sender_str,
+                    email_headers,
+                    urls=email.urls or [],
+                    attachments=email.attachments or [],
+                ),
                 self.link_analyzer.analyze(email.urls or []),
                 asyncio.to_thread(self.attachment_analyzer.analyze, email.attachments or []),
                 return_exceptions=True,
@@ -184,7 +196,7 @@ class AnalysisPipeline:
                     "dmarc_record": getattr(getattr(header_result, "dmarc", None), "record", ""),
                     "dmarc_details": getattr(getattr(header_result, "dmarc", None), "details", ""),
 
-                    "auth_confidence_score": getattr(header_result, "auth_confidence_score", 100.0),
+                    "auth_confidence_score": getattr(header_result, "auth_confidence_score", 50.0),
                 },
                 relay_path=relay_hops_dict,
                 geo_data=geo_data_dict,
@@ -404,13 +416,14 @@ class AnalysisPipeline:
     ) -> str:
         spf_status = getattr(getattr(header, "spf", None), "status", "")
         dkim_status = getattr(getattr(header, "dkim", None), "status", "")
-        nlp_label = getattr(nlp, "label", "Legitimate")
+        raw_label = getattr(nlp, "label", "LEGITIMATE")
+        canonical_label = normalize_threat_label(raw_label)
         impersonation_signals = getattr(nlp, "impersonation_signals", [])
         infra_flags = getattr(geo, "infrastructure_flags", []) or []
         anomalies = getattr(header, "anomalies", []) or []
         ip_rep = getattr(geo, "ip_reputation_score", 50)
 
-        if spf_status == "pass" and dkim_status == "pass" and nlp_label != "Legitimate":
+        if spf_status == "pass" and dkim_status == "pass" and canonical_label != "LEGITIMATE":
             return "Compromised Account"
         if spf_status == "fail" and any(s.startswith("lookalike") for s in impersonation_signals):
             return "Spoofed Domain"

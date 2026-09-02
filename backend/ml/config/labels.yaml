@@ -1,0 +1,170 @@
+# MailForensix — Master Label Taxonomy & Mapping Configuration
+# Version: 1.0
+# Date: 2026-09-01
+# Specification: implementation.md Section 11, 12, 13, 14, 15
+
+taxonomy:
+  classes:
+    0:
+      name: "LEGITIMATE"
+      display_name: "Legitimate"
+      description: "Authentic, benign business, personal, or administrative communications."
+      is_malicious: false
+    1:
+      name: "SUSPICIOUS"
+      display_name: "Suspicious"
+      description: "Anomalous, aggressive unsolicited messages, grayware, or high-risk unconfirmed communications."
+      is_malicious: true
+    2:
+      name: "PHISHING"
+      display_name: "Phishing"
+      description: "Credential harvesting, deceptive links, malicious attachments, or brand imitation."
+      is_malicious: true
+    3:
+      name: "BEC_FRAUD"
+      display_name: "BEC/Fraud"
+      description: "Business email compromise, advance-fee 419 scams, CEO fraud, wire fraud, or invoice deception."
+      is_malicious: true
+    4:
+      name: "IMPERSONATION"
+      display_name: "Impersonation"
+      description: "Display name spoofing, executive impersonation, lookalike domains, or unauthorized identity mimicry."
+      is_malicious: true
+
+  # Canonical ID lookup mappings
+  id_to_name:
+    0: "LEGITIMATE"
+    1: "SUSPICIOUS"
+    2: "PHISHING"
+    3: "BEC_FRAUD"
+    4: "IMPERSONATION"
+
+  name_to_id:
+    "LEGITIMATE": 0
+    "SUSPICIOUS": 1
+    "PHISHING": 2
+    "BEC_FRAUD": 3
+    "IMPERSONATION": 4
+    # Legacy / UI alias support
+    "Legitimate": 0
+    "Suspicious": 1
+    "Phishing": 2
+    "BEC/Fraud": 3
+    "Impersonation": 4
+
+source_mappings:
+  # 1. Enron (CMU / FERC records)
+  enron:
+    default: "LEGITIMATE"
+    confidence: 1.0
+    label_source: "direct_dataset_mapping"
+
+  # 2. TREC 2007 (Waterloo)
+  trec07:
+    mapping:
+      ham: "LEGITIMATE"
+      "0": "LEGITIMATE"
+      0: "LEGITIMATE"
+      spam: "CANDIDATE_SUSPICIOUS"  # Feeds semantic suspicious candidate scorer
+      "1": "CANDIDATE_SUSPICIOUS"
+      1: "CANDIDATE_SUSPICIOUS"
+    confidence_ham: 1.0
+    confidence_candidate: 0.70
+    label_source: "direct_dataset_mapping"
+
+  # 3. CEAS 2008 (Waterloo)
+  ceas08:
+    mapping:
+      ham: "LEGITIMATE"
+      "0": "LEGITIMATE"
+      0: "LEGITIMATE"
+      spam: "CANDIDATE_SUSPICIOUS"
+      "1": "CANDIDATE_SUSPICIOUS"
+      1: "CANDIDATE_SUSPICIOUS"
+    confidence_ham: 1.0
+    confidence_candidate: 0.70
+    label_source: "direct_dataset_mapping"
+
+  # 4. SpamAssassin (Apache)
+  spamassassin:
+    mapping:
+      easy_ham: "LEGITIMATE"
+      hard_ham: "LEGITIMATE"
+      ham: "LEGITIMATE"
+      spam: "CANDIDATE_SUSPICIOUS"
+      spam_2: "CANDIDATE_SUSPICIOUS"
+    confidence_ham: 1.0
+    confidence_candidate: 0.70
+    label_source: "direct_dataset_mapping"
+
+  # 5. Jose Nazario Phishing Corpus
+  nazario:
+    default: "PHISHING"
+    confidence: 0.95
+    label_source: "direct_dataset_mapping"
+
+  # 6. Phishing Pot (Honeypot)
+  phishing_pot:
+    default: "PHISHING"
+    confidence: 0.98
+    label_source: "direct_dataset_mapping"
+
+  # 7. Zefang Liu (HuggingFace)
+  zefang_liu:
+    mapping:
+      "0": "LEGITIMATE"
+      0: "LEGITIMATE"
+      "1": "PHISHING"
+      1: "PHISHING"
+    confidence: 0.95
+    label_source: "direct_dataset_mapping"
+
+  # 8. CLAIR (419 Fraud Collection)
+  clair:
+    default: "BEC_FRAUD"
+    fraud_subtype: "419_advance_fee"
+    confidence: 0.95
+    label_source: "direct_dataset_mapping"
+
+  # 9. BEC-2 (Rohit Dube 2025)
+  bec2:
+    default: "BEC_FRAUD"
+    fraud_subtype: "synthetic_bec"
+    confidence: 0.90
+    label_source: "direct_dataset_mapping"
+    is_synthetic: true
+    synthetic_source: "BEC-2 (LLM-generated; Rohit Dube 2025)"
+    test_set_policy: "exclude_from_real_test"
+
+  # 10. EPVME (Email Security Vulnerability Dataset)
+  epvme:
+    default: "IMPERSONATION" # Header authentication & DMARC/SPF exploit
+    confidence: 0.90
+    label_source: "direct_dataset_mapping"
+    is_synthetic: true
+    synthetic_source: "EPVME (Recombined text + injected SPF/DMARC attack headers)"
+    construction_type: "header_recombination"
+    supported_tasks: ["tabular"]
+
+  # 11. IWSPA-AP (Shared Task)
+  iwspa_ap:
+    mapping:
+      ham: "LEGITIMATE"
+      "0": "LEGITIMATE"
+      0: "LEGITIMATE"
+      phish: "PHISHING"
+      "1": "PHISHING"
+      1: "PHISHING"
+    confidence: 0.90
+    label_source: "direct_dataset_mapping"
+
+  # 12. Local Sample Emails
+  sample_emails:
+    mapping:
+      legitimate: "LEGITIMATE"
+      phishing: "PHISHING"
+      bec: "BEC_FRAUD"
+      impersonation: "IMPERSONATION"
+      suspicious: "SUSPICIOUS"
+    confidence: 1.0
+    label_source: "direct_dataset_mapping"

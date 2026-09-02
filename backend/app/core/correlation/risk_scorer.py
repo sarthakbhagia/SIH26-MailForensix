@@ -27,6 +27,47 @@ class CompositeRiskScore:
     threat_intel_enhanced: bool     # Whether external TI feeds enhanced the score
 
 
+def normalize_threat_label(label: Optional[str]) -> str:
+    """Canonical normalization of threat classification labels across MailForensix.
+    
+    Guarantees mapping of all variants (uppercase, title-case, snake_case, slash-separated, abbreviations)
+    to the canonical uppercase taxonomy:
+      - 'LEGITIMATE'
+      - 'SUSPICIOUS'
+      - 'PHISHING'
+      - 'BEC_FRAUD'
+      - 'IMPERSONATION'
+    """
+    if not label:
+        return "LEGITIMATE"
+    
+    cleaned = str(label).strip().upper().replace(" ", "_").replace("-", "_").replace("/", "_")
+    
+    if cleaned in ("LEGITIMATE", "CLEAN", "BENIGN", "NORMAL", "SAFE", "HAM"):
+        return "LEGITIMATE"
+    elif cleaned in ("PHISHING", "PHISH", "CREDENTIAL_HARVESTING"):
+        return "PHISHING"
+    elif cleaned in ("BEC_FRAUD", "BEC", "FRAUD", "WIRE_FRAUD", "CEO_FRAUD", "FINANCIAL_FRAUD"):
+        return "BEC_FRAUD"
+    elif cleaned in ("IMPERSONATION", "SPOOF", "SPOOFING", "BRAND_IMPERSONATION", "EXECUTIVE_IMPERSONATION"):
+        return "IMPERSONATION"
+    elif cleaned in ("SUSPICIOUS", "ANOMALOUS", "SUSPICION", "WARNING"):
+        return "SUSPICIOUS"
+    
+    if "PHISH" in cleaned:
+        return "PHISHING"
+    if "BEC" in cleaned or "FRAUD" in cleaned:
+        return "BEC_FRAUD"
+    if "IMPERSONAT" in cleaned or "SPOOF" in cleaned:
+        return "IMPERSONATION"
+    if "SUSPIC" in cleaned or "WARN" in cleaned:
+        return "SUSPICIOUS"
+    if "LEGIT" in cleaned or "CLEAN" in cleaned:
+        return "LEGITIMATE"
+        
+    return "LEGITIMATE"
+
+
 class RiskScorer:
     """Computes a multi-factor composite threat risk score across all Phase 2 and Phase 3 signals."""
 
@@ -96,7 +137,7 @@ class RiskScorer:
         ))
 
         # 2. Authentication Confidence (inverted — lower auth confidence = higher risk)
-        auth_score = getattr(header_result, "auth_confidence_score", 100.0) if header_result else 50.0
+        auth_score = getattr(header_result, "auth_confidence_score", 50.0) if header_result else 50.0
         if isinstance(header_result, dict):
             auth_score = header_result.get("auth_confidence_score", 50.0)
         auth_risk = max(0.0, min(100.0, 100.0 - float(auth_score)))
@@ -183,17 +224,17 @@ class RiskScorer:
         )
 
     def _compute_nlp_risk(self, nlp_result: Any) -> tuple[float, str]:
-        """Compute NLP risk score and details from NLP classification result."""
+        """Compute NLP risk score and details from NLP classification result using canonical label normalization."""
         if not nlp_result:
             return 0.0, "NLP analysis unavailable"
 
-        label = getattr(nlp_result, "label", "Legitimate")
+        raw_label = getattr(nlp_result, "label", "LEGITIMATE")
         raw_conf = getattr(nlp_result, "confidence", None)
         raw_evidence = getattr(nlp_result, "evidence_score", None)
         raw_urgency = getattr(nlp_result, "urgency_score", 0.0)
 
         if isinstance(nlp_result, dict):
-            label = nlp_result.get("label", "Legitimate")
+            raw_label = nlp_result.get("label", "LEGITIMATE")
             raw_conf = nlp_result.get("confidence", None)
             raw_evidence = nlp_result.get("evidence_score", None)
             raw_urgency = nlp_result.get("urgency_score", 0.0)
@@ -208,14 +249,15 @@ class RiskScorer:
             evidence_score = evidence_score * 100.0
 
         score_to_use = confidence if confidence is not None else evidence_score
+        canonical_label = normalize_threat_label(raw_label)
 
-        if label == "Legitimate":
+        if canonical_label == "LEGITIMATE":
             risk = max(0.0, score_to_use * 0.15) if score_to_use > 0 else 0.0
-        elif label in ("Phishing", "BEC/Fraud"):
+        elif canonical_label in ("PHISHING", "BEC_FRAUD"):
             risk = min(100.0, max(75.0, score_to_use))
-        elif label == "Impersonation":
+        elif canonical_label == "IMPERSONATION":
             risk = min(100.0, max(65.0, score_to_use * 0.9))
-        elif label == "Suspicious":
+        elif canonical_label == "SUSPICIOUS":
             risk = min(100.0, max(50.0, score_to_use * 0.8))
         else:
             risk = 30.0
@@ -224,11 +266,11 @@ class RiskScorer:
             risk = min(100.0, risk + 10.0)
 
         if confidence is not None:
-            details = f"Classification: {label} (confidence: {confidence:.1f}%)"
+            details = f"Classification: {canonical_label} (confidence: {confidence:.1f}%)"
         elif evidence_score > 0:
-            details = f"Classification: {label} (evidence score: {evidence_score:.1f}%)"
+            details = f"Classification: {canonical_label} (evidence score: {evidence_score:.1f}%)"
         else:
-            details = f"Classification: {label}"
+            details = f"Classification: {canonical_label}"
         return risk, details
 
     def _extract_auth_details(self, header_result: Any) -> str:

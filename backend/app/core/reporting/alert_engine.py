@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.models.alert import Alert, AlertSeverity
+from app.core.correlation.risk_scorer import normalize_threat_label
 
 logger = logging.getLogger(__name__)
 
@@ -98,14 +99,14 @@ class AlertEngine:
     def _build_title(self, nlp_label: str, severity: str, risk_score: float) -> str:
         """Build a concise, severity-coded alert title."""
         severity_emoji = "🔴" if severity == "critical" else "🟠"
-        label_clean = (nlp_label or "").strip()
+        canonical = normalize_threat_label(nlp_label)
         titles = {
-            "Phishing": f"{severity_emoji} Phishing Email Detected (Risk: {risk_score:.0f})",
-            "BEC/Fraud": f"{severity_emoji} Business Email Compromise Attempt (Risk: {risk_score:.0f})",
-            "Impersonation": f"{severity_emoji} Impersonation Attack Detected (Risk: {risk_score:.0f})",
-            "Suspicious": f"{severity_emoji} Suspicious Email Flagged (Risk: {risk_score:.0f})",
+            "PHISHING": f"{severity_emoji} Phishing Email Detected (Risk: {risk_score:.0f})",
+            "BEC_FRAUD": f"{severity_emoji} Business Email Compromise Attempt (Risk: {risk_score:.0f})",
+            "IMPERSONATION": f"{severity_emoji} Impersonation Attack Detected (Risk: {risk_score:.0f})",
+            "SUSPICIOUS": f"{severity_emoji} Suspicious Email Flagged (Risk: {risk_score:.0f})",
         }
-        return titles.get(label_clean, f"{severity_emoji} Threat Detected (Risk: {risk_score:.0f})")
+        return titles.get(canonical, f"{severity_emoji} Threat Detected (Risk: {risk_score:.0f})")
 
     def _extract_top_factors(self, risk_breakdown: Dict[str, Any]) -> List[str]:
         """Extract top 3 risk factors formatted as readable strings."""

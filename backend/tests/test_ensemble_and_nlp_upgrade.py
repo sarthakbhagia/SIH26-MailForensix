@@ -31,7 +31,7 @@ def test_ensemble_meta_features_and_training(tmp_path):
         raw_features={},
     )
     assert isinstance(pred, EnsemblePrediction)
-    assert pred.label in ("Legitimate", "Suspicious", "Phishing", "BEC/Fraud", "Impersonation")
+    assert pred.label.upper() in ("LEGITIMATE", "SUSPICIOUS", "PHISHING", "BEC_FRAUD", "IMPERSONATION", "BEC/FRAUD")
     assert 0.0 <= pred.confidence <= 100.0
 
 
@@ -46,7 +46,7 @@ def test_ensemble_override_rules():
         heuristic_probs=dummy_probs,
         raw_features={"dmarc_status_encoded": 1, "lookalike_domain_count": 1},
     )
-    assert pred1.label == "Phishing"
+    assert pred1.label.upper() == "PHISHING"
     assert pred1.confidence >= 85.0
     assert any("DMARC" in factor for factor in pred1.contributing_factors)
 
@@ -57,7 +57,7 @@ def test_ensemble_override_rules():
         heuristic_probs=dummy_probs,
         raw_features={"has_executable_attachment": True, "max_url_risk_score": 75.0},
     )
-    assert pred2.label == "Phishing"
+    assert pred2.label.upper() == "PHISHING"
     assert pred2.confidence >= 95.0
 
 

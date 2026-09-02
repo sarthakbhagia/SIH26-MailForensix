@@ -1,15 +1,26 @@
+"""Stacking Ensemble Meta-Classifier Training Pipeline for MailForensix.
+
+Combines 15-dimensional out-of-fold probability vectors from NLP (DistilRoBERTa),
+Tabular (LightGBM), and Heuristic Rules into a calibrated stacking meta-classifier.
+"""
+
+import json
 import logging
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 import joblib
 import numpy as np
+import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.calibration import CalibratedClassifierCV
+from sklearn.metrics import classification_report, f1_score, log_loss
 
 logger = logging.getLogger(__name__)
 
-LABEL_NAMES = ["Legitimate", "Suspicious", "Phishing", "BEC/Fraud", "Impersonation"]
+# Authoritative 5-Class Label Names matching labels.yaml
+LABEL_NAMES: List[str] = ["LEGITIMATE", "SUSPICIOUS", "PHISHING", "BEC_FRAUD", "IMPERSONATION"]
+assert LABEL_NAMES == ["LEGITIMATE", "SUSPICIOUS", "PHISHING", "BEC_FRAUD", "IMPERSONATION"], "Ensemble class ordering mismatch!"
 
 
 @dataclass
@@ -27,28 +38,28 @@ OVERRIDE_RULES: List[Dict[str, Any]] = [
     # 1. DMARC failure + lookalike domain -> force Phishing
     {
         "condition": lambda f: f.get("dmarc_status_encoded") in (1, 2) and f.get("lookalike_domain_count", 0) > 0,
-        "override_label": "Phishing",
+        "override_label": "PHISHING",
         "min_confidence": 85.0,
         "reason": "DMARC failure combined with lookalike domain impersonation",
     },
     # 2. Valid authentication + BEC patterns -> Compromised account / BEC
     {
         "condition": lambda f: f.get("spf_status_encoded") == 0 and f.get("dkim_status_encoded") == 0 and f.get("bec_score", 0) >= 14,
-        "override_label": "BEC/Fraud",
+        "override_label": "BEC_FRAUD",
         "min_confidence": 80.0,
         "reason": "Passed authentication with high-risk financial transfer instructions (suspected account compromise)",
     },
     # 3. Executable attachment + suspicious URL -> critical threat
     {
         "condition": lambda f: f.get("has_executable_attachment", False) and f.get("max_url_risk_score", 0) >= 50.0,
-        "override_label": "Phishing",
+        "override_label": "PHISHING",
         "min_confidence": 95.0,
         "reason": "Executable attachment combined with malicious/suspicious URL",
     },
     # 4. TOR exit node + newly registered sender domain
     {
         "condition": lambda f: f.get("is_tor_exit_node", False) and f.get("is_newly_registered", False),
-        "override_label": "Phishing",
+        "override_label": "PHISHING",
         "min_confidence": 80.0,
         "reason": "Originating from TOR exit node with newly registered sender domain",
     },
@@ -71,11 +82,12 @@ class EnsembleClassifier:
         heuristic_probs: np.ndarray,
     ) -> np.ndarray:
         """Stack probability distributions into a 15-dimensional meta-feature matrix."""
-        # Ensure 2D arrays of shape (n_samples, 5)
         nlp_2d = np.atleast_2d(nlp_probs)
         tab_2d = np.atleast_2d(tabular_probs)
         heu_2d = np.atleast_2d(heuristic_probs)
-        return np.hstack([nlp_2d, tab_2d, heu_2d])
+        stacked = np.hstack([nlp_2d, tab_2d, heu_2d])
+        assert stacked.shape[1] == 15, f"Expected 15 meta-features, got {stacked.shape[1]}"
+        return stacked
 
     def train(
         self,
@@ -83,14 +95,17 @@ class EnsembleClassifier:
         tabular_probs: np.ndarray,
         heuristic_probs: np.ndarray,
         labels: np.ndarray,
+        class_weight: Optional[Any] = "balanced",
         output_path: str = "ml/models/ensemble_meta.joblib",
     ):
-        """Train calibrated stacking logistic regression meta-classifier."""
+        """Train calibrated stacking logistic regression meta-classifier on 15D OOF inputs with Train-only class weighting."""
         meta_features = self.construct_meta_features(nlp_probs, tabular_probs, heuristic_probs)
 
         base_lr = LogisticRegression(
             solver="lbfgs",
             max_iter=1000,
+            C=1.0,
+            class_weight=class_weight,
             random_state=42,
         )
 
@@ -108,21 +123,41 @@ class EnsembleClassifier:
         logger.info(f"Ensemble meta-classifier saved to {out}")
         return self.meta_classifier
 
+    def predict_proba_matrix(
+        self,
+        nlp_probs: np.ndarray,
+        tabular_probs: np.ndarray,
+        heuristic_probs: np.ndarray,
+    ) -> np.ndarray:
+        """Predict multi-class probabilities across multiple samples."""
+        meta_features = self.construct_meta_features(nlp_probs, tabular_probs, heuristic_probs)
+        if self.meta_classifier is not None:
+            probs = self.meta_classifier.predict_proba(meta_features)
+        else:
+            w_nlp, w_tab, w_heu = 0.50, 0.35, 0.15
+            probs = (
+                nlp_probs * w_nlp +
+                tabular_probs * w_tab +
+                heuristic_probs * w_heu
+            )
+            probs = probs / np.sum(probs, axis=-1, keepdims=True)
+        return probs
+
     def predict(
         self,
         nlp_probs: np.ndarray,
         tabular_probs: np.ndarray,
         heuristic_probs: np.ndarray,
         raw_features: Optional[Dict[str, Any]] = None,
+        suspicious_threshold: Optional[float] = None,
     ) -> EnsemblePrediction:
-        """Generate stacking ensemble prediction with domain heuristic overrides."""
+        """Generate single-sample stacking ensemble prediction with domain heuristic overrides."""
         raw_f = raw_features or {}
         meta_features = self.construct_meta_features(nlp_probs, tabular_probs, heuristic_probs)
 
         if self.meta_classifier is not None:
             probs = self.meta_classifier.predict_proba(meta_features)[0]
         else:
-            # Fallback weighted average if model not trained yet
             w_nlp, w_tab, w_heu = 0.50, 0.35, 0.15
             probs = (
                 np.array(nlp_probs).flatten() * w_nlp +
@@ -131,8 +166,16 @@ class EnsembleClassifier:
             )
             probs = probs / np.sum(probs)
 
-        pred_idx = int(np.argmax(probs))
-        pred_label = LABEL_NAMES[pred_idx] if pred_idx < len(LABEL_NAMES) else "Suspicious"
+        # Apply minority decision threshold if specified
+        if suspicious_threshold is not None and suspicious_threshold > 0.0:
+            if probs[1] >= suspicious_threshold and probs[1] >= probs[2] * 0.7 and probs[1] >= probs[3] * 0.7:
+                pred_idx = 1
+            else:
+                pred_idx = int(np.argmax(probs))
+        else:
+            pred_idx = int(np.argmax(probs))
+
+        pred_label = LABEL_NAMES[pred_idx] if pred_idx < len(LABEL_NAMES) else "SUSPICIOUS"
         confidence = float(probs[pred_idx] * 100.0)
 
         # Apply domain expert heuristic override rules
@@ -161,6 +204,36 @@ class EnsembleClassifier:
             contributing_factors=contributing_factors,
         )
 
+    def evaluate(
+        self,
+        nlp_probs: np.ndarray,
+        tabular_probs: np.ndarray,
+        heuristic_probs: np.ndarray,
+        true_labels: np.ndarray,
+        suspicious_threshold: Optional[float] = None,
+    ) -> Dict[str, Any]:
+        """Evaluate ensemble predictions on evaluation split."""
+        probs = self.predict_proba_matrix(nlp_probs, tabular_probs, heuristic_probs)
+        if suspicious_threshold is not None and suspicious_threshold > 0.0:
+            pred_labels = np.zeros(len(probs), dtype=int)
+            for i in range(len(probs)):
+                p = probs[i]
+                if p[1] >= suspicious_threshold and p[1] >= p[2] * 0.7 and p[1] >= p[3] * 0.7:
+                    pred_labels[i] = 1
+                else:
+                    pred_labels[i] = int(np.argmax(p))
+        else:
+            pred_labels = np.argmax(probs, axis=-1)
+
+        report = classification_report(
+            true_labels,
+            pred_labels,
+            target_names=LABEL_NAMES,
+            output_dict=True,
+            zero_division=0,
+        )
+        return report
+
     def load(self, path: str):
         """Load trained meta-classifier from disk."""
         p = Path(path)
@@ -172,41 +245,17 @@ class EnsembleClassifier:
 
 
 if __name__ == "__main__":
-    import argparse
-    from ml.data.prepare_datasets import DatasetPreparer
-    from ml.train_tabular import TabularTrainer
-    from ml.feature_engineering import FEATURE_COLUMNS
-
-    parser = argparse.ArgumentParser(description="Train Stacking Ensemble Meta-Classifier.")
-    parser.add_argument("--output", type=str, default="ml/models/ensemble_meta.joblib", help="Output model path.")
-    parser.add_argument("--tabular-model", type=str, default="ml/models/tabular_classifier.joblib", help="Tabular model path.")
-    args = parser.parse_args()
-
-    preparer = DatasetPreparer()
-    print("Preparing datasets for stacking...")
-    train_df, val_df, test_df = preparer.prepare_tabular_dataset()
-
-    # Load or train tabular model
-    tab_trainer = TabularTrainer(output_path=args.tabular_model)
-    if Path(args.tabular_model).exists():
-        tab_trainer.load()
+    oof_path = Path("ml/data/artifacts/oof_predictions.parquet")
+    if not oof_path.exists():
+        print(f"OOF predictions file not found at {oof_path}. Run OOF generator first.")
     else:
-        print("Training baseline tabular model...")
-        tab_trainer.train(train_df, val_df)
+        df_oof = pd.read_parquet(oof_path)
+        nlp_p = df_oof[[f"nlp_p{i}" for i in range(5)]].values
+        tab_p = df_oof[[f"lgbm_p{i}" for i in range(5)]].values
+        rule_p = df_oof[[f"rule_p{i}" for i in range(5)]].values
+        y_true = df_oof["true_label"].values.astype(int)
 
-    # Generate probabilities for stacking
-    X_train = train_df[FEATURE_COLUMNS].values.astype(float)
-    y_train = train_df["label"].map({"Legitimate": 0, "Suspicious": 1, "Phishing": 2, "BEC/Fraud": 3, "Impersonation": 4}).values.astype(int)
-    tab_probs = tab_trainer.model.predict_proba(X_train)
-
-    # Simulated NLP & heuristic probabilities
-    nlp_probs = tab_probs * 0.9 + np.random.uniform(0, 0.1, size=tab_probs.shape)
-    nlp_probs = nlp_probs / nlp_probs.sum(axis=1, keepdims=True)
-    heu_probs = tab_probs * 0.85 + np.random.uniform(0, 0.15, size=tab_probs.shape)
-    heu_probs = heu_probs / heu_probs.sum(axis=1, keepdims=True)
-
-    ensemble = EnsembleClassifier()
-    print("Training Calibrated Logistic Regression stacking meta-classifier...")
-    ensemble.train(nlp_probs, tab_probs, heu_probs, y_train, output_path=args.output)
-    print(f"Ensemble meta-classifier successfully trained and saved to {args.output}")
-
+        ensemble = EnsembleClassifier()
+        print("Training Stacking Ensemble meta-classifier on 15D OOF meta-features...")
+        ensemble.train(nlp_p, tab_p, rule_p, y_true)
+        print("Ensemble meta-classifier training completed!")

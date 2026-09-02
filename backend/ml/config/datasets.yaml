@@ -1,0 +1,266 @@
+# MailForensix — Master Dataset Configuration
+# Version: 1.0
+# Date: 2026-08-31
+# Specification: implementation.md Section 6
+
+datasets:
+
+  # =========================================================================
+  # PRIMARY DATASETS
+  # =========================================================================
+
+  enron:
+    name: "Enron Email Dataset"
+    category: "primary"
+    source_url: "https://www.cs.cmu.edu/~enron/enron_mail_20150507.tar.gz"
+    source_type: "archive_download"
+    archive_format: "tar.gz"
+    format: "maildir"
+    parser: "maildir"
+    default_label: "Legitimate"
+    is_synthetic: false
+    synthetic_source: null
+    construction_type: "authentic"
+    supported_tasks: ["nlp", "tabular"]
+    license: "Public Domain (FERC Record)"
+    license_verified: true
+    requires_manual_acquisition: false
+    raw_subdir: "enron"
+    notes: "Baseline authentic corporate legitimate emails. Header chain is internal/partial."
+
+  trec07:
+    name: "TREC 2007 Public Spam Corpus (trec07p)"
+    category: "primary"
+    source_url: "https://plg.uwaterloo.ca/~gvcormac/treccorpus07/"
+    source_type: "restricted_archive"
+    archive_format: "tgz"
+    format: "rfc822"
+    parser: "rfc822"
+    source_labels:
+      ham: "Legitimate"
+      spam: "candidate_suspicious"
+    default_label: null
+    is_synthetic: false
+    synthetic_source: null
+    construction_type: "authentic"
+    supported_tasks: ["nlp", "tabular"]
+    license: "Research-only, non-redistributable (Waterloo Usage Agreement)"
+    license_verified: true
+    requires_manual_acquisition: true
+    raw_subdir: "trec07"
+    notes: "Requires accepting Waterloo web agreement. Spam portion serves as candidate pool for Suspicious class filtering."
+
+  nazario:
+    name: "Jose Nazario Phishing Corpus"
+    category: "primary"
+    source_url: "https://monkey.org/~jose/phishing/"
+    source_type: "archive_download"
+    archive_format: "mbox"
+    format: "mbox"
+    parser: "mbox"
+    default_label: "Phishing"
+    is_synthetic: false
+    synthetic_source: null
+    construction_type: "authentic"
+    supported_tasks: ["nlp", "tabular"]
+    license: "Public research archive"
+    license_verified: false
+    requires_manual_acquisition: false
+    raw_subdir: "nazario"
+    notes: "Canonical historical phishing collection in mbox format. Note: NOT github.com/r-dube/bec."
+
+  phishing_pot:
+    name: "Phishing Pot Honeypot Collection"
+    category: "primary"
+    source_url: "https://github.com/rf-peixoto/phishing_pot"
+    source_type: "git_repository"
+    git_ref: "main"
+    pinned_commit: null
+    format: "rfc822"
+    parser: "rfc822"
+    default_label: "Phishing"
+    is_synthetic: false
+    synthetic_source: null
+    construction_type: "authentic"
+    supported_tasks: ["nlp", "tabular"]
+    license: "GPL-3.0"
+    license_verified: true
+    requires_manual_acquisition: false
+    raw_subdir: "phishing_pot"
+    notes: "Modern honeypot-captured phishing emails with complete RFC822 headers and PII redaction."
+
+  epvme:
+    name: "EPVME Email Security Vulnerability Dataset"
+    category: "primary"
+    source_url: "https://github.com/sunknighteric/EPVME-Dataset/"
+    source_type: "git_repository"
+    git_ref: "master"
+    pinned_commit: null
+    format: "eml"
+    parser: "rfc822"
+    default_label: "Phishing"
+    is_synthetic: true
+    synthetic_source: "EPVME (Recombined text + injected SPF/DMARC attack headers)"
+    construction_type: "header_recombination"
+    supported_tasks: ["tabular"]
+    license: "Academic research / GitHub public repo"
+    license_verified: false
+    requires_manual_acquisition: false
+    raw_subdir: "epvme"
+    notes: "Primary source for forensic/header authentication attacks. Do NOT use as primary NLP prose corpus."
+
+  # =========================================================================
+  # SECONDARY DATASETS
+  # =========================================================================
+
+  ceas08:
+    name: "CEAS 2008 Spam Conference Corpus"
+    category: "secondary"
+    source_url: "https://plg.uwaterloo.ca/~gvcormac/ceascorpus/"
+    source_type: "restricted_archive"
+    archive_format: "tgz"
+    format: "rfc822"
+    parser: "rfc822"
+    source_labels:
+      ham: "Legitimate"
+      spam: "candidate_suspicious"
+    default_label: null
+    is_synthetic: false
+    synthetic_source: null
+    construction_type: "authentic"
+    supported_tasks: ["nlp", "tabular"]
+    license: "Research-only, non-redistributable (CEAS Agreement)"
+    license_verified: true
+    requires_manual_acquisition: true
+    raw_subdir: "ceas08"
+    notes: "Supplementary ham and candidate spam pool."
+
+  iwspa_ap:
+    name: "IWSPA-AP Shared Task Phishing Dataset"
+    category: "secondary"
+    source_url: "https://github.com/dasavisha/IWSPA-sharedtask"
+    source_type: "git_repository"
+    git_ref: "master"
+    pinned_commit: null
+    format: "tsv_csv_eml"
+    parser: "csv"
+    source_labels:
+      ham: "Legitimate"
+      phish: "Phishing"
+      0: "Legitimate"
+      1: "Phishing"
+    default_label: null
+    is_synthetic: false
+    synthetic_source: null
+    construction_type: "authentic"
+    supported_tasks: ["nlp", "tabular"]
+    license: "Academic research (CEUR-WS Vol-2124)"
+    license_verified: false
+    requires_manual_acquisition: false
+    raw_subdir: "iwspa_ap"
+    notes: "Contains both header and no-header tracks with realistic imbalance."
+
+  zefang_liu:
+    name: "Zefang Liu Phishing Email Dataset (HuggingFace)"
+    category: "secondary"
+    source_url: "https://huggingface.co/datasets/zefang-liu/phishing-email-dataset"
+    source_type: "huggingface"
+    format: "csv"
+    parser: "csv"
+    source_labels:
+      "0": "Legitimate"
+      "1": "Phishing"
+      0: "Legitimate"
+      1: "Phishing"
+    default_label: null
+    is_synthetic: false
+    synthetic_source: null
+    construction_type: "authentic"
+    supported_tasks: ["nlp"]
+    license: "LGPL-3.0"
+    license_verified: true
+    requires_manual_acquisition: false
+    raw_subdir: "zefang_liu"
+    notes: "NLP volume dataset. Body text and subject only; no forensic headers."
+
+  clair:
+    name: "CLAIR Collection of Fraud Email (ADCR2008T001)"
+    category: "secondary"
+    source_url: "https://aclweb.org/aclwiki/CLAIR_collection_of_fraud_email_(Repository)"
+    source_type: "archive_download"
+    format: "txt_collection"
+    parser: "clair"
+    default_label: "BEC/Fraud"
+    fraud_subtype: "419_advance_fee"
+    is_synthetic: false
+    synthetic_source: null
+    construction_type: "authentic"
+    supported_tasks: ["nlp"]
+    license: "Creative Commons Attribution-ShareAlike 3.0 US"
+    license_verified: true
+    requires_manual_acquisition: false
+    raw_subdir: "clair"
+    notes: "Authentic advance-fee / 419 fraud scam emails. Must retain fraud_subtype='419_advance_fee'."
+
+  bec2:
+    name: "BEC-2 Dataset (Rohit Dube 2025)"
+    category: "secondary"
+    source_url: "https://github.com/r-dube/bec"
+    source_type: "git_repository"
+    git_ref: "main"
+    pinned_commit: null
+    format: "json_csv"
+    parser: "bec2"
+    default_label: "BEC/Fraud"
+    fraud_subtype: "synthetic_bec"
+    is_synthetic: true
+    synthetic_source: "BEC-2 (LLM-generated; Rohit Dube 2025)"
+    construction_type: "llm_generated"
+    supported_tasks: ["nlp"]
+    license: "Academic research"
+    license_verified: false
+    requires_manual_acquisition: false
+    raw_subdir: "bec2"
+    notes: "279 LLM-generated BEC emails. Training-only; must be excluded from real evaluation test set."
+
+  spamassassin:
+    name: "Apache SpamAssassin Public Corpus"
+    category: "secondary"
+    source_url: "https://spamassassin.apache.org/old/publiccorpus/"
+    source_type: "archive_download"
+    archive_format: "tar.bz2"
+    format: "rfc822"
+    parser: "rfc822"
+    source_labels:
+      easy_ham: "Legitimate"
+      hard_ham: "Legitimate"
+      spam: "candidate_suspicious"
+      spam_2: "candidate_suspicious"
+    default_label: null
+    is_synthetic: false
+    synthetic_source: null
+    construction_type: "authentic"
+    supported_tasks: ["nlp", "tabular"]
+    license: "Apache-2.0 / Public"
+    license_verified: true
+    requires_manual_acquisition: false
+    raw_subdir: "spamassassin"
+    notes: "Canonical snapshots (~6,047 messages). Spam subset feeds Suspicious candidate pool."
+
+  sample_emails:
+    name: "MailForensix Local Sample Emails"
+    category: "local"
+    source_url: "local://sample_emails"
+    source_type: "local_dir"
+    format: "eml"
+    parser: "rfc822"
+    default_label: null
+    is_synthetic: false
+    synthetic_source: null
+    construction_type: "authentic"
+    supported_tasks: ["nlp", "tabular"]
+    license: "Internal Project Fixture"
+    license_verified: true
+    requires_manual_acquisition: false
+    raw_subdir: "sample_emails"
+    notes: "Local EML samples included in the repository for validation."

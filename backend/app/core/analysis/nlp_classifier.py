@@ -5,6 +5,11 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 import numpy as np
+import pandas as pd
+import joblib
+
+from ml.src.preprocessing.nlp_formatter import format_nlp_input
+from ml.feature_engineering import FeatureExtractor, FEATURE_COLUMNS
 
 logger = logging.getLogger(__name__)
 
@@ -81,21 +86,28 @@ class NLPClassificationResult:
 
 
 class NLPClassifier:
-    """Multi-tiered threat classifier combining ML Transformer, Stacking Ensemble, and Rule Heuristics."""
+    """Multi-tiered threat classifier combining ML Transformer, LightGBM Tabular, Stacking Ensemble, and Rule Heuristics."""
 
     def __init__(
         self,
         model_path: Optional[str] = None,
         ensemble_path: Optional[str] = None,
+        tabular_path: Optional[str] = None,
     ):
         self.model_path = model_path
         self.ensemble_path = ensemble_path
+        self.tabular_path = tabular_path
         self.tokenizer = None
         self.transformer_model = None
+        self.tabular_classifier = None
         self.ensemble_classifier = None
+        self.feature_extractor = FeatureExtractor()
         self.rule_based_only = True
 
-        # Load transformer model if present on disk
+        models_loaded = []
+        models_failed = []
+
+        # 1. Load transformer model if present on disk
         if model_path and Path(model_path).exists():
             try:
                 from transformers import AutoModelForSequenceClassification, AutoTokenizer
@@ -104,20 +116,44 @@ class NLPClassifier:
                     model_path, local_files_only=True
                 )
                 self.transformer_model.eval()
-                self.rule_based_only = False
-                logger.info(f"Loaded NLP transformer model from {model_path}")
+                models_loaded.append(f"NLP: {model_path}")
             except Exception as e:
-                logger.debug(f"Transformer model load skipped ({e}); using rule fallback.")
+                logger.error(f"Failed to load NLP transformer model from {model_path}: {e}")
+                models_failed.append(f"NLP: {model_path} ({e})")
+        elif model_path:
+            logger.warning(f"NLP transformer model path not found on disk: {model_path}")
+            models_failed.append(f"NLP: {model_path} (not found)")
 
-        # Load ensemble meta-classifier if present on disk
+        # 2. Load tabular classifier (LightGBM) if present on disk
+        if tabular_path and Path(tabular_path).exists():
+            try:
+                self.tabular_classifier = joblib.load(tabular_path)
+                models_loaded.append(f"Tabular: {tabular_path}")
+            except Exception as e:
+                logger.error(f"Failed to load Tabular LightGBM model from {tabular_path}: {e}")
+                models_failed.append(f"Tabular: {tabular_path} ({e})")
+        elif tabular_path:
+            logger.warning(f"Tabular LightGBM model path not found on disk: {tabular_path}")
+            models_failed.append(f"Tabular: {tabular_path} (not found)")
+
+        # 3. Load ensemble meta-classifier if present on disk
         if ensemble_path and Path(ensemble_path).exists():
             try:
                 from ml.train_ensemble import EnsembleClassifier
                 self.ensemble_classifier = EnsembleClassifier(ensemble_path)
-                self.rule_based_only = False
-                logger.info(f"Loaded Ensemble meta-classifier from {ensemble_path}")
+                models_loaded.append(f"Ensemble: {ensemble_path}")
             except Exception as e:
-                logger.debug(f"Ensemble meta-classifier load skipped ({e}); using rule fallback.")
+                logger.error(f"Failed to load Ensemble meta-classifier from {ensemble_path}: {e}")
+                models_failed.append(f"Ensemble: {ensemble_path} ({e})")
+        elif ensemble_path:
+            logger.warning(f"Ensemble meta-classifier path not found on disk: {ensemble_path}")
+            models_failed.append(f"Ensemble: {ensemble_path} (not found)")
+
+        if models_loaded:
+            self.rule_based_only = False
+            logger.info(f"ML models loaded successfully | " + " | ".join(models_loaded))
+        if models_failed:
+            logger.warning(f"ML models failed to load | " + " | ".join(models_failed) + " | Operating in rule-heuristic fallback mode.")
 
     def classify(
         self,
@@ -125,6 +161,9 @@ class NLPClassifier:
         body_text: Optional[str],
         sender: Optional[str],
         headers: Optional[dict],
+        urls: Optional[List[str]] = None,
+        attachments: Optional[List[dict]] = None,
+        analysis_context: Optional[dict] = None,
     ) -> NLPClassificationResult:
         full_text = f"{subject or ''} {body_text or ''}".lower()
         sender_str = str(sender or "")
@@ -155,7 +194,7 @@ class NLPClassifier:
 
         # Impersonation checks
         impersonation_signals: List[str] = []
-        from_header = headers.get("from", "") if isinstance(headers, dict) else ""
+        from_header = headers_dict.get("from", "")
         display_name = ""
         actual_email = ""
 
@@ -203,13 +242,14 @@ class NLPClassifier:
         ])
         rule_probs = rule_probs / np.sum(rule_probs)
 
-        # 3. Model Inference (if available)
+        # 3. Model Inference (DistilRoBERTa)
         nlp_probs = rule_probs
         if self.transformer_model and self.tokenizer:
             try:
                 import torch
+                nlp_input_text = format_nlp_input(subject, body_text)
                 inputs = self.tokenizer(
-                    f"{subject} [SEP] {body_text}",
+                    nlp_input_text,
                     truncation=True,
                     max_length=512,
                     return_tensors="pt",
@@ -218,41 +258,76 @@ class NLPClassifier:
                     logits = self.transformer_model(**inputs).logits
                     nlp_probs = torch.softmax(logits, dim=-1).cpu().numpy()[0]
             except Exception as e:
-                logger.debug(f"Transformer inference error: {e}")
+                logger.warning(f"Transformer inference error: {e}. Falling back to rule heuristics for NLP probabilities.")
+                nlp_probs = rule_probs
 
-        # 4. Stacking Ensemble Prediction (if available)
+        # 4. Tabular Model Inference (LightGBM on 35 Features)
+        tab_probs = rule_probs
+        if self.tabular_classifier:
+            try:
+                email_data = {
+                    "subject": subject or "",
+                    "body_text": body_text or "",
+                    "sender": sender_str,
+                    "headers": headers_dict,
+                    "urls": urls or [],
+                    "attachments": attachments or [],
+                }
+                fv = self.feature_extractor.extract(email_data, analysis_context or {})
+                fv_dict = asdict(fv)
+                df = pd.DataFrame([fv_dict])[FEATURE_COLUMNS]
+                tab_probs = self.tabular_classifier.predict_proba(df)[0]
+            except Exception as e:
+                logger.warning(f"Tabular classifier inference error: {e}. Falling back to rule heuristics for tabular probabilities.")
+                tab_probs = rule_probs
+
+        # 5. Stacking Ensemble Prediction (if available)
         if self.ensemble_classifier:
-            raw_features = {
-                "bec_score": bec_score,
-                "phishing_score": phishing_score,
-                "urgency_score": urgency_score,
-                "lookalike_domain_count": sum(1 for s in impersonation_signals if "lookalike" in s),
-                "impersonation_count": len(impersonation_signals),
-            }
-            # Dummy/heuristic tabular probabilities based on header signals
-            tab_probs = rule_probs
-            ensemble_pred = self.ensemble_classifier.predict(
-                nlp_probs=nlp_probs,
-                tabular_probs=tab_probs,
-                heuristic_probs=rule_probs,
-                raw_features=raw_features,
-            )
-            return NLPClassificationResult(
-                label=ensemble_pred.label,
-                confidence=ensemble_pred.confidence,
-                probabilities=ensemble_pred.probabilities,
-                urgency_score=urgency_score,
-                bec_indicators=matched_bec,
-                impersonation_signals=impersonation_signals,
-                contributing_factors=ensemble_pred.contributing_factors or self._build_factors(
-                    phishing_score, bec_score, urgency_score, display_name, actual_email, impersonation_signals
-                ),
-                confidence_calibrated=True,
-                confidence_method="ensemble_stacking",
-                evidence_score=ensemble_pred.confidence,
-            )
+            try:
+                has_exec = False
+                if attachments:
+                    has_exec = any(
+                        str(a.get("filename", "")).lower().endswith((".exe", ".scr", ".bat", ".vbs", ".cmd", ".ps1", ".hta", ".js", ".docm", ".xlsm"))
+                        for a in attachments if isinstance(a, dict)
+                    )
+                max_url_risk = 0.0
+                if analysis_context and "risk_breakdown" in analysis_context:
+                    max_url_risk = float(analysis_context["risk_breakdown"].get("link", 0.0))
 
-        # 5. Rule-Based Classification Baseline
+                raw_features = {
+                    "bec_score": bec_score,
+                    "phishing_score": phishing_score,
+                    "urgency_score": urgency_score,
+                    "lookalike_domain_count": sum(1 for s in impersonation_signals if "lookalike" in s),
+                    "impersonation_count": len(impersonation_signals),
+                    "has_executable_attachment": has_exec,
+                    "max_url_risk_score": max_url_risk,
+                }
+                ensemble_pred = self.ensemble_classifier.predict(
+                    nlp_probs=nlp_probs,
+                    tabular_probs=tab_probs,
+                    heuristic_probs=rule_probs,
+                    raw_features=raw_features,
+                    suspicious_threshold=0.225,
+                )
+                return NLPClassificationResult(
+                    label=ensemble_pred.label,
+                    confidence=ensemble_pred.confidence,
+                    probabilities=ensemble_pred.probabilities,
+                    urgency_score=urgency_score,
+                    bec_indicators=matched_bec,
+                    impersonation_signals=impersonation_signals,
+                    contributing_factors=ensemble_pred.contributing_factors or self._build_factors(
+                        phishing_score, bec_score, urgency_score, display_name, actual_email, impersonation_signals
+                    ),
+                    confidence_calibrated=True,
+                    confidence_method="ensemble_stacking",
+                    evidence_score=ensemble_pred.confidence,
+                )
+            except Exception as e:
+                logger.warning(f"Ensemble meta-classifier inference error: {e}. Falling back to rule heuristics.")
+
+        # 6. Rule-Based Classification Baseline (Fallback / Standalone)
         if bec_score >= 14:
             label = "BEC/Fraud"
         elif len(impersonation_signals) >= 2:
@@ -276,8 +351,6 @@ class NLPClassifier:
             phishing_score, bec_score, urgency_score, display_name, actual_email, impersonation_signals
         )
 
-        # For rule-based heuristic classification:
-        # If clean email (no signals), do NOT claim 100% confidence. It is an uncalibrated heuristic rule match.
         has_threat_signals = bool(phishing_score or bec_score or urgency_total or impersonation_signals)
         computed_confidence = round(raw_rule_score, 1) if has_threat_signals else None
 
@@ -291,7 +364,7 @@ class NLPClassifier:
             contributing_factors=contributing,
             confidence_calibrated=False,
             confidence_method="rule_heuristic",
-            evidence_score=round(raw_rule_score, 1),
+            evidence_score=raw_rule_score if has_threat_signals else 0.0,
         )
 
     def _build_factors(

@@ -94,7 +94,7 @@ async def test_pipeline_run_integration():
         assert result is not None
         assert isinstance(result, AnalysisResult)
         assert result.composite_risk_score >= 0.0
-        assert result.nlp_label in ("BEC/Fraud", "Impersonation", "Suspicious", "Legitimate", "Phishing")
+        assert result.nlp_label.upper() in ("BEC/FRAUD", "BEC_FRAUD", "IMPERSONATION", "SUSPICIOUS", "LEGITIMATE", "PHISHING")
         assert result.risk_breakdown is not None
         assert "factors" in result.risk_breakdown
         assert "severity" in result.risk_breakdown
